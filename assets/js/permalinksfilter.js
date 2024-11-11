@@ -1,4 +1,5 @@
 jQuery(document).ready(function($) {
+    var rfilterbuttonsId = $('.rfilterbuttons').attr('id');
     // Initialize filters and handle changes
     $('#product-filter, .rfilterbuttons').on('change', handleFilterChange);
     fetchFilteredProducts();
@@ -97,7 +98,7 @@ const extractedValues = extractValuesAfterLastSegment(currentUrl);
 
     function syncCheckboxSelections() {
         const $list = $('.rfilterbuttons ul').empty();
-        $('#conference-by-month input[type="checkbox"]').each(function() {
+        $('#' + rfilterbuttonsId + ' input[type="checkbox"]').each(function() {
             const value = $(this).val();
             const checked = $(this).is(':checked');
             $list.append(createCheckboxListItem(value, checked));
@@ -109,7 +110,7 @@ const extractedValues = extractValuesAfterLastSegment(currentUrl);
     function createCheckboxListItem(value, checked) {
         return $('<li></li>').addClass(checked ? 'checked' : '').append(
             $('<input>', {
-                name: 'attribute[conference-by-month][]',
+                name: 'attribute[' + rfilterbuttonsId + '][]',
                 id: 'text_' + value,
                 type: 'checkbox',
                 value: value,
@@ -123,7 +124,7 @@ const extractedValues = extractValuesAfterLastSegment(currentUrl);
     }
 
     function syncToMainFilter() {
-        $(`#conference-by-month input[type="checkbox"][value="${$(this).val()}"]`).prop('checked', $(this).is(':checked'));
+        $(`#${rfilterbuttonsId} input[type="checkbox"][value="${$(this).val()}"]`).prop('checked', $(this).is(':checked'));
     }
 
     function attachCheckboxClickEvents() {
@@ -135,7 +136,7 @@ const extractedValues = extractValuesAfterLastSegment(currentUrl);
     }
 
     function attachMainFilterChangeEvents() {
-        $('#conference-by-month input[type="checkbox"]').on('change', function() {
+        $('#' + rfilterbuttonsId + ' input[type="checkbox"]').on('change', function() {
             const relatedCheckbox = $(`.rfilterbuttons ul li input[value="${$(this).val()}"]`);
             relatedCheckbox.prop('checked', $(this).is(':checked')).closest('li').toggleClass('checked', $(this).is(':checked'));
         });

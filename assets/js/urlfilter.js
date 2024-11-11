@@ -1,4 +1,5 @@
 jQuery(document).ready(function($) {
+    var rfilterbuttonsId = $('.rfilterbuttons').attr('id');
     // Initialize filters
     $('#product-filter, .rfilterbuttons').on('change', handleFilterChange);
     var index = 0;
@@ -87,7 +88,7 @@ jQuery(document).ready(function($) {
 
     function syncCheckboxSelections() {
         const $list = $('.rfilterbuttons ul').empty();
-        $('#conference-by-month input[type="checkbox"]').each(function() {
+        $('#' + rfilterbuttonsId + ' input[type="checkbox"]').each(function() {
             const value = $(this).val();
             const checked = $(this).is(':checked');
             $list.append(createCheckboxListItem(value, checked));
@@ -99,7 +100,7 @@ jQuery(document).ready(function($) {
     function createCheckboxListItem(value, checked) {
         return $('<li></li>').addClass(checked ? 'checked' : '').append(
             $('<input>', {
-                name: 'attribute[conference-by-month][]',
+                name: 'attribute[' + rfilterbuttonsId + '][]',
                 id: 'text_' + value,
                 type: 'checkbox',
                 value: value,
@@ -113,7 +114,7 @@ jQuery(document).ready(function($) {
     }
 
     function syncToMainFilter() {
-        $(`#conference-by-month input[type="checkbox"][value="${$(this).val()}"]`).prop('checked', $(this).is(':checked'));
+        $(`#${rfilterbuttonsId} input[type="checkbox"][value="${$(this).val()}"]`).prop('checked', $(this).is(':checked'));
     }
 
     function attachCheckboxClickEvents() {
@@ -125,7 +126,7 @@ jQuery(document).ready(function($) {
     }
 
     function attachMainFilterChangeEvents() {
-        $('#conference-by-month input[type="checkbox"]').on('change', function() {
+        $('#' + rfilterbuttonsId + ' input[type="checkbox"]').on('change', function() {
             const relatedCheckbox = $(`.rfilterbuttons ul li input[value="${$(this).val()}"]`);
             relatedCheckbox.prop('checked', $(this).is(':checked')).closest('li').toggleClass('checked', $(this).is(':checked'));
         });

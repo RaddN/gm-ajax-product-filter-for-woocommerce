@@ -140,11 +140,11 @@ function wcapf_product_filter_shortcode_single($atts) {
 
     // Check if the name is provided
     if (empty($atts['name'])) {
-        return 'Please provide an attribute name.';
+        return '<p style="background:red;background: red;text-align: center;color: #fff;">Please provide an attribute slug. Expample: [wcapf_product_filter_single name="conference-by-month"]</p>';
     }
 
     // Generate the output
-    $output = '<form class="rfilterbuttons"><ul>';
+    $output = '<form class="rfilterbuttons" id="'.$atts['name'].'"><ul>';
     $output .= '</ul></form>';
 
     return $output;

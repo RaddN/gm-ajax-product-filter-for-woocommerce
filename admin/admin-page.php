@@ -17,11 +17,13 @@ function wcapf_admin_page_content() {
     <div class="wrap">
         <h1>Manage WooCommerce Product Filters</h1>
         <form method="post" action="options.php">
+            
             <?php
             settings_fields('wcapf_options_group');
             do_settings_sections('wcapf-admin');
             submit_button();
             ?>
+            <p>Use short code to show filter <b>[wcapf_product_filter attribute="your-attribute" terms="your-terms1, your-terms2" category="yourcata1, your-cata2" tag="your-tag1, your-tag2"]</b> for button style filter use this shortcode <b>[wcapf_product_filter_single name="conference-by-month"]</b></p>
         </form>
     </div>
     <?php
