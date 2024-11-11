@@ -65,6 +65,7 @@ function wcapf_product_filter_shortcode($atts) {
     ob_start(); // Start output buffering
     ?>
     <form id="product-filter" method="POST">
+    <?php wp_nonce_field('gm-product-filter-action', 'gm-product-filter-nonce'); ?>
 <?php
     $options = get_option('wcapf_options');
     
@@ -89,9 +90,9 @@ function wcapf_product_filter_shortcode($atts) {
                 $terms = get_terms(array('taxonomy' => 'pa_' . $attribute->attribute_name, 'hide_empty' => true));
                 $selected_terms = explode(',', $atts['terms']);
                 if ($terms) {
-                    echo '<div id="'.$attribute->attribute_label.'"> <div class="title">' . $attribute->attribute_label . '</div><div class="items">';
+                    echo '<div id="' . esc_attr($attribute->attribute_label) . '"> <div class="title">' . esc_html($attribute->attribute_label) . '</div><div class="items">';
                     foreach ($terms as $term) {
-                        echo '<label><input type="checkbox" class="filter-checkbox" name="attribute[' . $attribute->attribute_name . '][]" value="' . $term->slug . '"' . (in_array($term->slug,  $selected_terms) ? ' checked' : '') . '> ' . $term->name . '</label>';
+                        echo '<label><input type="checkbox" class="filter-checkbox" name="attribute[' . esc_attr($attribute->attribute_name) . '][]" value="' . esc_attr($term->slug) . '"' . (in_array($term->slug, $selected_terms) ? ' checked' : '') . '> ' . esc_html($term->name) . '</label>';
                     }
                     echo '</div></div>';
                 }
@@ -105,7 +106,7 @@ function wcapf_product_filter_shortcode($atts) {
         $selected_tags = explode(',', $atts['tag']);
         if ($tags) {
             foreach ($tags as $tag) {
-                echo '<label><input type="checkbox" class="filter-checkbox" name="tags[]" value="' . $tag->slug . '"' . (in_array($tag->slug, $selected_tags) ? ' checked' : '') . '> ' . $tag->name . '</label><br>';
+                echo '<label><input type="checkbox" class="filter-checkbox" name="tags[]" value="' . esc_attr($tag->slug) . '"' . (in_array($tag->slug, $selected_tags) ? ' checked' : '') . '> ' . esc_html($tag->name) . '</label><br>';
             }
         }
         echo '</div>';

@@ -57,7 +57,7 @@ function wcapf_settings_init() {
     }
     // Add Page Management Section
     add_settings_section('wcapf_page_section', __('Pages Manage', 'gm-ajax-product-filter-for-woocommerce'), function() {
-        echo '<p>' . __('Add the pages below where you have added the shortcode.', 'gm-ajax-product-filter-for-woocommerce') . '</p>';
+        echo '<p>' . esc_html__( 'Add the pages below where you have added the shortcode.', 'gm-ajax-product-filter-for-woocommerce' ) . '</p>';
     }, 'wcapf-admin');
 
     // Pages List Field
@@ -68,7 +68,7 @@ add_action('admin_init', 'wcapf_settings_init');
 function wcapf_render_checkbox($key) {
     $options = get_option('wcapf_options');
     ?>
-    <input type='checkbox' name='wcapf_options[<?php echo $key; ?>]' <?php checked(isset($options[$key]) && $options[$key] === "on"); ?>>
+    <input type='checkbox' name='wcapf_options[<?php echo esc_attr($key); ?>]' <?php checked(isset($options[$key]) && $options[$key] === "on"); ?>>
     <?php
 }
 
@@ -84,7 +84,7 @@ function wcapf_use_url_filter_render() {
     $options = get_option('wcapf_options');
     ?>
     <fieldset>
-        <legend><?php _e('Select URL Filter Type', 'gm-ajax-product-filter-for-woocommerce'); ?></legend>
+    <legend><?php esc_html_e('Select URL Filter Type', 'gm-ajax-product-filter-for-woocommerce'); ?></legend>
         <?php
         $types = [
             'query_string' => __('With Query String (e.g., ?filters)', 'gm-ajax-product-filter-for-woocommerce'),
@@ -92,7 +92,7 @@ function wcapf_use_url_filter_render() {
             'ajax' => __('With Ajax', 'gm-ajax-product-filter-for-woocommerce'),
         ];
         foreach ($types as $value => $label) {
-            echo "<label><input type='radio' name='wcapf_options[use_url_filter]' value='$value' " . checked($options['use_url_filter'], $value, false) . "> $label</label><br>";
+            echo "<label><input type='radio' name='wcapf_options[use_url_filter]' value='" . esc_attr($value) . "' " . checked($options['use_url_filter'], $value, false) . "> " . esc_html($label) . "</label><br>";
         }
         ?>
     </fieldset>

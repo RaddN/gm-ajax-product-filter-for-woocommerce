@@ -5,25 +5,26 @@ class WCAPF_Filter_Functions {
     public function process_filter() {
         $args = array(
             'post_type' => 'product',
-            'posts_per_page' => -1,
+            'posts_per_page' => 12,
             'post_status' => 'publish',
             'tax_query' => array(
                 'relation' => 'AND'
             )
         );
 
+        if (isset($_POST['gm-product-filter-nonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['gm-product-filter-nonce'])), 'gm-product-filter-action')) {
         // Filter by categories
         if (!empty($_POST['category'])) {
             $args['tax_query'][] = array(
                 'taxonomy' => 'product_cat',
                 'field' => 'slug',
-                'terms' => $_POST['category']
+                'terms' => array_map('sanitize_text_field', wp_unslash($_POST['category']))
             );
         }
 
         // Filter by attributes
         if (!empty($_POST['attribute'])) {
-            foreach ($_POST['attribute'] as $attribute_name => $attribute_values) {
+            foreach (wp_unslash($_POST['attribute']) as $attribute_name => $attribute_values) {
                 if (!empty($attribute_values)) {
                     $args['tax_query'][] = array(
                         'taxonomy' => 'pa_' . sanitize_text_field($attribute_name),
@@ -39,10 +40,13 @@ class WCAPF_Filter_Functions {
             $args['tax_query'][] = array(
                 'taxonomy' => 'product_tag',
                 'field' => 'slug',
-                'terms' => array_map('sanitize_text_field', $_POST['tags'])
+                'terms' => array_map('sanitize_text_field', wp_unslash($_POST['tags']))
             );
         }
-
+    }else {
+        // Nonce verification failed
+        die('Security check failed');
+    }
         $query = new WP_Query($args);
 
         // Prepare the updated filters
