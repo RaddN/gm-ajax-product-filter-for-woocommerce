@@ -1,0 +1,81 @@
+.filter-group {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.filter-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.filter-group select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+}
+
+#filtered-products {
+    margin-top: 20px;
+}
+div#loader {
+    position: absolute;
+    top: 40%;
+}
+#loader {
+   width: 56px;
+   height: 56px;
+   border-radius: 50%;
+   background: conic-gradient(#0000 10%,#474bff);
+   -webkit-mask: radial-gradient(farthest-side,#0000 calc(100% - 9px),#000 0);
+   animation: spinner-zp9dbg 1s infinite linear;
+}
+
+@keyframes spinner-zp9dbg {
+   to {
+      transform: rotate(1turn);
+   }
+}
+
+
+.rfilterbuttons li {
+    padding: 10px 20px;
+    border: 1px solid;
+    border-radius: 30px;
+}
+.rfilterbuttons ul {
+    display: flex;
+    list-style: none;
+    padding: 0 !important;
+    gap: 14px;
+}
+.rfilterbuttons input {
+    display: none;
+}
+.rfilterbuttons ul li.checked {
+    background: red;
+    color: #fff;
+}
+
+.filter-group.attributes .title {
+    background: linear-gradient(90deg, #501A73 9%, #432FB8 37%);
+    color: white !important;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 20px !important;
+}
+
+.filter-group.attributes>div {
+    background: rgba(255, 255, 255, 0.7);
+    padding-bottom: 1px;
+    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+}
+.filter-group.attributes .items {
+    padding: 20px 10px;
+}
+.filter-group.attributes .items>label,.rfilterbuttons label {
+    text-transform: capitalize;
+    cursor: pointer;
+}
