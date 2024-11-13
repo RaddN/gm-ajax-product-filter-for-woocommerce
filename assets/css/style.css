@@ -56,7 +56,7 @@ div#loader {
 }
 .rfilterbuttons ul li.checked {
     background: red;
-    color: #fff;
+    color: #fff !important;
 }
 
 .filter-group.attributes .title {
@@ -78,4 +78,10 @@ div#loader {
 .filter-group.attributes .items>label,.rfilterbuttons label {
     text-transform: capitalize;
     cursor: pointer;
+}
+
+
+/* price & button hide */
+.add_to_cart_button,span.price {
+    display: none !important;
 }

@@ -1,20 +1,9 @@
 <?php
-
-function wcapf_add_rewrite_rules() {
-    add_rewrite_rule(
-        '^(.+)/(.+)/(.+)/?$',
-        'index.php?pagename=your-page-slug&filters=$matches[1],$matches[2],$matches[3]',
-        'top'
-    );
-}
-add_action('init', 'wcapf_add_rewrite_rules');
-
-
+session_start();
 function myplugin_register_template() {
     global $wp;
+    global $options;
 
-    // Get the pages from the options
-    $options = get_option('wcapf_options');
     $pages = isset($options['pages']) ? $options['pages'] : [];
 
     // Loop through each page and check if the current request starts with any of them
@@ -24,9 +13,8 @@ function myplugin_register_template() {
             // Get the part of the URI after the page slug
             $slug = str_replace($page . '/', '', $wp->request);
 
-            // Store the slug in a transient
-            set_transient($page . '_slug', $slug, 30); // Store for 30 seconds
-
+            // Store the slug in the session
+            $_SESSION["filters" . '_slug'] = $slug;
             // Redirect to the main page
             wp_redirect(home_url("/$page"), 301);
             exit;
@@ -35,24 +23,22 @@ function myplugin_register_template() {
 }
 
 function myplugin_add_console_log() {
-    // Get the pages from the options
-    $options = get_option('wcapf_options');
-    $pages = isset($options['pages']) ? $options['pages'] : [];
-
-    // Check each page's transient
-    foreach ($pages as $page) {
-        if ($slug = get_transient($page . '_slug')) {
-            // Output the script to log the value to the console and update the URL
-            echo "<script>
-                    // Update the URL with the slug value
-                    var newUrl = window.location.href + '" . esc_js($slug) . "';
-                    window.history.replaceState(null, null, newUrl);
-                  </script>";
-
-            // Delete the transient after logging
-            delete_transient($page . '_slug');
-        }
-    }
+    // Output the script to check session and update the URL
+    echo "<script>
+            document.addEventListener('DOMContentLoaded', function() {";
+    // Check each page's session variable
+        if (isset($_SESSION["filters" . '_slug'])) {
+            $slug = sanitize_text_field($_SESSION["filters" . '_slug']);
+            echo "
+                // Update the URL with the slug value
+                var newUrl = window.location.href + '" . esc_js($slug) . "';
+                window.history.replaceState(null, null, newUrl);
+                console.log('" . esc_js($slug) . "');
+                // Remove the slug from the session
+                ";
+            unset($_SESSION[$page . '_slug']);
+            }
+    echo "});</script>";
 }
 
 // Hook the functions to appropriate actions

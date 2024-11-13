@@ -70,8 +70,7 @@ function wcapf_product_filter_shortcode($atts) {
     $options = get_option('wcapf_options');
     
     // Display categories
-    if (!empty($options['show_categories'])) {
-        echo '<div class="filter-group category"><label>Category:</label>';
+        echo '<div class="filter-group category" style="display: ' . (!empty($options['show_categories']) ? 'block' : 'none') . ';"><label>Category:</label>';
         $categories = get_terms(array('taxonomy' => 'product_cat', 'hide_empty' => true));
         $selected_categories = explode(',', $atts['category']);
         if ($categories) {
@@ -81,9 +80,8 @@ function wcapf_product_filter_shortcode($atts) {
             }
         }
         echo '</div>';
-    }
-    if (!empty($options['show_attributes'])) {
-        echo '<div class="filter-group attributes"><label style="display:none;">Attributes:</label>';
+
+        echo '<div class="filter-group attributes" style="display: ' . (!empty($options['show_attributes']) ? 'block' : 'none') . ';"><label style="display:none;">Attributes:</label>';
         $attributes = wc_get_attribute_taxonomies();
         if ($attributes) {
             foreach ($attributes as $attribute) {
@@ -99,9 +97,9 @@ function wcapf_product_filter_shortcode($atts) {
             }
         }
         echo '</div>';
-    }
-    if (!empty($options['show_tags'])) {
-        echo '<div class="filter-group tags"><label>Tags:</label>';
+
+
+        echo '<div class="filter-group tags" style="display: ' . (!empty($options['show_tags']) ? 'block' : 'none') . ';"><label>Tags:</label>';
         $tags = get_terms(array('taxonomy' => 'product_tag', 'hide_empty' => true));
         $selected_tags = explode(',', $atts['tag']);
         if ($tags) {
@@ -110,7 +108,7 @@ function wcapf_product_filter_shortcode($atts) {
             }
         }
         echo '</div>';
-    }
+        
     echo '</form>';
 ?>
 <!-- Loader HTML -->

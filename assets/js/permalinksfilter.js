@@ -2,7 +2,7 @@ jQuery(document).ready(function($) {
     var rfilterbuttonsId = $('.rfilterbuttons').attr('id');
     // Initialize filters and handle changes
     $('#product-filter, .rfilterbuttons').on('change', handleFilterChange);
-    fetchFilteredProducts();
+    // fetchFilteredProducts();
     var index = 0;
     const currentUrl = window.location.href.replace(/\/$/, '');
     // Create a function to extract values after the last segment

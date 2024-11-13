@@ -57,7 +57,23 @@ class WCAPF_Filter_Functions {
 
         if ($query->have_posts()) {
             while ($query->have_posts()) : $query->the_post();
-                wc_get_template_part('content', 'product');
+                $product_link = get_permalink(); // Get the product link
+                $product_title = get_the_title(); // Get the product title
+                $product_image = wp_get_attachment_image_src(get_post_thumbnail_id(), 'full'); // Get the product image
+        
+                echo '
+                        <li class="product  type-product gm-product">
+                        <a href="' . esc_url($product_link) . '" class="woocommerce-LoopProduct-link woocommerce-loop-product__link gm-link">
+                            <div class="astra-shop-thumbnail-wrap thumbnail">
+                                <img src="' . esc_url($product_image[0]) . '" alt="' . esc_attr($product_title) . '" class="attachment-woocommerce_thumbnail size-woocommerce_thumbnail gm-thumbnail">
+                            </div>
+                            <div class="astra-shop-summary-wrap gm-summary-wrap">
+                                <h2 class="woocommerce-loop-product__title">' . esc_html($product_title) . '</h2>
+                                <div class="woocommerce-product-description ast-woo-shop-product-description">' . apply_filters('the_excerpt', get_the_excerpt()) . '</div>
+                            </div>
+                            </a>
+                        </li>
+                      ';
             endwhile;
         } else {
             echo '<p>No products found</p>';

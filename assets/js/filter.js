@@ -116,7 +116,7 @@ jQuery(document).ready(function($) {
     }
 
     function attachMainFilterChangeEvents() {
-        $('#' + rfilterbuttonsId + 'input[type="checkbox"]').on('change', function() {
+        $('#' + rfilterbuttonsId + ' input[type="checkbox"]').on('change', function() {
             const relatedCheckbox = $(`.rfilterbuttons ul li input[value="${$(this).val()}"]`);
             relatedCheckbox.prop('checked', $(this).is(':checked')).closest('li').toggleClass('checked', $(this).is(':checked'));
         });

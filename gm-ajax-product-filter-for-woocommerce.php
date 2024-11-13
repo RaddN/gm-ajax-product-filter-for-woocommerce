@@ -94,7 +94,6 @@ function wcapf_filter_products() {
 
 // Admin page for filter settings
 
-// Include filter processing class
 include(plugin_dir_path(__FILE__) . 'admin/admin-page.php');
 
 // Register settings for filter management in admin
