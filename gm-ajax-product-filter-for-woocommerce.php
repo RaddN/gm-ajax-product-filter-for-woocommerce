@@ -115,3 +115,20 @@ if ($use_url_filter === 'permalinks' && !empty($options['pages'])){
 }
 
 include_once plugin_dir_path(__FILE__) . 'admin/admin-notice.php';
+
+
+// Hook into the 'plugin_action_links' filter
+add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'my_plugin_settings_link');
+
+/**
+ * Add settings link to the plugin page
+ *
+ * @param array $links The array of plugin action links.
+ * @return array Modified array with our custom link added.
+ */
+function my_plugin_settings_link($links) {
+    // Add the settings link
+    $settings_link = '<a href="admin.php?page=wcapf-admin">Settings</a>';
+    array_unshift($links, $settings_link); // Add at the beginning of the links array
+    return $links;
+}
