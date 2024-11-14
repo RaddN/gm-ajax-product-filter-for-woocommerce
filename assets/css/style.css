@@ -4,13 +4,11 @@
     flex-direction: column;
     gap: 20px;
 }
-
 .filter-group label {
     display: block;
     font-weight: bold;
     margin-bottom: 5px;
 }
-
 .filter-group select {
     width: 100%;
     padding: 8px;
@@ -32,14 +30,11 @@ div#loader {
    -webkit-mask: radial-gradient(farthest-side,#0000 calc(100% - 9px),#000 0);
    animation: spinner-zp9dbg 1s infinite linear;
 }
-
 @keyframes spinner-zp9dbg {
    to {
       transform: rotate(1turn);
    }
 }
-
-
 .rfilterbuttons li {
     padding: 10px 20px;
     border: 1px solid;
@@ -58,7 +53,6 @@ div#loader {
     background: red;
     color: #fff !important;
 }
-
 .filter-group.attributes .title {
     background: linear-gradient(90deg, #501A73 9%, #432FB8 37%);
     color: white !important;
@@ -66,7 +60,6 @@ div#loader {
     padding: 10px 0;
     font-size: 20px !important;
 }
-
 .filter-group.attributes>div {
     background: rgba(255, 255, 255, 0.7);
     padding-bottom: 1px;
@@ -78,10 +71,4 @@ div#loader {
 .filter-group.attributes .items>label,.rfilterbuttons label {
     text-transform: capitalize;
     cursor: pointer;
-}
-
-
-/* price & button hide */
-.add_to_cart_button,span.price {
-    display: none !important;
 }

@@ -97,8 +97,6 @@ function wcapf_product_filter_shortcode($atts) {
             }
         }
         echo '</div>';
-
-
         echo '<div class="filter-group tags" style="display: ' . (!empty($options['show_tags']) ? 'block' : 'none') . ';"><label>Tags:</label>';
         $tags = get_terms(array('taxonomy' => 'product_tag', 'hide_empty' => true));
         $selected_tags = explode(',', $atts['tag']);
@@ -108,7 +106,6 @@ function wcapf_product_filter_shortcode($atts) {
             }
         }
         echo '</div>';
-        
     echo '</form>';
 ?>
 <!-- Loader HTML -->

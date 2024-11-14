@@ -4,28 +4,18 @@ jQuery(document).ready(function($) {
     $('#product-filter, .rfilterbuttons').on('change', handleFilterChange);
     // fetchFilteredProducts();
     var index = 0;
-    const currentUrl = window.location.href.replace(/\/$/, '');
-    // Create a function to extract values after the last segment
-function extractValuesAfterLastSegment(url) {
-    // Create an anchor element to easily parse the URL
-    const a = document.createElement('a');
-    a.href = url;
-    // Get the pathname from the URL
-    const pathname = a.pathname;
-    // Split the pathname by '/' and filter out any empty strings
-    const valuesArray = pathname.split('/').filter(value => value !== '');
-    // Return all values after the last segment
-    return valuesArray.slice(1); // Skip the first segment
-}
-const extractedValues = extractValuesAfterLastSegment(currentUrl);
-    if (extractedValues.length > 0) {
-        const filtersString = extractedValues.join(',');
-        applyFiltersFromUrl(filtersString);
-    } else if (anyFilterSelected()) {
+    if (typeof wcapf_data !== 'undefined' && wcapf_data.slug) {
+        const slugArray = wcapf_data.slug.split('/').filter(value => value !== '');
+        if (slugArray.length > 0) {
+            console.log(slugArray);
+            const filtersString = slugArray.join(',');
+            applyFiltersFromUrl(filtersString);
+            updateUrlFilters(); 
+        } 
+    }else if (anyFilterSelected()) {
         $('#loader').show();
         fetchFilteredProducts();
     }
-
     function handleFilterChange(e) {
         e.preventDefault();
         updateUrlFilters(); // Update URL based on selected filters

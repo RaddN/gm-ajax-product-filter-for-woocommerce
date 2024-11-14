@@ -32,16 +32,24 @@ $use_url_filter = isset($options['use_url_filter']) ? $options['use_url_filter']
 // Enqueue scripts for frontend
 function wcapf_enqueue_scripts() {
     // Determine the script to enqueue based on the 'use_url_filter' setting
-    global $use_url_filter;
-    if ($use_url_filter === 'query_string') {
-        $script_handle = 'urlfilter-ajax';
-        $script_path = 'assets/js/urlfilter.js';
-    } elseif ($use_url_filter === 'permalinks') {
-        $script_handle = 'permalinksfilter-ajax';
-        $script_path = 'assets/js/permalinksfilter.js';
-    } else {
-        $script_handle = 'filter-ajax';
-        $script_path = 'assets/js/filter.js';
+    global $use_url_filter, $options;
+    $slug = "";
+    switch ($use_url_filter) {
+        case 'query_string':
+            $script_handle = 'urlfilter-ajax';
+            $script_path = 'assets/js/urlfilter.js';
+            break;
+        case 'permalinks':
+            $script_handle = 'permalinksfilter-ajax';
+            $script_path = 'assets/js/permalinksfilter.js';
+            if (isset($_SESSION['gmfilter_slug'])) {
+                $slug = sanitize_text_field($_SESSION['gmfilter_slug']);
+            }
+            break;
+        default:
+            $script_handle = 'filter-ajax';
+            $script_path = 'assets/js/filter.js';
+            break;
     }
 
     // Enqueue the determined script
@@ -52,12 +60,11 @@ function wcapf_enqueue_scripts() {
         '1.0.0',
         true
     );
-     // Retrieve the PHP variable
-     $options = get_option('wcapf_options');
   
     // Pass the variable to the JavaScript file
     wp_localize_script($script_handle, 'wcapf_data', array(
-        'options' => $options
+        'options' => $options,
+        'slug' => $slug
      ));
     // Localize the script for AJAX functionality
     wp_localize_script(
@@ -65,7 +72,6 @@ function wcapf_enqueue_scripts() {
         'wcapf_ajax',
         array('ajax_url' => admin_url('admin-ajax.php'))
     );
-
     // Enqueue the CSS style
     wp_enqueue_style('filter-style', plugin_dir_url(__FILE__) . 'assets/css/style.css',array(),'1.0.0');
 }
@@ -103,7 +109,6 @@ function wcapf_register_settings() {
 add_action('admin_init', 'wcapf_register_settings');
 
 // include permalinks setup
-if ($use_url_filter === 'permalinks'){
+if ($use_url_filter === 'permalinks' && !empty($options['pages'])){
     include(plugin_dir_path(__FILE__) . 'includes/permalinks-setup.php');
-
 }
