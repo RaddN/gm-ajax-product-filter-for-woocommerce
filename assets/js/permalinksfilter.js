@@ -91,7 +91,9 @@ jQuery(document).ready(function($) {
                 const checked = isChecked(`attribute[${name}][]`, term.slug) ? 'checked' : '';
                 return `<label class="${checked}"><input type="checkbox" name="attribute[${name}][]" value="${term.slug}" ${checked}> ${term.name}</label>`;
             }).join('');
-            return `<div id="${name}"><div class="title">${name}</div><div class="items">${termsHtml}</div></div>`;
+           let title = name.replace(/-/g, ' ');
+           title = title.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+            return `<div id="${name}"><div class="title">${title}</div><div class="items">${termsHtml}</div></div>`;
         }).join(''));
     }
 

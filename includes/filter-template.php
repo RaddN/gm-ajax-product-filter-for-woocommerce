@@ -1,4 +1,3 @@
-
 <?php
 function wcapf_product_filter_shortcode($atts) {
     // Define default attributes and merge with user-defined attributes

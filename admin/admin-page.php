@@ -31,9 +31,9 @@ function wcapf_admin_page_content() {
 
 function wcapf_settings_init() {
     $options = get_option('wcapf_options') ?: [
-        'show_categories' => 1,
+        'show_categories' => 0,
         'show_attributes' => 1,
-        'show_tags' => 1,
+        'show_tags' => 0,
         'use_url_filter' => '',
         'update_filter_options' => 0,
         'show_loader' => 1,
@@ -57,20 +57,30 @@ function wcapf_settings_init() {
     foreach ($fields as $key => $label) {
         add_settings_field($key, $label, "wcapf_{$key}_render", 'wcapf-admin', 'wcapf_section');
     }
-    // Add Page Management Section
-    add_settings_section('wcapf_page_section', __('Pages Manage', 'gm-ajax-product-filter-for-woocommerce'), function() {
-        echo '<p>' . esc_html__( 'Add the pages below where you have added the shortcode.', 'gm-ajax-product-filter-for-woocommerce' ) . '</p>';
-    }, 'wcapf-admin');
 
     // Pages List Field
+        // Add Page Management Section
+        add_settings_section('wcapf_page_section_before', __('', 'gm-ajax-product-filter-for-woocommerce'), function() {
+            global $options;
+            echo '<div class="page_manage" style="' . ($options['use_url_filter'] === "permalinks" ? 'display:block;' : 'display:none;') . '">';
+        }, 'wcapf-admin');
+        add_settings_section('wcapf_page_section', __('Pages Manage', 'gm-ajax-product-filter-for-woocommerce'), function() {
+            echo '<p>' . esc_html__( 'Add the pages below where you have added the shortcode.', 'gm-ajax-product-filter-for-woocommerce' ) . '</p>';
+        }, 'wcapf-admin');
     add_settings_field('pages', __('Pages List', 'gm-ajax-product-filter-for-woocommerce'), 'wcapf_pages_render', 'wcapf-admin', 'wcapf_page_section');
+    add_settings_section('wcapf_page_section_after', __('', 'gm-ajax-product-filter-for-woocommerce'), function() {
+        echo '</div>';
+    }, 'wcapf-admin');
 }
 add_action('admin_init', 'wcapf_settings_init');
 
 function wcapf_render_checkbox($key) {
     $options = get_option('wcapf_options');
     ?>
+    <label class="switch">
     <input type='checkbox' name='wcapf_options[<?php echo esc_attr($key); ?>]' <?php checked(isset($options[$key]) && $options[$key] === "on"); ?>>
+    <span class="slider round"></span>
+    </label>
     <?php
 }
 
@@ -104,6 +114,8 @@ function wcapf_pages_render() {
     $options = get_option('wcapf_options');
     $pages = isset($options['pages']) ? array_filter($options['pages']) : []; // Filter out empty values
     ?>
+    <div class="page-listing">
+    <legend>Manage Pages</legend>
     <div class="page-inputs">
         <input type="text" name="wcapf_options[pages][]" value="" placeholder="Add new page" />
         <button type="button" class="add-page">Add Page</button>
@@ -116,6 +128,7 @@ function wcapf_pages_render() {
             </div>
         <?php endforeach; ?>
     </div>
+        </div>
     <script>
         document.querySelector('.page-inputs .add-page').addEventListener('click', function() {
             var newPage = document.createElement('div');
