@@ -1,4 +1,21 @@
 jQuery(document).ready(function($) {
+    // Check if filter_slug is set and store it in local storage
+    if (wcapf_data.filter_slug) {
+        localStorage.setItem('gmfilter_slug', wcapf_data.filter_slug);
+    }
+
+    // Example of how to retrieve the slug later
+    var savedSlug = localStorage.getItem('gmfilter_slug');
+    if (savedSlug) {
+        console.log("Saved filter slug:", savedSlug);
+        // You can use the savedSlug to apply filters or for other logic
+    }
+
+    // Optional: Clear the slug from local storage when needed
+    // localStorage.removeItem('gmfilter_slug');
+});
+
+jQuery(document).ready(function($) {
     var rfilterbuttonsId = $('.rfilterbuttons').attr('id');
     // Initialize filters and handle changes
     $('#product-filter, .rfilterbuttons').on('change', handleFilterChange);

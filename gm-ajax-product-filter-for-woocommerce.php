@@ -28,12 +28,13 @@ if (!defined('ABSPATH')) {
 // Retrieve the 'use_url_filter' setting from the options
 $options = get_option('wcapf_options');
 $use_url_filter = isset($options['use_url_filter']) ? $options['use_url_filter'] : false;
+$slug = "";
 
 // Enqueue scripts for frontend
 function wcapf_enqueue_scripts() {
     // Determine the script to enqueue based on the 'use_url_filter' setting
-    global $use_url_filter, $options;
-    $slug = "";
+    global $use_url_filter, $options, $slug;
+
     switch ($use_url_filter) {
         case 'query_string':
             $script_handle = 'urlfilter-ajax';
@@ -42,8 +43,8 @@ function wcapf_enqueue_scripts() {
         case 'permalinks':
             $script_handle = 'permalinksfilter-ajax';
             $script_path = 'assets/js/permalinksfilter.js';
-            if (isset($_SESSION['gmfilter_slug'])) {
-                $slug = sanitize_text_field($_SESSION['gmfilter_slug']);
+            if (get_transient('gmfilter_slug')) {
+                $slug = sanitize_text_field(get_transient('gmfilter_slug'));
             }
             break;
         default:
