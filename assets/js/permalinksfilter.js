@@ -1,27 +1,14 @@
 jQuery(document).ready(function($) {
-    // Check if filter_slug is set and store it in local storage
-    if (wcapf_data.filter_slug) {
-        localStorage.setItem('gmfilter_slug', wcapf_data.filter_slug);
-    }
-
-    // Example of how to retrieve the slug later
-    var savedSlug = localStorage.getItem('gmfilter_slug');
-    if (savedSlug) {
-        console.log("Saved filter slug:", savedSlug);
-        // You can use the savedSlug to apply filters or for other logic
-    }
-
-    // Optional: Clear the slug from local storage when needed
-    // localStorage.removeItem('gmfilter_slug');
-});
-
-jQuery(document).ready(function($) {
     var rfilterbuttonsId = $('.rfilterbuttons').attr('id');
     // Initialize filters and handle changes
     $('#product-filter, .rfilterbuttons').on('change', handleFilterChange);
     // fetchFilteredProducts();
     var index = 0;
+    const urlParams = new URLSearchParams(window.location.search);
+    const gmfilter = urlParams.get('gmfilter');
+    
     if (typeof wcapf_data !== 'undefined' && wcapf_data.slug) {
+        
         const slugArray = wcapf_data.slug.split('/').filter(value => value !== '');
         if (slugArray.length > 0) {
             console.log(slugArray);
@@ -29,7 +16,16 @@ jQuery(document).ready(function($) {
             applyFiltersFromUrl(filtersString);
             updateUrlFilters(); 
         } 
-    }else if (anyFilterSelected()) {
+    }else if(gmfilter){
+        const slugtoArray = gmfilter.split('/').filter(value => value !== '');
+        if (slugtoArray.length > 0) {
+            console.log(slugtoArray);
+            const filtersString = slugtoArray.join(',');
+            applyFiltersFromUrl(filtersString);
+            updateUrlFilters(); 
+        } 
+    }
+    else if (anyFilterSelected()) {
         $('#loader').show();
         fetchFilteredProducts();
     }

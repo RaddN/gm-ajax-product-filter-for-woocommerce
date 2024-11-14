@@ -12,12 +12,11 @@ function myplugin_register_template() {
             $slug = substr($request, strlen($page) + 1);
             set_transient('gmfilter_slug', $slug, 30);
             // Redirect to the main page
-            wp_redirect(home_url("/$page"), 301);
+            wp_redirect(home_url("/$page?gmfilter=$slug"), 301);
             exit;
         }
     }
 }
-
 function remove_session() {
     // Remove the slug from the session
     delete_transient('gmfilter_slug');
