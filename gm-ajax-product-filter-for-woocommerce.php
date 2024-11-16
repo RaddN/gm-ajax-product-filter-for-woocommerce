@@ -58,7 +58,7 @@ function wcapf_enqueue_scripts() {
         $script_handle,
         plugin_dir_url(__FILE__) . $script_path,
         array('jquery'),
-        '1.0.1',
+        '1.0.2',
         true
     );
   

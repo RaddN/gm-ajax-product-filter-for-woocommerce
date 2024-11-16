@@ -11,7 +11,6 @@ jQuery(document).ready(function($) {
         
         const slugArray = wcapf_data.slug.split('/').filter(value => value !== '');
         if (slugArray.length > 0) {
-            console.log(slugArray);
             const filtersString = slugArray.join(',');
             applyFiltersFromUrl(filtersString);
             updateUrlFilters(); 
@@ -19,7 +18,6 @@ jQuery(document).ready(function($) {
     }else if(gmfilter){
         const slugtoArray = gmfilter.split('/').filter(value => value !== '');
         if (slugtoArray.length > 0) {
-            console.log(slugtoArray);
             const filtersString = slugtoArray.join(',');
             applyFiltersFromUrl(filtersString);
             updateUrlFilters(); 
@@ -86,15 +84,13 @@ jQuery(document).ready(function($) {
     }
 
     function updateAttributes(attributes) {
-        console.log(attributes);
         $('.filter-group.attributes').html(Object.keys(attributes).map(name => {
-            
             const termsHtml = attributes[name].map(term => {
                 const checked = isChecked(`attribute[${name}][]`, term.slug) ? 'checked' : '';
                 return `<label class="${checked}"><input type="checkbox" name="attribute[${name}][]" value="${term.slug}" ${checked}> ${term.name}</label>`;
             }).join('');
-        //    let title = name.replace(/-/g, ' ');
-        //    title = title.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+           let title = name.replace(/-/g, ' ');
+           title = title.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
             return `<div id="${name}"><div class="title">${name}</div><div class="items">${termsHtml}</div></div>`;
         }).join(''));
     }
