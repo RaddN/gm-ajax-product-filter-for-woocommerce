@@ -75,6 +75,10 @@ div#loader {
 
 /* responsive filter */
 @media (max-width: 781px) {
+    form#conference-by-month {
+        display: none;
+    }
+    #product-filter .filter-group div .title{cursor:pointer;}
     #product-filter:before {
         content: "Filter";
         background: linear-gradient(90deg, #041a57, #d62229);
@@ -103,4 +107,3 @@ left:0;
         box-shadow: #efefef99 0 -4px 10px 4px;
     }
 }
-#product-filter .filter-group div .title{cursor:pointer;}
