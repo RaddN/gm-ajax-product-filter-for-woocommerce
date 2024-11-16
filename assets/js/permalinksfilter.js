@@ -91,7 +91,7 @@ jQuery(document).ready(function($) {
             }).join('');
            let title = name.replace(/-/g, ' ');
            title = title.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-            return `<div id="${name}"><div class="title">${name}</div><div class="items">${termsHtml}</div></div>`;
+            return `<div id="${name}"><div class="title">${title}</div><div class="items">${termsHtml}</div></div>`;
         }).join(''));
     }
 
