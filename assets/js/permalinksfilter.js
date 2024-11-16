@@ -3,7 +3,7 @@ jQuery(document).ready(function($) {
     // Initialize filters and handle changes
     $('#product-filter, .rfilterbuttons').on('change', handleFilterChange);
     // fetchFilteredProducts();
-    var rfilterrfilterindex = 0;
+    var rfilterindex = 0;
     const urlParams = new URLSearchParams(window.location.search);
     const gmfilter = urlParams.get('gmfilter');
     
@@ -86,14 +86,16 @@ jQuery(document).ready(function($) {
     }
 
     function updateAttributes(attributes) {
+        console.log(attributes);
         $('.filter-group.attributes').html(Object.keys(attributes).map(name => {
+            
             const termsHtml = attributes[name].map(term => {
                 const checked = isChecked(`attribute[${name}][]`, term.slug) ? 'checked' : '';
                 return `<label class="${checked}"><input type="checkbox" name="attribute[${name}][]" value="${term.slug}" ${checked}> ${term.name}</label>`;
             }).join('');
-           let title = name.replace(/-/g, ' ');
-           title = title.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-            return `<div id="${name}"><div class="title">${title}</div><div class="items">${termsHtml}</div></div>`;
+        //    let title = name.replace(/-/g, ' ');
+        //    title = title.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+            return `<div id="${name}"><div class="title">${name}</div><div class="items">${termsHtml}</div></div>`;
         }).join(''));
     }
 

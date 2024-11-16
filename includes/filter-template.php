@@ -89,7 +89,7 @@ function wcapf_product_filter_shortcode($atts) {
                 $terms = get_terms(array('taxonomy' => 'pa_' . $attribute->attribute_name, 'hide_empty' => true));
                 $selected_terms = explode(',', $atts['terms']);
                 if ($terms) {
-                    echo '<div id="' . esc_attr($attribute->attribute_label) . '"> <div class="title">' . esc_html($attribute->attribute_label) . '</div><div class="items">';
+                    echo '<div id="' . esc_attr($attribute->attribute_name) . '"> <div class="title">' . esc_html($attribute->attribute_label) . '</div><div class="items">';
                     foreach ($terms as $term) {
                         echo '<label><input type="checkbox" class="filter-checkbox" name="attribute[' . esc_attr($attribute->attribute_name) . '][]" value="' . esc_attr($term->slug) . '"' . (in_array($term->slug, $selected_terms) ? ' checked' : '') . '> ' . esc_html($term->name) . '</label>';
                     }
