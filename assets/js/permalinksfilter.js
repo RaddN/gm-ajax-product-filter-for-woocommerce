@@ -155,27 +155,14 @@ jQuery(document).ready(function($) {
         $('#loader').show();
         fetchFilteredProducts();
     }
-
-
+    var rfiltercurrentUrl = window.location.href;
     function updateUrlFilters() {
         const selectedFilters = new Set();
         $('#product-filter input[type="checkbox"]:checked').each(function() {
             selectedFilters.add($(this).val());
         });
         const filtersArray = Array.from(selectedFilters);
-        const { domain, currentPath } = extractDomainAndPath(window.location);
-        const newUrl = `${domain}/${currentPath}/${filtersArray.join('/')}`;
-
+        const newUrl = `${rfiltercurrentUrl}${filtersArray.join('/')}`;
         history.replaceState(null, '', newUrl);
-    }
-    function extractDomainAndPath(url) {
-        const a = document.createElement('a');
-        a.href = url;
-        const domain = a.protocol + '//' + a.host;
-        const pathname = a.pathname.split('/').filter(value => value !== '');
-        return {
-            domain: domain,
-            currentPath: pathname[0] || null // Return the first segment or null if not found
-        };
     }
 });
