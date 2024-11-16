@@ -72,3 +72,35 @@ div#loader {
     text-transform: capitalize;
     cursor: pointer;
 }
+
+/* responsive filter */
+@media (max-width: 781px) {
+    #product-filter:before {
+        content: "Filter";
+        background: linear-gradient(90deg, #041a57, #d62229);
+        color: white;
+        padding: 10px 11px;
+        width: 60px;
+        height: 45px;
+        position: absolute;
+    }
+.filter-group.attributes {
+    display: flex !important
+;
+    flex-direction: row !important;
+    overflow: scroll;
+    margin-left: 66px;
+    gap: 10px;
+}
+.filter-group.attributes>div {
+    min-width: 100px;
+}
+    #product-filter .items {
+        position: absolute;
+left:0;
+        background: white;
+        padding: 20px 15px;
+        box-shadow: #efefef99 0 -4px 10px 4px;
+    }
+}
+#product-filter .filter-group div .title{cursor:pointer;}
