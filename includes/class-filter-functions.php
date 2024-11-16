@@ -56,23 +56,37 @@ class WCAPF_Filter_Functions {
 
         if ($query->have_posts()) {
             while ($query->have_posts()) : $query->the_post();
-                $product_link = get_permalink(); // Get the product link
-                $product_title = get_the_title(); // Get the product title
-                $product_image = wp_get_attachment_image_src(get_post_thumbnail_id(), 'full'); // Get the product image
-        
-                echo '
-                        <li class="product  type-product gm-product">
-                        <a href="' . esc_url($product_link) . '" class="woocommerce-LoopProduct-link woocommerce-loop-product__link gm-link">
-                            <div class="astra-shop-thumbnail-wrap thumbnail">
-                                <img src="' . esc_url($product_image[0]) . '" alt="' . esc_attr($product_title) . '" class="attachment-woocommerce_thumbnail size-woocommerce_thumbnail gm-thumbnail">
-                            </div>
-                            <div class="astra-shop-summary-wrap gm-summary-wrap">
-                                <h2 class="woocommerce-loop-product__title">' . esc_html($product_title) . '</h2>
-                                <div class="woocommerce-product-description ast-woo-shop-product-description">' . apply_filters('the_excerpt', get_the_excerpt()) . '</div>
-                            </div>
-                            </a>
-                        </li>
-                      ';
+            global $options;
+            if(isset($options['use_custom_template'])){
+        // Get product details
+        $product = wc_get_product(get_the_ID());
+        $product_link = get_permalink();
+        $product_title = get_the_title(); 
+        $product_image = wp_get_attachment_image_src(get_post_thumbnail_id(), 'full')[0];
+        $product_excerpt = get_the_excerpt();
+        $product_price = $product->get_price_html(); 
+        $product_category = wp_strip_all_tags(get_the_term_list(get_the_ID(), 'product_cat', '', ', ')); 
+        $product_sku = $product->get_sku(); 
+        $product_stock = $product->is_in_stock() ? __('In Stock', 'gm-ajax-product-filter-for-woocommerce') : __('Out of Stock', 'gm-ajax-product-filter-for-woocommerce'); 
+        $add_to_cart_url = esc_url(add_query_arg('add-to-cart', get_the_ID(), $product_link)); 
+
+            // Retrieve the custom template from the database
+            $custom_template = $options['custom_template_code'];
+            
+            // Replace placeholders with actual values
+            $custom_template = str_replace('{{product_link}}', esc_url($product_link), $custom_template);
+            $custom_template = str_replace('{{product_title}}', esc_html($product_title), $custom_template);
+            $custom_template = str_replace('{{product_image}}', esc_url($product_image), $custom_template);
+            $custom_template = str_replace('{{product_excerpt}}', apply_filters('the_excerpt', $product_excerpt), $custom_template);
+            $custom_template = str_replace('{{product_price}}', wp_kses_post($product_price), $custom_template);
+            $custom_template = str_replace('{{product_category}}', $product_category, $custom_template);
+            $custom_template = str_replace('{{product_sku}}', esc_html($product_sku), $custom_template);
+            $custom_template = str_replace('{{product_stock}}', esc_html($product_stock), $custom_template);
+            $custom_template = str_replace('{{add_to_cart_url}}', $add_to_cart_url, $custom_template);
+              echo  $custom_template;
+            } else {
+                wc_get_template_part('content', 'product');
+            }
             endwhile;
         } else {
             echo '<p>No products found</p>';

@@ -38,6 +38,8 @@ function wcapf_settings_init() {
         'update_filter_options' => 0,
         'show_loader' => 1,
         'pages' => [], 
+        'use_custom_template' => 0,
+        'custom_template_code' => '',
     ];
     update_option('wcapf_options', $options);
 
@@ -52,6 +54,7 @@ function wcapf_settings_init() {
         'use_url_filter' => __('Use URL-Based Filter', 'gm-ajax-product-filter-for-woocommerce'),
         'update_filter_options' => __('Update filter options', 'gm-ajax-product-filter-for-woocommerce'),
         'show_loader' => __('Show Loader', 'gm-ajax-product-filter-for-woocommerce'),
+        'use_custom_template' => __('Use Custom Product Template', 'gm-ajax-product-filter-for-woocommerce')
     ];
 
     foreach ($fields as $key => $label) {
@@ -71,13 +74,16 @@ function wcapf_settings_init() {
     add_settings_section('wcapf_page_section_after', __('', 'gm-ajax-product-filter-for-woocommerce'), function() {
         echo '</div>';
     }, 'wcapf-admin');
+
+    // custom code template
+    add_settings_field('custom_template_code', __('product custom template code', 'gm-ajax-product-filter-for-woocommerce'), 'wcapf_custom_template_code_render', 'wcapf-admin', 'wcapf_section');
 }
 add_action('admin_init', 'wcapf_settings_init');
 
 function wcapf_render_checkbox($key) {
     $options = get_option('wcapf_options');
     ?>
-    <label class="switch">
+    <label class="switch <?php echo $key; ?>">
     <input type='checkbox' name='wcapf_options[<?php echo esc_attr($key); ?>]' <?php checked(isset($options[$key]) && $options[$key] === "on"); ?>>
     <span class="slider round"></span>
     </label>
@@ -91,6 +97,58 @@ function wcapf_update_filter_options_render() {
     wcapf_render_checkbox('update_filter_options');
 }
 function wcapf_show_loader_render() { wcapf_render_checkbox('show_loader'); }
+// Render functions for new fields
+function wcapf_use_custom_template_render() {
+    wcapf_render_checkbox('use_custom_template');
+}
+
+function wcapf_custom_template_code_render() {
+    $options = get_option('wcapf_options');
+    
+    echo '
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <div class="custom_template_code" style="' . (isset($options['use_custom_template']) ? 'display:block;' : 'display:none;') . '">';
+    ?>
+
+        <!-- Placeholder List -->
+        <div id="placeholder-list" style="margin-bottom: 10px;">
+        <span class="placeholder" onclick="insertPlaceholder('{{product_link}}')">{{product_link}}</span>
+        <span class="placeholder" onclick="insertPlaceholder('{{product_title}}')">{{product_title}}</span>
+        <span class="placeholder" onclick="insertPlaceholder('{{product_image}}')">{{product_image}}</span>
+        <span class="placeholder" onclick="insertPlaceholder('{{product_price}}')">{{product_price}}</span>
+        <span class="placeholder" onclick="insertPlaceholder('{{product_excerpt}}')">{{product_excerpt}}</span>
+        <span class="placeholder" onclick="insertPlaceholder('{{product_category}}')">{{product_category}}</span>
+        <span class="placeholder" onclick="insertPlaceholder('{{product_sku}}')">{{product_sku}}</span>
+        <span class="placeholder" onclick="insertPlaceholder('{{product_stock}}')">{{product_stock}}</span>
+        <span class="placeholder" onclick="insertPlaceholder('{{add_to_cart_url}}')">{{add_to_cart_url}}</span>
+    </div>
+    <textarea style="display:none;" id="custom_template_input" name="wcapf_options[custom_template_code]" rows="10" cols="50" class="large-text"><?php if(isset($options['custom_template_code'])){echo esc_textarea($options['custom_template_code']); } ?></textarea>
+    <div id="code-editor"></div>
+    <p class="description"><?php esc_html_e('Enter your custom template code here.', 'gm-ajax-product-filter-for-woocommerce'); ?></p>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+<script>
+const editor = CodeMirror(document.getElementById("code-editor"), {
+            value: document.getElementById("custom_template_input").value,
+            mode: "text/html",
+            lineNumbers: true,
+            lineWrapping: true
+        });
+
+        editor.on("change", function() {
+            document.getElementById("custom_template_input").value = editor.getValue();
+        });
+
+
+        function insertPlaceholder(placeholder) {
+            const cursor = editor.getCursor();
+            editor.replaceRange(placeholder, cursor);
+            editor.focus();
+        }
+</script>
+    <?php
+}
 
 function wcapf_use_url_filter_render() {
     $options = get_option('wcapf_options');
@@ -145,4 +203,7 @@ function wcapf_pages_render() {
     </script>
     <?php
 }
+
+
+
 ?>

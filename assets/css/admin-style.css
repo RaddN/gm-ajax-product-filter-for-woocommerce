@@ -208,3 +208,27 @@ input[type=radio]:checked::before {
 .page-listing .page-item button:hover {
     background-color: #c82333;
 }
+
+/* custom code style */
+
+.custom_template_code .placeholder {
+    display: inline-block;
+    margin-right: 10px;
+    padding: 5px 10px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.custom_template_code .placeholder:hover {
+    background-color: #e0e0e0;
+}
+
+.custom_template_code .CodeMirror {
+    border: 1px solid #eee;
+}
+.custom_template_code .custom_template_code {
+    margin: 20px;
+}
