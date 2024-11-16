@@ -57,7 +57,9 @@ function wcapf_product_filter_shortcode($atts) {
             );
         }
     }
-
+    if (!empty($atts['attribute'])|| !empty($atts['terms']) || !empty($atts['category']) || !empty($atts['tag'])) {
+        echo "<script> rfilterindex = 1;</script>";
+    }
     // Query the products based on the filters
     $products = new WP_Query($args);
     

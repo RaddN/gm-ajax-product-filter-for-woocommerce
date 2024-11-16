@@ -3,7 +3,7 @@ jQuery(document).ready(function($) {
     // Initialize filters and handle changes
     $('#product-filter, .rfilterbuttons').on('change', handleFilterChange);
     // fetchFilteredProducts();
-    var index = 0;
+    var rfilterrfilterindex = 0;
     const urlParams = new URLSearchParams(window.location.search);
     const gmfilter = urlParams.get('gmfilter');
     
@@ -48,9 +48,9 @@ jQuery(document).ready(function($) {
                 $('ul.products').html(response.data.products);
                 if (typeof wcapf_data !== 'undefined' && wcapf_data.options) {
                     const options = wcapf_data.options;
-                    if (!options.update_filter_options && index<1) {
+                    if (!options.update_filter_options && rfilterindex<1) {
                 updateFilterOptions(response.data.filters);
-                 index++;
+                 rfilterindex++;
                     }
                     if (options.update_filter_options) {
                         updateFilterOptions(response.data.filters);

@@ -2,7 +2,7 @@ jQuery(document).ready(function($) {
     var rfilterbuttonsId = $('.rfilterbuttons').attr('id');
     // Initialize filters
     $('#product-filter, .rfilterbuttons').on('change', handleFilterChange);
-    var index = 0;
+    var rfilterindex = 0;
     // Check if URL contains filters and load products accordingly
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('filters')) {
@@ -35,9 +35,9 @@ jQuery(document).ready(function($) {
                 $('ul.products').html(response.data.products);
                 if (typeof wcapf_data !== 'undefined' && wcapf_data.options) {
                     const options = wcapf_data.options;
-                    if (!options.update_filter_options && index<1) {
+                    if (!options.update_filter_options && rfilterindex<1) {
                 updateFilterOptions(response.data.filters);
-                 index++;
+                 rfilterindex++;
                     }
                     if (options.update_filter_options) {
                         updateFilterOptions(response.data.filters);
