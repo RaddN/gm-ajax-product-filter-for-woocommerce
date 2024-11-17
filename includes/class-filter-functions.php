@@ -6,6 +6,8 @@ class WCAPF_Filter_Functions {
             'post_type' => 'product',
             'posts_per_page' => 12,
             'post_status' => 'publish',
+            'orderby' => 'date',
+            'order' => 'ASC',
             'tax_query' => array(
                 'relation' => 'AND'
             )

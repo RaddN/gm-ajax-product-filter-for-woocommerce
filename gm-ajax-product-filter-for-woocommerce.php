@@ -3,7 +3,7 @@
  * Plugin Name: GM AJAX Product Filter for WooCommerce
  * Plugin URI:  https://plugincy.com/
  * Description: A WooCommerce plugin to filter products by attributes, categories, and tags using AJAX for seamless user experience.
- * Version:     1.0.3
+ * Version:     1.0.4
  * Author:      Plugincy
  * Author URI:  https://plugincy.com
  * License:     GPL-2.0-or-later
@@ -58,7 +58,7 @@ function wcapf_enqueue_scripts() {
         $script_handle,
         plugin_dir_url(__FILE__) . $script_path,
         array('jquery'),
-        '1.0.3',
+        '1.0.4',
         true
     );
   
@@ -74,14 +74,14 @@ function wcapf_enqueue_scripts() {
         array('ajax_url' => admin_url('admin-ajax.php'))
     );
     // Enqueue the CSS style
-    wp_enqueue_style('filter-style', plugin_dir_url(__FILE__) . 'assets/css/style.css',array(),'1.0.3');
+    wp_enqueue_style('filter-style', plugin_dir_url(__FILE__) . 'assets/css/style.css',array(),'1.0.4');
 }
 
 add_action('wp_enqueue_scripts', 'wcapf_enqueue_scripts');
 
 // Enqueue admin scripts
 function wcapf_admin_scripts() {
-    wp_enqueue_style('wcapf-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css',array(),'1.0.3');
+    wp_enqueue_style('wcapf-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css',array(),'1.0.4');
 }
 add_action('admin_enqueue_scripts', 'wcapf_admin_scripts');
 
