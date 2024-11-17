@@ -124,3 +124,36 @@ jQuery(document).ready(function($) {
         });
     }
 });
+
+
+
+jQuery(document).ready(function($) {
+    function isMobile() {
+        return $(window).width() <= 768;
+    }
+    function textChange() {
+        if (isMobile()) {
+            $('#product-filter .filter-group div .title').each(function() {
+                $(this).text($(this).text().split(' ').pop());
+            });
+            $('#product-filter .items').hide();
+        }
+    }
+    textChange();
+     $(document).ajaxComplete(function() {
+        textChange();
+    });
+            // Use event delegation for dynamically added elements
+            $('#product-filter').on('click', '.title', function(event) {
+                if (isMobile()) {
+                event.stopPropagation();
+                $('#product-filter .items').hide();
+                $(this).next('.items').slideToggle(); // Toggle items with a sliding effect
+                }
+            });
+            $(document).on('click', function() {
+                if (isMobile()) {
+                    $('.items').hide();
+                }
+            });
+});
