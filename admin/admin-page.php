@@ -14,7 +14,7 @@ add_action('admin_menu', 'wcapf_admin_menu');
 
 function wcapf_admin_page_content() {
     ?>
-    <div class="wrap">
+    <div class="wrap wcapf_admin">
         <h1>Manage WooCommerce Product Filters</h1>
         <form method="post" action="options.php">
             

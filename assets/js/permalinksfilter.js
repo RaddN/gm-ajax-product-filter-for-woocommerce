@@ -4,6 +4,8 @@ jQuery(document).ready(function($) {
     $('#product-filter, .rfilterbuttons').on('change', handleFilterChange);
     // fetchFilteredProducts();
     var rfilterindex = 0;
+    var rfiltercurrentUrl = window.location.href;
+    rfiltercurrentUrl = rfiltercurrentUrl.split('?')[0];
     const urlParams = new URLSearchParams(window.location.search);
     const gmfilter = urlParams.get('gmfilter');
     
@@ -153,14 +155,13 @@ jQuery(document).ready(function($) {
         $('#loader').show();
         fetchFilteredProducts();
     }
-    var rfiltercurrentUrl = window.location.href;
     function updateUrlFilters() {
         const selectedFilters = new Set();
         $('#product-filter input[type="checkbox"]:checked').each(function() {
             selectedFilters.add($(this).val());
         });
         const filtersArray = Array.from(selectedFilters);
-        const newUrl = `${rfiltercurrentUrl}${filtersArray.join('/')}`;
+        const newUrl = rfiltercurrentUrl?`${rfiltercurrentUrl}${filtersArray.join('/')}`:`${filtersArray.join('/')}`;
         history.replaceState(null, '', newUrl);
     }
 });
