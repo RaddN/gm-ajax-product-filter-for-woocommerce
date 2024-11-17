@@ -2,12 +2,15 @@
 class WCAPF_Filter_Functions {
 
     public function process_filter() {
+            // Determine the current page number
+    $paged = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
         $args = array(
             'post_type' => 'product',
             'posts_per_page' => 12,
             'post_status' => 'publish',
             'orderby' => 'date',
             'order' => 'ASC',
+            'paged' => $paged,
             'tax_query' => array(
                 'relation' => 'AND'
             )
@@ -90,6 +93,9 @@ class WCAPF_Filter_Functions {
                 wc_get_template_part('content', 'product');
             }
             endwhile;
+
+                    // Add pagination links
+        $this->pagination($query,$paged);
         } else {
             echo '<p>No products found</p>';
         }
@@ -99,7 +105,8 @@ class WCAPF_Filter_Functions {
         // Send both the filtered products and updated filters back to the AJAX request
         wp_send_json_success(array(
             'products' => $product_html,
-            'filters' => $updated_filters
+            'filters' => $updated_filters,
+            'pagination' => $this->pagination($query,$paged)
         ));
 
         wp_die();
@@ -140,5 +147,29 @@ class WCAPF_Filter_Functions {
             'attributes' => $attributes,
             'tags' => $tags
         );
+    }
+    // Function to generate pagination
+    private function pagination($query,$paged) {
+        $big = 999999999; // an unlikely integer
+        $paginationLinks = paginate_links(array(
+            'base' => str_replace($big, '%#%', esc_url(get_pagenum_link($big))),
+            'format' => '?paged=%#%',
+            'current' => max(1, $paged),
+            'total' => $query->max_num_pages,
+            'prev_text' => __('« Prev'),
+            'next_text' => __('Next »'),
+            'type' => 'array', // This returns an array of pagination links
+        ));
+    
+        if ($paginationLinks) {
+            // Start building the pagination HTML
+            $paginationHtml = '';
+            foreach ($paginationLinks as $link) {
+                // Wrap each link in an <a> tag
+                $paginationHtml .= '<li>' . $link . '</li>';
+            }
+            return $paginationHtml; // Return the constructed HTML
+        }
+        return '';
     }
 }
