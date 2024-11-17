@@ -68,6 +68,7 @@ jQuery(document).ready(function($) {
             const url = $(this).attr('href'); // Get the URL from the link
             const page = new URL(url).searchParams.get('paged'); // Extract the page number
             $('#loader').show(); // Show loader
+            rfilterindex = 0;
             fetchFilteredProducts(page); // Fetch products for the selected page
         });
     }
