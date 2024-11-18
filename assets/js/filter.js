@@ -19,7 +19,7 @@ jQuery(document).ready(function($) {
     }
 
     function fetchFilteredProducts(page = 1) {
-        $.post(wcapf_ajax.ajax_url, gatherFormData() + '&paged=${page}&action=wcapf_filter_products', function(response) {
+        $.post(wcapf_ajax.ajax_url, gatherFormData() + `&paged=${page}&action=wcapf_filter_products`, function(response) {
             $('#roverlay').hide();
             $('#loader').hide();
             if (response.success) {
