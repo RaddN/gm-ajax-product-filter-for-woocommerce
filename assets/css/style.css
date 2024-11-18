@@ -5,9 +5,14 @@
     gap: 20px;
 }
 .filter-group label {
-    display: block;
+    display: flex;
     font-weight: bold;
     margin-bottom: 5px;
+    gap: 7px;
+    align-items: center;
+}
+.filter-group label:last-child {
+    margin-bottom: 0px;
 }
 .filter-group select {
     width: 100%;
