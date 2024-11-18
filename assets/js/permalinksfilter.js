@@ -26,12 +26,12 @@ jQuery(document).ready(function($) {
         } 
     }
     else if (anyFilterSelected()) {
-        $('#loader').show();
         fetchFilteredProducts();
     }
     function handleFilterChange(e) {
         e.preventDefault();
         updateUrlFilters(); // Update URL based on selected filters
+        $('#roverlay').show();
         $('#loader').show();
         fetchFilteredProducts();
     }
@@ -43,6 +43,7 @@ jQuery(document).ready(function($) {
 
     function fetchFilteredProducts(page = 1) {
         $.post(wcapf_ajax.ajax_url, gatherFormData() +  `&paged=${page}&action=wcapf_filter_products`, function(response) {
+            $('#roverlay').hide();
             $('#loader').hide();
             if (response.success) {
                 $('ul.products').html(response.data.products);
@@ -67,7 +68,8 @@ jQuery(document).ready(function($) {
             e.preventDefault(); // Prevent the default anchor click behavior
             const url = $(this).attr('href'); // Get the URL from the link
             const page = new URL(url).searchParams.get('paged'); // Extract the page number
-            $('#loader').show(); // Show loader
+            $('#roverlay').show();
+            $('#loader').show();
             rfilterindex = 0;
             fetchFilteredProducts(page); // Fetch products for the selected page
         });
@@ -80,6 +82,7 @@ jQuery(document).ready(function($) {
     }
 
     function handleAjaxError(xhr, status, error) {
+        $('#roverlay').hide();
         $('#loader').hide();
         console.error('AJAX Error:', status, error);
     }
@@ -165,7 +168,6 @@ jQuery(document).ready(function($) {
         filtersString.split(',').forEach(value => {
             $(`input[type="checkbox"][value="${value}"]`).prop('checked', true);
         });
-        $('#loader').show();
         fetchFilteredProducts();
     }
     function updateUrlFilters() {

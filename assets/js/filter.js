@@ -8,6 +8,7 @@ jQuery(document).ready(function($) {
     function handleFilterChange(e) {
         e.preventDefault();
         if (!anyFilterSelected()) return location.reload();
+        $('#roverlay').show();
         $('#loader').show();
         fetchFilteredProducts();
     }
@@ -17,11 +18,13 @@ jQuery(document).ready(function($) {
                $('.rfilterbuttons input[type="checkbox"]:checked').length > 0;
     }
 
-    function fetchFilteredProducts() {
-        $.post(wcapf_ajax.ajax_url, gatherFormData() + '&action=wcapf_filter_products', function(response) {
+    function fetchFilteredProducts(page = 1) {
+        $.post(wcapf_ajax.ajax_url, gatherFormData() + '&paged=${page}&action=wcapf_filter_products', function(response) {
+            $('#roverlay').hide();
             $('#loader').hide();
             if (response.success) {
                 $('ul.products').html(response.data.products);
+                $('ul.page-numbers').html(response.data.pagination);
                 if (typeof wcapf_data !== 'undefined' && wcapf_data.options) {
                     const options = wcapf_data.options;
                     if (!options.update_filter_options && rfilterindex<1) {
@@ -37,12 +40,27 @@ jQuery(document).ready(function($) {
             }
         }).fail(handleAjaxError);
     }
+    function attachPaginationEvents() {
+        $(document).on('click', '.woocommerce-pagination a.page-numbers', function(e) {
+            e.preventDefault(); // Prevent the default anchor click behavior
+            const url = $(this).attr('href'); // Get the URL from the link
+            const page = new URL(url).searchParams.get('paged'); // Extract the page number
+            $('#roverlay').show();
+            $('#loader').show();
+            rfilterindex = 0;
+            fetchFilteredProducts(page); // Fetch products for the selected page
+        });
+    }
+    
+    // Call this function after updating the product listings
+    attachPaginationEvents();
 
     function gatherFormData() {
         return $('#product-filter').serialize();
     }
 
     function handleAjaxError(xhr, status, error) {
+        $('#roverlay').hide();
         $('#loader').hide();
         console.error('AJAX Error:', status, error);
     }

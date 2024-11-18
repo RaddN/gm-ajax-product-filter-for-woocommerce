@@ -110,8 +110,8 @@ function wcapf_product_filter_shortcode($atts) {
     echo '</form>';
 ?>
 <!-- Loader HTML -->
-<div id="loader" style="display:none;">
-</div>
+<div id="loader" style="display:none;"></div>
+<div id="roverlay" style="display: none;"></div>
 
 <div id="filtered-products">
     <!-- AJAX results will be displayed here -->
