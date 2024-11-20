@@ -2,6 +2,11 @@
 class WCAPF_Filter_Functions {
 
     public function process_filter() {
+
+        if (!isset($_POST['gm-product-filter-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['gm-product-filter-nonce'])), 'gm-product-filter-action')) {
+            wp_send_json_error(array('message' => 'Security check failed'), 403);
+            wp_die();
+        }
             // Determine the current page number
     $paged = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
         $args = array(
@@ -15,8 +20,6 @@ class WCAPF_Filter_Functions {
                 'relation' => 'AND'
             )
         );
-
-        if (isset($_POST['gm-product-filter-nonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['gm-product-filter-nonce'])), 'gm-product-filter-action')) {
         // Filter by categories
         if (!empty($_POST['category'])) {
             $args['tax_query'][] = array(
@@ -26,18 +29,31 @@ class WCAPF_Filter_Functions {
             );
         }
 
-        // Filter by attributes
-        if (!empty($_POST['attribute'])) {
-            foreach (wp_unslash($_POST['attribute']) as $attribute_name => $attribute_values) {
-                if (!empty($attribute_values)) {
-                    $args['tax_query'][] = array(
-                        'taxonomy' => 'pa_' . sanitize_text_field($attribute_name),
-                        'field' => 'slug',
-                        'terms' => array_map('sanitize_text_field', $attribute_values)
-                    );
-                }
-            }
+// Filter by attributes
+if (!empty($_POST['attribute']) && is_array($_POST['attribute'])) {
+    // Unslash and sanitize the entire input array
+    $attributes = map_deep( wp_unslash( $_POST['attribute'] ), 'sanitize_text_field' );
+
+
+    foreach ($attributes as $attribute_name => $attribute_values) {
+        // Sanitize the attribute name
+        $attribute_name = sanitize_key($attribute_name);
+
+        // Ensure attribute values are an array before processing
+        if (!empty($attribute_values) && is_array($attribute_values)) {
+            // Sanitize the attribute values
+            $sanitized_values = array_map('sanitize_text_field', $attribute_values);
+
+            // Build the tax_query
+            $args['tax_query'][] = array(
+                'taxonomy' => 'pa_' . $attribute_name,
+                'field'    => 'slug',
+                'terms'    => $sanitized_values,
+            );
         }
+    }
+}
+
 
         // Filter by tags
         if (!empty($_POST['tags'])) {
@@ -47,14 +63,17 @@ class WCAPF_Filter_Functions {
                 'terms' => array_map('sanitize_text_field', wp_unslash($_POST['tags']))
             );
         }
-    }else {
-        // Nonce verification failed
-        die('Security check failed');
-    }
         $query = new WP_Query($args);
 
         // Prepare the updated filters
-        $updated_filters = $this->get_updated_filters($args);
+        $updated_filters = $this->get_updated_filters($query);
+
+        $cache_key = 'updated_filters_' . md5(serialize($args));
+$updated_filters = get_transient($cache_key);
+if ($updated_filters === false) {
+    $updated_filters = $this->get_updated_filters($query);
+    set_transient($cache_key, $updated_filters, HOUR_IN_SECONDS);
+}
 
         // Capture the product listing
         ob_start();
@@ -88,7 +107,65 @@ class WCAPF_Filter_Functions {
             $custom_template = str_replace('{{product_sku}}', esc_html($product_sku), $custom_template);
             $custom_template = str_replace('{{product_stock}}', esc_html($product_stock), $custom_template);
             $custom_template = str_replace('{{add_to_cart_url}}', $add_to_cart_url, $custom_template);
-              echo  $custom_template;
+            $allowed_tags = array(
+                'a' => array(
+                    'href' => array(),
+                    'title' => array(),
+                    'class' => array(),
+                    'target' => array(), // Allow target attribute for links
+                ),
+                'strong' => array(),
+                'em' => array(),
+                'li' => array(
+                    'class' => array(),
+                ),
+                'div' => array(
+                    'class' => array(),
+                    'id' => array(), // Allow id for divs
+                ),
+                'img' => array(
+                    'src' => array(),
+                    'alt' => array(),
+                    'class' => array(),
+                    'width' => array(), // Allow width attribute
+                    'height' => array(), // Allow height attribute
+                ),
+                'h1' => array('class' => array()), // Allow h1
+                'h2' => array('class' => array()),
+                'h3' => array('class' => array()), // Allow h3
+                'h4' => array('class' => array()), // Allow h4
+                'h5' => array('class' => array()), // Allow h5
+                'h6' => array('class' => array()), // Allow h6
+                'span' => array('class' => array()),
+                'p' => array('class' => array()),
+                'br' => array(), // Allow line breaks
+                'blockquote' => array(
+                    'cite' => array(), // Allow cite attribute for blockquotes
+                    'class' => array(),
+                ),
+                'table' => array(
+                    'class' => array(),
+                    'style' => array(), // Allow inline styles
+                ),
+                'tr' => array(
+                    'class' => array(),
+                ),
+                'td' => array(
+                    'class' => array(),
+                    'colspan' => array(), // Allow colspan attribute
+                    'rowspan' => array(), // Allow rowspan attribute
+                ),
+                'th' => array(
+                    'class' => array(),
+                    'colspan' => array(),
+                    'rowspan' => array(),
+                ),
+                'ul' => array('class' => array()), // Allow unordered lists
+                'ol' => array('class' => array()), // Allow ordered lists
+                'script' => array(), // Be cautious with scripts
+            );
+            
+            echo wp_kses($custom_template, $allowed_tags);;
             } else {
                 wc_get_template_part('content', 'product');
             }
@@ -113,11 +190,9 @@ class WCAPF_Filter_Functions {
     }
 
     // Function to get updated filter options based on the filtered products
-    private function get_updated_filters($args) {
+    private function get_updated_filters($query) {
         // Get the current product IDs based on the filtered query
-        $query = new WP_Query($args);
         $product_ids = wp_list_pluck($query->posts, 'ID');
-
         // Initialize arrays to store filter data
         $categories = array();
         $attributes = array();
@@ -156,8 +231,8 @@ class WCAPF_Filter_Functions {
             'format' => '?paged=%#%',
             'current' => max(1, $paged),
             'total' => $query->max_num_pages,
-            'prev_text' => __('« Prev'),
-            'next_text' => __('Next »'),
+            'prev_text' => __('« Prev','gm-ajax-product-filter-for-woocommerce'),
+            'next_text' => __('Next »', 'gm-ajax-product-filter-for-woocommerce'),
             'type' => 'array', // This returns an array of pagination links
         ));
     

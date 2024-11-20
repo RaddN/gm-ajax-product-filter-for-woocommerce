@@ -82,6 +82,10 @@ add_action('wp_enqueue_scripts', 'wcapf_enqueue_scripts');
 // Enqueue admin scripts
 function wcapf_admin_scripts() {
     wp_enqueue_style('wcapf-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css',array(),'1.0.5');
+    wp_enqueue_style('wcapf-admin-codemirror-style', plugin_dir_url(__FILE__) . 'assets/css/codemirror.min.css',array(),'5.65.2');
+    wp_enqueue_script('wcapf-admin-codemirror-script', plugin_dir_url(__FILE__) . 'assets/js/codemirror.min.js',array(), '5.65.2', true);
+    wp_enqueue_script('wcapf-admin-xml-script', plugin_dir_url(__FILE__) . 'assets/js/xml.min.js',array(), '5.65.2', true);
+    wp_enqueue_script('wcapf-admin-script', plugin_dir_url(__FILE__) . 'assets/js/admin-script.js',array(), '1.0.5', true);
 }
 add_action('admin_enqueue_scripts', 'wcapf_admin_scripts');
 

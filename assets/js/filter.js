@@ -47,7 +47,6 @@ jQuery(document).ready(function($) {
             const page = new URL(url).searchParams.get('paged'); // Extract the page number
             $('#roverlay').show();
             $('#loader').show();
-            rfilterindex = 0;
             fetchFilteredProducts(page); // Fetch products for the selected page
         });
     }

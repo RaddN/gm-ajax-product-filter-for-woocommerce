@@ -63,15 +63,15 @@ function wcapf_settings_init() {
 
     // Pages List Field
         // Add Page Management Section
-        add_settings_section('wcapf_page_section_before', __('', 'gm-ajax-product-filter-for-woocommerce'), function() {
+        add_settings_section('wcapf_page_section_before', null, function() {
             global $options;
             echo '<div class="page_manage" style="' . ($options['use_url_filter'] === "permalinks" ? 'display:block;' : 'display:none;') . '">';
         }, 'wcapf-admin');
         add_settings_section('wcapf_page_section', __('Pages Manage', 'gm-ajax-product-filter-for-woocommerce'), function() {
-            echo '<p>' . esc_html__( 'Add the pages below where you have added the shortcode.', 'gm-ajax-product-filter-for-woocommerce' ) . '</p>';
+            echo '<p>' . esc_html__('Add the pages below where you have added the shortcode.', 'gm-ajax-product-filter-for-woocommerce') . '</p>';
         }, 'wcapf-admin');
     add_settings_field('pages', __('Pages List', 'gm-ajax-product-filter-for-woocommerce'), 'wcapf_pages_render', 'wcapf-admin', 'wcapf_page_section');
-    add_settings_section('wcapf_page_section_after', __('', 'gm-ajax-product-filter-for-woocommerce'), function() {
+    add_settings_section('wcapf_page_section_after', null, function() {
         echo '</div>';
     }, 'wcapf-admin');
 
@@ -83,7 +83,7 @@ add_action('admin_init', 'wcapf_settings_init');
 function wcapf_render_checkbox($key) {
     $options = get_option('wcapf_options');
     ?>
-    <label class="switch <?php echo $key; ?>">
+    <label class="switch <?php echo esc_attr($key); ?>">
     <input type='checkbox' name='wcapf_options[<?php echo esc_attr($key); ?>]' <?php checked(isset($options[$key]) && $options[$key] === "on"); ?>>
     <span class="slider round"></span>
     </label>
@@ -104,12 +104,9 @@ function wcapf_use_custom_template_render() {
 
 function wcapf_custom_template_code_render() {
     $options = get_option('wcapf_options');
-    
-    echo '
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    echo '    
     <div class="custom_template_code" style="' . (isset($options['use_custom_template']) ? 'display:block;' : 'display:none;') . '">';
     ?>
-
         <!-- Placeholder List -->
         <div id="placeholder-list" style="margin-bottom: 10px;">
         <span class="placeholder" onclick="insertPlaceholder('{{product_link}}')">{{product_link}}</span>
@@ -126,27 +123,7 @@ function wcapf_custom_template_code_render() {
     <div id="code-editor"></div>
     <p class="description"><?php esc_html_e('Enter your custom template code here.', 'gm-ajax-product-filter-for-woocommerce'); ?></p>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
-<script>
-const editor = CodeMirror(document.getElementById("code-editor"), {
-            value: document.getElementById("custom_template_input").value,
-            mode: "text/html",
-            lineNumbers: true,
-            lineWrapping: true
-        });
 
-        editor.on("change", function() {
-            document.getElementById("custom_template_input").value = editor.getValue();
-        });
-
-
-        function insertPlaceholder(placeholder) {
-            const cursor = editor.getCursor();
-            editor.replaceRange(placeholder, cursor);
-            editor.focus();
-        }
-</script>
     <?php
 }
 
