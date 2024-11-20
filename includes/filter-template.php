@@ -41,13 +41,6 @@ function wcapf_product_filter_shortcode($atts) {
 
     // Add tag filter if specified
     if (!empty($atts['tag'])) {
-        $args['tax_query'][] = array(
-            'taxonomy' => 'product_tag',
-            'field' => 'slug',
-            'terms' => sanitize_text_field($atts['tag']),
-        );
-    }
-    if (!empty($atts['tag'])) {
         $tags = array_map('sanitize_text_field', explode(',', $atts['tag']));
         foreach ($tags as $tag) {
             $args['tax_query'][] = array(
