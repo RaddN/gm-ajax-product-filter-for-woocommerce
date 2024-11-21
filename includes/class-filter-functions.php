@@ -33,15 +33,9 @@ class WCAPF_Filter_Functions {
 
         $query = new WP_Query($args);
         $OptionsQuery = new WP_Query($argsOptions);
-    
-        // Cache the updated filters
-        $cache_key = 'updated_filters_' . md5(serialize($argsOptions));
-        $updated_filters = get_transient($cache_key);
-    
-        if ($updated_filters === false) {
-            $updated_filters = $this->get_updated_filters($OptionsQuery);
-            set_transient($cache_key, $updated_filters, HOUR_IN_SECONDS);
-        }
+        
+        $updated_filters = $this->get_updated_filters($OptionsQuery);
+
         // Capture the product listing
         ob_start();
 
