@@ -139,35 +139,43 @@ function my_plugin_settings_link($links) {
 
 // Automatic add & remove pages slug list based on shortcode used
 function find_wcapf_shortcode_pages() {
-    global $wpdb;
     $shortcode = 'wcapf_product_filter';
-    $query = "
-        SELECT post_title, post_name 
-        FROM $wpdb->posts 
-        WHERE post_type = 'page' 
-        AND post_status = 'publish' 
-        AND post_content LIKE '%[$shortcode%'
-    ";
-    return $wpdb->get_results($query);
+
+    // Use WP_Query instead of direct SQL
+    $query = new WP_Query([
+        'post_type'      => 'page',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1, // To get all pages
+        's'              => $shortcode // Search for the shortcode in content
+    ]);
+    
+    // Return the pages with the shortcode
+    return $query->posts;
 }
+
 function update_wcapf_options_with_page_slugs() {
+    // Fetch pages containing the shortcode
     $pages_with_wcapf_shortcode = find_wcapf_shortcode_pages();
-        // Get the current options
-        $options = get_option('wcapf_options');
-        $options['pages'] = [];
-     // Extract slugs from the pages with the shortcode
+    
+    // Get the current options
+    $options = get_option('wcapf_options');
+    $options['pages'] = [];
+
+    // Extract slugs from the pages with the shortcode
     $slugs = array_map(function($page) {
         return $page->post_name;
     }, $pages_with_wcapf_shortcode);
-        // Update the pages array
-    // Update the pages array, ensuring unique values
+
+    // Update the pages array ensuring unique values
     $options['pages'] = array_unique(array_merge($options['pages'], $slugs));
+
     // Update the options in the database
     update_option('wcapf_options', $options);
 }
 
 // Hook the function to an action, for example, when the admin initializes
 add_action('admin_init', 'update_wcapf_options_with_page_slugs');
+
 
 
 
