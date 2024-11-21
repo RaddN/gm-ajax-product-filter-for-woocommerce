@@ -5,6 +5,7 @@ jQuery(document).ready(function($) {
     // fetchFilteredProducts();
     var rfilterindex = 0;
     var rfiltercurrentUrl = window.location.href;
+    var path = window.location.pathname;
     rfiltercurrentUrl = rfiltercurrentUrl.split('?')[0];
     const urlParams = new URLSearchParams(window.location.search);
     const gmfilter = urlParams.get('gmfilter');
@@ -213,7 +214,6 @@ jQuery(document).ready(function($) {
         if (typeof wcapf_data !== 'undefined' && wcapf_data.options) {
             const options = wcapf_data.options;
             if (options.default_filters) {
-                var path = window.location.pathname;
                 var currentPage = path.replace(/^\/|\/$/g, '');
                 var defaultFilters = options.default_filters[currentPage];
                 // Remove values from filtersArray that are present in defaultFilters
