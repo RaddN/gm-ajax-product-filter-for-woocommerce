@@ -70,7 +70,6 @@ jQuery(document).ready(function($) {
             const page = new URL(url).searchParams.get('paged'); // Extract the page number
             $('#roverlay').show();
             $('#loader').show();
-            rfilterindex = 0;
             fetchFilteredProducts(page); // Fetch products for the selected page
         });
     }
@@ -102,6 +101,7 @@ jQuery(document).ready(function($) {
     }
 
     function updateAttributes(attributes) {
+        sortValues(attributes);
         $('.filter-group.attributes').html(Object.keys(attributes).map(name => {
             const termsHtml = attributes[name].map(term => {
                 const checked = isChecked(`attribute[${name}][]`, term.slug) ? 'checked' : '';
@@ -113,6 +113,38 @@ jQuery(document).ready(function($) {
         }).join(''));
     }
 
+        // Function to sort values
+        function sortValues(data) {
+            const sortedData = {};
+    
+            $.each(data, function(key, values) {
+                // Sort each array based on the name
+                sortedData[key] = values.sort(function(a, b) {
+                    return customSort(a.name, b.name);
+                });
+            });
+    
+            return sortedData;
+        }
+    
+        // Custom sorting function
+        function customSort(a, b) {
+            // Check if both are dates
+            const dateA = Date.parse(a);
+            const dateB = Date.parse(b);
+            if (!isNaN(dateA) && !isNaN(dateB)) {
+                return dateA - dateB; // Sort as dates
+            }
+    
+            // Check if both are numbers
+            if (!isNaN(a) && !isNaN(b)) {
+                return a - b; // Sort as numbers
+            }
+    
+            // Otherwise, sort as strings
+            return a.localeCompare(b);
+        }
+
     function isChecked(name, value) {
         return $(`input[name="${name}"][value="${value}"]`).is(':checked');
     }
@@ -121,6 +153,7 @@ jQuery(document).ready(function($) {
         const $list = $('.rfilterbuttons ul').empty();
         $('#' + rfilterbuttonsId + ' input[type="checkbox"]').each(function() {
             const value = $(this).val();
+            console.log(value);
             const checked = $(this).is(':checked');
             $list.append(createCheckboxListItem(value, checked));
         });
@@ -129,6 +162,9 @@ jQuery(document).ready(function($) {
     }
 
     function createCheckboxListItem(value, checked) {
+        const formattedLabel = value.split('-').map(word => 
+            word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
         return $('<li></li>').addClass(checked ? 'checked' : '').append(
             $('<input>', {
                 name: 'attribute[' + rfilterbuttonsId + '][]',
@@ -139,7 +175,7 @@ jQuery(document).ready(function($) {
             }).on('change', syncToMainFilter),
             $('<label></label>', {
                 for: 'text_' + value,
-                text: value
+                text: formattedLabel
             })
         );
     }

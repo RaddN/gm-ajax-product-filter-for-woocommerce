@@ -20,16 +20,26 @@ class WCAPF_Filter_Functions {
                 'relation' => 'AND'
             )
         );
+        $argsOptions = array(
+            'post_type' => 'product',
+            'posts_per_page' => -1,
+            'post_status' => 'publish',
+            'tax_query' => array(
+                'relation' => 'AND'
+            )
+        );
         $args = $this->apply_filters_to_args($args);
+        $argsOptions = $this->apply_filters_to_args($argsOptions);
 
         $query = new WP_Query($args);
+        $OptionsQuery = new WP_Query($argsOptions);
     
         // Cache the updated filters
-        $cache_key = 'updated_filters_' . md5(serialize($args));
+        $cache_key = 'updated_filters_' . md5(serialize($argsOptions));
         $updated_filters = get_transient($cache_key);
     
         if ($updated_filters === false) {
-            $updated_filters = $this->get_updated_filters($query);
+            $updated_filters = $this->get_updated_filters($OptionsQuery);
             set_transient($cache_key, $updated_filters, HOUR_IN_SECONDS);
         }
         // Capture the product listing
@@ -208,16 +218,18 @@ class WCAPF_Filter_Functions {
                     }
                 }
             }
-
             // Get tags for the filtered products
             $tags = wp_get_object_terms($product_ids, 'product_tag', array('fields' => 'all'));
         }
+        
 
-        return array(
+        $data = array(
             'categories' => $categories,
             'attributes' => $attributes,
             'tags' => $tags
         );
+
+        return $data;
     }
     // Function to generate pagination
     private function pagination($query,$paged) {

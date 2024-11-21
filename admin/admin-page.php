@@ -38,6 +38,7 @@ function wcapf_settings_init() {
         'update_filter_options' => 0,
         'show_loader' => 1,
         'pages' => [], 
+        'default_filters' => [],
         'use_custom_template' => 0,
         'custom_template_code' => '',
     ];
@@ -74,6 +75,11 @@ function wcapf_settings_init() {
     add_settings_section('wcapf_page_section_after', null, function() {
         echo '</div>';
     }, 'wcapf-admin');
+    // Default Filter List Field
+    add_settings_section('wcapf_default_filters_section', __('Default Filters for Pages', 'gm-ajax-product-filter-for-woocommerce'), function() {
+        echo '<p>' . esc_html__('Define default filters for each listed page below.', 'gm-ajax-product-filter-for-woocommerce') . '</p>';
+    }, 'wcapf-admin');
+    add_settings_field('default_filters', __('Default Filter List', 'gm-ajax-product-filter-for-woocommerce'), 'wcapf_default_filters_render', 'wcapf-admin', 'wcapf_default_filters_section');
 
     // custom code template
     add_settings_field('custom_template_code', __('product custom template code', 'gm-ajax-product-filter-for-woocommerce'), 'wcapf_custom_template_code_render', 'wcapf-admin', 'wcapf_section');
@@ -179,6 +185,24 @@ function wcapf_pages_render() {
         });
     </script>
     <?php
+}
+// Render function for default filters
+function wcapf_default_filters_render() {
+    $options = get_option('wcapf_options');
+    $default_filters = isset($options['default_filters']) ? $options['default_filters'] : [];
+    $pages = isset($options['pages']) ? $options['pages'] : [];
+
+    echo '<table class="form-table">';
+    foreach ($pages as $page_id => $page_name) {
+        $filters = isset($default_filters[$page_id]) ? esc_attr($default_filters[$page_id]) : '';
+        echo '<tr>';
+        echo '<th>' . esc_html($page_name) . '</th>';
+        echo '<td>';
+        echo '<input type="text" name="wcapf_options[default_filters][' . $page_id . ']" value="' . $filters . '" placeholder="' . esc_html__('Enter default filters, comma-separated', 'gm-ajax-product-filter-for-woocommerce') . '" />';
+        echo '</td>';
+        echo '</tr>';
+    }
+    echo '</table>';
 }
 
 

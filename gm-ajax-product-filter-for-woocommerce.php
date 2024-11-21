@@ -138,10 +138,6 @@ function my_plugin_settings_link($links) {
 }
 
 // Automatic add & remove pages slug list based on shortcode used
-
-
-
-
 function find_wcapf_shortcode_pages() {
     global $wpdb;
     $shortcode = 'wcapf_product_filter';

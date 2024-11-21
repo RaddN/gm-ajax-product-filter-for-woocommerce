@@ -79,11 +79,15 @@ function wcapf_product_filter_shortcode($atts) {
 
         echo '<div class="filter-group attributes" style="display: ' . (!empty($options['show_attributes']) ? 'block' : 'none') . ';"><label style="display:none;">Attributes:</label>';
         $attributes = wc_get_attribute_taxonomies();
+        
         if ($attributes) {
             foreach ($attributes as $attribute) {
                 $terms = get_terms(array('taxonomy' => 'pa_' . $attribute->attribute_name, 'hide_empty' => true));
                 $selected_terms = explode(',', $atts['terms']);
                 if ($terms) {
+                    usort($terms, function($a, $b) {
+                        return customSort($a->name, $b->name);
+                    });
                     echo '<div id="' . esc_attr($attribute->attribute_name) . '"> <div class="title">' . esc_html($attribute->attribute_label) . '</div><div class="items">';
                     foreach ($terms as $term) {
                         echo '<label><input type="checkbox" class="filter-checkbox" name="attribute[' . esc_attr($attribute->attribute_name) . '][]" value="' . esc_attr($term->slug) . '"' . (in_array($term->slug, $selected_terms) ? ' checked' : '') . '> ' . esc_html($term->name) . '</label>';
@@ -118,6 +122,24 @@ function wcapf_product_filter_shortcode($atts) {
 }
 add_shortcode('wcapf_product_filter', 'wcapf_product_filter_shortcode');
 
+// General sorting function
+function customSort($a, $b) {
+    // Try to convert to timestamp for date comparison
+    $dateA = strtotime($a);
+    $dateB = strtotime($b);
+
+    if ($dateA && $dateB) {
+        return $dateA <=> $dateB; // Both are dates
+    }
+
+    // Check if both are numeric
+    if (is_numeric($a) && is_numeric($b)) {
+        return $a <=> $b; // Both are numbers
+    }
+
+    // Fallback to string comparison
+    return strcmp($a, $b);
+}
 
 
 function wcapf_product_filter_shortcode_single($atts) {
