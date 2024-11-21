@@ -193,17 +193,39 @@ function wcapf_default_filters_render() {
     $pages = isset($options['pages']) ? $options['pages'] : [];
 
     echo '<table class="form-table">';
-    foreach ($pages as $page_id => $page_name) {
-        $filters = isset($default_filters[$page_id]) ? esc_attr($default_filters[$page_id]) : '';
+    foreach ($pages as $page_name) {
+        $filters = isset($default_filters[$page_name]) ? $default_filters[$page_name] : [];
+        $filters_string = implode(',', $filters); // Convert array to comma-separated string for editing.
+
         echo '<tr>';
         echo '<th>' . esc_html($page_name) . '</th>';
         echo '<td>';
-        echo '<input type="text" name="wcapf_options[default_filters][' . $page_id . ']" value="' . $filters . '" placeholder="' . esc_html__('Enter default filters, comma-separated', 'gm-ajax-product-filter-for-woocommerce') . '" />';
+        echo '<input type="text" name="wcapf_options[default_filters][' . esc_attr($page_name) . ']" value="' . esc_attr($filters_string) . '" placeholder="' . esc_html__('Enter default filters, comma-separated', 'gm-ajax-product-filter-for-woocommerce') . '" />';
         echo '</td>';
         echo '</tr>';
     }
     echo '</table>';
 }
+function wcapf_options_sanitize($input) {
+    if (isset($input['default_filters'])) {
+        foreach ($input['default_filters'] as $page_name => $filters_value) {
+            // Ensure $filters_value is a string before calling explode
+            if (is_string($filters_value)) {
+                $input['default_filters'][$page_name] = array_filter(array_map('trim', explode(',', $filters_value)));
+            } elseif (is_array($filters_value)) {
+                // If already an array, clean up empty values and trim items
+                $input['default_filters'][$page_name] = array_filter(array_map('trim', $filters_value));
+            } else {
+                // Invalid type, fallback to an empty array
+                $input['default_filters'][$page_name] = [];
+            }
+        }
+    }
+    return $input;
+}
+add_filter('pre_update_option_wcapf_options', 'wcapf_options_sanitize');
+
+
 
 
 

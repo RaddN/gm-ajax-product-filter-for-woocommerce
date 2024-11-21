@@ -212,7 +212,20 @@ jQuery(document).ready(function($) {
         });
 
         // Create the filters query string from the Set
-        const filtersQueryString = Array.from(selectedFilters).join(','); // Convert Set back to array
+        let filtersQueryString = Array.from(selectedFilters); // Convert Set back to array
+        if (typeof wcapf_data !== 'undefined' && wcapf_data.options) {
+            const options = wcapf_data.options;
+            if (options.default_filters) {
+                var path = window.location.pathname;
+                var currentPage = path.replace(/^\/|\/$/g, '');
+                var defaultFilters = options.default_filters[currentPage];
+                // Remove values from filtersArray that are present in defaultFilters
+                filtersQueryString = filtersQueryString.filter(function (value) {
+                    return !defaultFilters.includes(value);
+                });
+            }
+        }
+        filtersQueryString.join(',');
         const newUrl = `?filters=${filtersQueryString}`;
         
         // Update the browser's URL without reloading the page

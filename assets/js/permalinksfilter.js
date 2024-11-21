@@ -153,14 +153,12 @@ jQuery(document).ready(function($) {
         const $list = $('.rfilterbuttons ul').empty();
         $('#' + rfilterbuttonsId + ' input[type="checkbox"]').each(function() {
             const value = $(this).val();
-            console.log(value);
             const checked = $(this).is(':checked');
             $list.append(createCheckboxListItem(value, checked));
         });
         attachCheckboxClickEvents();
         attachMainFilterChangeEvents();
     }
-
     function createCheckboxListItem(value, checked) {
         const formattedLabel = value.split('-').map(word => 
             word.charAt(0).toUpperCase() + word.slice(1)
@@ -211,7 +209,19 @@ jQuery(document).ready(function($) {
         $('#product-filter input[type="checkbox"]:checked').each(function() {
             selectedFilters.add($(this).val());
         });
-        const filtersArray = Array.from(selectedFilters);
+        let filtersArray = Array.from(selectedFilters);
+        if (typeof wcapf_data !== 'undefined' && wcapf_data.options) {
+            const options = wcapf_data.options;
+            if (options.default_filters) {
+                var path = window.location.pathname;
+                var currentPage = path.replace(/^\/|\/$/g, '');
+                var defaultFilters = options.default_filters[currentPage];
+                // Remove values from filtersArray that are present in defaultFilters
+                filtersArray = filtersArray.filter(function (value) {
+                    return !defaultFilters.includes(value);
+                });
+            }
+        }
         const newUrl = rfiltercurrentUrl?`${rfiltercurrentUrl}${filtersArray.join('/')}`:`${filtersArray.join('/')}`;
         history.replaceState(null, '', newUrl);
     }
