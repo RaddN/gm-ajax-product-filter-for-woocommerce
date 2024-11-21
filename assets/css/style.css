@@ -124,3 +124,6 @@ div#roverlay {
         z-index: 999;
     }
 }
+form.rfilterbuttons li {
+    cursor: pointer;
+}
