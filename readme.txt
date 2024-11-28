@@ -45,6 +45,11 @@ GM AJAX Product Filter for WooCommerce is a powerful plugin that enables WooComm
 * Initial release.
 * Added AJAX filtering by category, tag, and attribute.
 * Enabled seamless integration with query strings and custom permalinks.
+= 1.0.4 =
+* Second release version.
+* Added permalinks filtering by category, tag, and attribute.
+* Fix issues
+* Autodetect pages where shortcode used
 
 ## Frequently Asked Questions
 

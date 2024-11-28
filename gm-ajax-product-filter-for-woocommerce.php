@@ -27,13 +27,15 @@ if (!defined('ABSPATH')) {
 }
 // Retrieve the 'use_url_filter' setting from the options
 $options = get_option('wcapf_options');
+$styleoptions = get_option('wcapf_style_options');
+$product_count = get_option('wcapf_product_count');
 $use_url_filter = isset($options['use_url_filter']) ? $options['use_url_filter'] : false;
 $slug = "";
 
 // Enqueue scripts for frontend
 function wcapf_enqueue_scripts() {
     // Determine the script to enqueue based on the 'use_url_filter' setting
-    global $use_url_filter, $options, $slug;
+    global $use_url_filter, $options, $slug, $styleoptions, $product_count;
 
     switch ($use_url_filter) {
         case 'query_string':
@@ -65,7 +67,9 @@ function wcapf_enqueue_scripts() {
     // Pass the variable to the JavaScript file
     wp_localize_script($script_handle, 'wcapf_data', array(
         'options' => $options,
-        'slug' => $slug
+        'slug' => $slug,
+        'styleoptions' => $styleoptions,
+        'product_count' => $product_count
      ));
     // Localize the script for AJAX functionality
     wp_localize_script(
@@ -75,6 +79,34 @@ function wcapf_enqueue_scripts() {
     );
     // Enqueue the CSS style
     wp_enqueue_style('filter-style', plugin_dir_url(__FILE__) . 'assets/css/style.css',array(),'1.0.6');
+
+
+    // Enqueue Select2 CSS and JS
+    wp_enqueue_style('select2-css', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css');
+    wp_enqueue_script('select2-js', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js', array('jquery'), null, true);
+
+    // Enqueue your custom script to initialize Select2
+    wp_add_inline_script('select2-js', '
+        jQuery(document).ready(function($) {
+    $(".select2").select2(
+{
+        placeholder: "Select Options"
+}
+    );
+    $("select.select2_classic").select2({
+        placeholder: "Select Options",
+        allowClear: true
+    });
+    $(".title.collapsable_arrow").on("click", function() {
+    const svg = $(this).find("svg");
+svg.toggleClass("rotated");
+$(this).siblings(".items").slideToggle(300); // Smooth toggle effect
+});
+$(".title.collapsable_no_arrow").on("click", function() {
+$(this).siblings(".items").slideToggle(300); // Smooth toggle effect
+});
+});
+    ');
 }
 
 add_action('wp_enqueue_scripts', 'wcapf_enqueue_scripts');
@@ -86,6 +118,8 @@ function wcapf_admin_scripts() {
     wp_enqueue_script('wcapf-admin-codemirror-script', plugin_dir_url(__FILE__) . 'assets/js/codemirror.min.js',array(), '5.65.2', true);
     wp_enqueue_script('wcapf-admin-xml-script', plugin_dir_url(__FILE__) . 'assets/js/xml.min.js',array(), '5.65.2', true);
     wp_enqueue_script('wcapf-admin-script', plugin_dir_url(__FILE__) . 'assets/js/admin-script.js',array(), '1.0.6', true);
+    wp_enqueue_media();
+    wp_enqueue_script('wcapf-media-uploader', plugin_dir_url(__FILE__) . 'assets/js/media-uploader.js', ['jquery'], '1.0.0', true);
 }
 add_action('admin_enqueue_scripts', 'wcapf_admin_scripts');
 
@@ -176,6 +210,9 @@ function update_wcapf_options_with_page_slugs() {
 // Hook the function to an action, for example, when the admin initializes
 add_action('admin_init', 'update_wcapf_options_with_page_slugs');
 
+
+// count product & store
+include_once plugin_dir_path(__FILE__) . 'includes/count_product.php';
 
 
 

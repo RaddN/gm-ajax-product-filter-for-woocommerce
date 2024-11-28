@@ -66,8 +66,8 @@ jQuery(document).ready(function($) {
 
     // Update filters with selections and sync options
     function updateFilterOptions(filters) {
-        updateFilterGroup('.filter-group.category', filters.categories, 'category[]');
-        updateFilterGroup('.filter-group.tags', filters.tags, 'tags[]');
+        updateFilterGroup('.filter-group.category .items', filters.categories, 'category[]');
+        updateFilterGroup('.filter-group.tags .items', filters.tags, 'tags[]');
         updateAttributes(filters.attributes);
         syncCheckboxSelections();
     }
@@ -75,7 +75,7 @@ jQuery(document).ready(function($) {
     function updateFilterGroup(selector, items, name) {
         $(selector).html(items.map(item => {
             const checked = isChecked(name, item.slug) ? 'checked' : '';
-            return `<label class="${checked}"><input type="checkbox" name="${name}" value="${item.slug}" ${checked}> ${item.name}</label><br>`;
+            return `<label class="${checked}"><input type="checkbox" name="${name}" value="${item.slug}" ${checked}> ${item.name}</label>`;
         }).join(''));
     }
 
@@ -209,3 +209,5 @@ jQuery(document).ready(function($) {
                 }
             });
 });
+
+

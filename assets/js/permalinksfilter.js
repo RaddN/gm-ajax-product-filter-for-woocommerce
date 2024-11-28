@@ -1,4 +1,8 @@
 jQuery(document).ready(function($) {
+    let styleoptions = [];
+    if (typeof wcapf_data !== 'undefined' && wcapf_data.styleoptions) {
+        styleoptions = wcapf_data.styleoptions;
+    }
     var rfilterbuttonsId = $('.rfilterbuttons').attr('id');
     // Initialize filters and handle changes
     $('#product-filter, .rfilterbuttons').on('change', handleFilterChange);
@@ -86,18 +90,158 @@ jQuery(document).ready(function($) {
         $('#loader').hide();
         console.error('AJAX Error:', status, error);
     }
+    async function countProducts(categorySlug = '', attribute = '', termSlug = '', tagSlug = '') {
+        const response = await fetch(`/wp-json/custom/v1/count-products?category_slug=${categorySlug}&attribute=${attribute}&term_slug=${termSlug}&tag_slug=${tagSlug}`);
+        
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+    
+        const productCount = await response.json();
+        return productCount;
+    }
 
+    function renderFilterOption(
+        subOption,
+        title,
+        value,
+        checked,
+        name,
+        attribute = '',
+        singleValueSelect = 'no',
+        count = 0
+    ) {
+        let output = '';
+        const inputType = singleValueSelect === 'yes' ? 'radio' : 'checkbox';
+    
+        switch (subOption) {
+            case 'checkbox':
+            case 'radio_check':
+            case 'radio':
+                output += `<label>
+                    <input type="${inputType}" class="filter-${subOption}" name="${name}" value="${value}"${checked}>
+                    ${title}${count ? ` (${count})` : ''}
+                </label>`;
+                break;
+    
+            case 'square_check':
+            case 'square':
+                output += `<label class="square-option">
+                    <input type="${inputType}" class="filter-${subOption}" name="${name}" value="${value}"${checked}>
+                    <span>${title}${count ? ` (${count})` : ''}</span>
+                </label>`;
+                break;
+    
+            case 'checkbox_hide':
+                output += `<label>
+                    <input type="${inputType}" class="filter-checkbox" name="${name}" value="${value}"${checked} style="display:none;">
+                    ${title}${count ? ` (${count})` : ''}
+                </label>`;
+                break;
+    
+            case 'color':
+            case 'color_no_border':
+                const color = styleOptions?.[attribute]?.colors?.[value] || '#000';
+                const border = subOption === 'color_no_border' ? 'none' : '1px solid #000';
+                output += `<label style="position: relative;">
+                    <input type="${inputType}" class="filter-color" name="${name}" value="${value}"${checked}>
+                    <span class="color-box" style="background-color: ${color}; border: ${border}; width: 30px; height: 30px;"></span>
+                </label>`;
+                break;
+    
+            case 'image':
+            case 'image_no_border':
+                const image = styleOptions?.[attribute]?.images?.[value] || 'default-image.jpg';
+                const borderClass = subOption === 'image_no_border' ? 'no-border' : '';
+                output += `<label class="image-option ${borderClass}">
+                    <input type="${inputType}" class="filter-image" name="${name}" value="${value}"${checked}>
+                    <img src="${image}" alt="${title}">
+                </label>`;
+                break;
+    
+            case 'select2':
+            case 'select2_classic':
+            case 'select':
+                output += `<option class="filter-option" value="${value}"${checked}>${title}${count ? ` (${count})` : ''}</option>`;
+                break;
+    
+            default:
+                output += `<label>
+                    <input type="checkbox" class="filter-checkbox" name="${name}" value="${value}"${checked}>
+                    ${title}${count ? ` (${count})` : ''}
+                </label>`;
+                break;
+        }
+    
+        return output;
+    }
     function updateFilterOptions(filters) {
-        updateFilterGroup('.filter-group.category', filters.categories, 'category[]');
-        updateFilterGroup('.filter-group.tags', filters.tags, 'tags[]');
+        // let subOptioncata = styleoptions["category"]["sub_option"];
+        // let show_count = styleoptions["category"]["show_product_count"];
+        // let singlevaluecataSelect = styleoptions["category"]["single_selection"];
+        // updateFilterGroup('.filter-group.category .items', filters.categories, 'category[]',subOptioncata, singlevaluecataSelect,attribute="category",show_count);
+        updateFilterGroup('.filter-group.category .items', filters.categories, 'category[]');
+        updateFilterGroup('.filter-group.tags .items', filters.tags, 'tags[]');
         updateAttributes(filters.attributes);
         syncCheckboxSelections();
     }
 
+    // async function fetchProductCounts(slugs) {
+    //     // Modify this function to fetch counts for multiple slugs if your API supports it
+    //     const counts = {};
+    //     const promises = slugs.map(async slug => {
+    //         try {
+    //             const count = await countProducts(slug);
+    //             counts[slug] = count; // Store the count by slug
+    //         } catch (error) {
+    //             console.error(`Error fetching count for ${slug}:`, error);
+    //             counts[slug] = 0; // Fallback on error
+    //         }
+    //     });
+    //     await Promise.all(promises);
+    //     return counts; // Return an object with counts for all slugs
+    // }
+    // async function updateFilterGroup(selector, items, name, subOption, singleValueSelect = 'no', attribute = '', show_count) {
+    //     let counts = {};
+        
+    //     // Fetch product counts if necessary
+    //     if (show_count === "yes") {
+    //         const slugs = items.map(item => item.slug); // Extract all slugs
+    //         counts = await fetchProductCounts(slugs); // Fetch counts in a single call
+    //     }
+    
+    //     // Build the select element if needed
+    //     let addselect = '';
+    //     if (["select", "select2", "select2_classic"].includes(subOption)) {
+    //         addselect = `<select name="category[]" id="${subOption}" class="${subOption} filter-select" ${singleValueSelect !== "yes" ? 'multiple="multiple"' : ''}>`;
+    //         addselect += '<option class="filter-checkbox" value="any"> Any </option>';
+    //     }
+    
+    //     // Create filter options based on fetched counts
+    //     const filterOptions = items.map(item => {
+    //         const checked = isChecked(name, item.slug) ? ' checked="checked"' : '';
+    //         const TotalNumProduct = show_count === "yes" ? counts[item.slug] || 0 : 0; // Use the fetched count
+            
+    //         return renderFilterOption(
+    //             subOption,
+    //             item.name,  // title
+    //             item.slug,  // value
+    //             checked,
+    //             name,
+    //             attribute,
+    //             singleValueSelect,
+    //             TotalNumProduct
+    //         );
+    //     });
+    
+    //     // Update the HTML with the rendered filter options
+    //     $(selector).html(addselect + filterOptions.join(''));
+    // }
+
     function updateFilterGroup(selector, items, name) {
         $(selector).html(items.map(item => {
             const checked = isChecked(name, item.slug) ? 'checked' : '';
-            return `<label class="${checked}"><input type="checkbox" name="${name}" value="${item.slug}" ${checked}> ${item.name}</label><br>`;
+            return `<label class="${checked}"><input type="checkbox" name="${name}" value="${item.slug}" ${checked}> ${item.name}</label>`;
         }).join(''));
     }
 

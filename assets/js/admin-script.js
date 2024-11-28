@@ -1,3 +1,4 @@
+if(document.getElementById("custom_template_input")){
 const editor = CodeMirror(document.getElementById("code-editor"), {
             value: document.getElementById("custom_template_input").value,
             mode: "text/html",
@@ -15,3 +16,7 @@ const editor = CodeMirror(document.getElementById("code-editor"), {
             editor.replaceRange(placeholder, cursor);
             editor.focus();
         }
+    }
+
+
+    

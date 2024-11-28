@@ -69,22 +69,31 @@ div#roverlay {
     background: red;
     color: #fff !important;
 }
-.filter-group.attributes .title {
+.filter-group.attributes .title, .filter-group.category .title,.filter-group.tags .title {
     background: linear-gradient(90deg, #501A73 9%, #432FB8 37%);
     color: white !important;
     text-align: center;
     padding: 10px 0;
     font-size: 20px !important;
+    display: flex;
+    justify-content: space-between;
+    padding-left: 14px ;
+    padding-right: 13px;
 }
-.filter-group.attributes>div {
+.title .collaps svg {
+    width: 16px;
+    height: 16px;
+    fill: #fff;
+}
+.filter-group.attributes>div,.filter-group.category,.filter-group.tags {
     background: rgba(255, 255, 255, 0.7);
     padding-bottom: 1px;
     box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
 }
-.filter-group.attributes .items {
+.filter-group.attributes  .items ,.filter-group.category .items, .filter-group.tags .items{
     padding: 20px 10px;
 }
-.filter-group.attributes .items>label,.rfilterbuttons label {
+.filter-group.attributes .items>label,.filter-group.category .items>label,.filter-group.tags .items>label,.rfilterbuttons label {
     text-transform: capitalize;
     cursor: pointer;
 }
@@ -125,5 +134,136 @@ div#roverlay {
     }
 }
 form.rfilterbuttons li {
+    cursor: pointer;
+}
+
+/* color style */
+.items.color label,.items.color_no_border label,.items.image label,.items.image_no_border label{
+    position: relative;
+    margin: 0;
+}
+
+.items.color input,.items.color_no_border input,.items.image input,.items.image_no_border input{
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: none;
+}
+.items.color,.items.color_no_border,.items.image,.items.image_no_border {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    justify-items: stretch;
+    align-content: stretch;
+    align-items: stretch;
+}
+.items.image,.items.image_no_border {
+    grid-template-columns: repeat(3, 1fr);
+}
+.items.color input:checked,.items.color_no_border input:checked, .items.image input:checked,.items.image_no_border input:checked{
+    display: block;
+}
+.items.image img,.items.image_no_border img{
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+label.image-option {
+    border: 2px solid red;
+    border-radius: 10px;
+}
+label.image-option.no-border {
+    border: none;
+}
+
+
+/* style checkbox like radio check */
+/* Hide the actual checkbox input */
+.filter-radio-check,.filter-radio {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #aaa;
+    border-radius: 50%;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+.filter-square{
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #aaa;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+
+/* Add styling for checked state */
+.filter-radio-check:checked,.filter-radio:checked,.filter-square:checked {
+    border-color: #007bff;
+    background-color: #007bff;
+}
+
+.filter-radio:checked::after,.filter-square:checked::after {
+    content: '';
+    display: block;
+    width: 8px;
+    height: 8px;
+    background-color: #fff;
+    border-radius: 50%;
+}
+.filter-radio-check:checked::after {
+    content: "";
+    width: 5px;
+    height: 8px;
+    border-bottom: 2px solid #fff;
+    border-right: 2px solid #fff;
+    display: block;
+    transform: rotate(45deg);
+}
+
+/* Add hover effect */
+.filter-radio-check:hover,.filter-radio:hover,.filter-square:hover  {
+    border-color: #007bff;
+}
+
+.items.select,.items.select2 {
+    position: relative;
+}
+input#searchFilter {
+    position: absolute;
+    width: 81%;
+    left: 12px;
+    top: 21px;
+    padding: 7px;
+    border: 0;
+}
+
+ /* Custom styling for Select2 selection height */
+ .select2-selection {
+    padding: 5px; 
+}
+.select2-selection--multiple {
+    min-height: 60px; 
+    padding: 5px;
+    overflow: auto;
+}
+.rotatable.rotated {
+    transform: rotate(270deg);
+}
+.collaps {
+    cursor: pointer;
+}
+.title.collapsable_no_arrow {
     cursor: pointer;
 }

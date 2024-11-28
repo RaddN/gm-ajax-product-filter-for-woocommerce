@@ -16,214 +16,402 @@ function wcapf_admin_page_content() {
     ?>
     <div class="wrap wcapf_admin">
         <h1>Manage WooCommerce Product Filters</h1>
-        <form method="post" action="options.php">
-            
+        <h2 class="nav-tab-wrapper">
+            <a href="?page=wcapf-admin&tab=form_manage" class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] == 'form_manage' ? 'nav-tab-active' : ''; ?>">Form Manage</a>
+            <a href="?page=wcapf-admin&tab=form_style" class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] == 'form_style' ? 'nav-tab-active' : ''; ?>">Form Style</a>
+        </h2>
+
+        <div class="tab-content">
             <?php
-            settings_fields('wcapf_options_group');
-            do_settings_sections('wcapf-admin');
-            submit_button();
-            ?>
-            <p>Use short code to show filter <b>[wcapf_product_filter attribute="your-attribute" terms="your-terms1, your-terms2" category="yourcata1, your-cata2" tag="your-tag1, your-tag2"]</b> for button style filter use this shortcode <b>[wcapf_product_filter_single name="conference-by-month"]</b></p>
-        </form>
-    </div>
+            $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'form_manage';
+
+            if ($active_tab == 'form_manage') {
+                ?>
+                <form method="post" action="options.php">
+                    <?php
+                    settings_fields('wcapf_options_group');
+                    do_settings_sections('wcapf-admin');
+                    submit_button();
+                    ?>
+                    <p>Use shortcode to show filter: <b>[wcapf_product_filter attribute="your-attribute" terms="your-terms1, your-terms2" category="your-cata1, your-cata2" tag="your-tag1, your-tag2"]</b></p>
+                    <p>For button style filter use this shortcode: <b>[wcapf_product_filter_single name="conference-by-month"]</b></p>
+                </form>
+                <?php
+            } elseif ($active_tab == 'form_style') {
+                ?>
+                <form method="post" action="options.php">
     <?php
-}
+    settings_fields('wcapf_style_options_group');
+    do_settings_sections('wcapf-style');
 
-function wcapf_settings_init() {
-    $options = get_option('wcapf_options') ?: [
-        'show_categories' => 0,
-        'show_attributes' => 1,
-        'show_tags' => 0,
-        'use_url_filter' => '',
-        'update_filter_options' => 0,
-        'show_loader' => 1,
-        'pages' => [], 
-        'default_filters' => [],
-        'use_custom_template' => 0,
-        'custom_template_code' => '',
-    ];
-    update_option('wcapf_options', $options);
+    // Fetch WooCommerce attributes
+    $attributes = wc_get_attribute_taxonomies();
+    $form_styles = get_option('wcapf_style_options', []);
 
-    register_setting('wcapf_options_group', 'wcapf_options');
-    
-    add_settings_section('wcapf_section', __('Filter Settings', 'gm-ajax-product-filter-for-woocommerce'), null, 'wcapf-admin');
-
-    $fields = [
-        'show_categories' => __('Show Categories', 'gm-ajax-product-filter-for-woocommerce'),
-        'show_attributes' => __('Show Attributes', 'gm-ajax-product-filter-for-woocommerce'),
-        'show_tags' => __('Show Tags', 'gm-ajax-product-filter-for-woocommerce'),
-        'use_url_filter' => __('Use URL-Based Filter', 'gm-ajax-product-filter-for-woocommerce'),
-        'update_filter_options' => __('Update filter options', 'gm-ajax-product-filter-for-woocommerce'),
-        'show_loader' => __('Show Loader', 'gm-ajax-product-filter-for-woocommerce'),
-        'use_custom_template' => __('Use Custom Product Template', 'gm-ajax-product-filter-for-woocommerce')
+    // Define extra options
+    $extra_options = [
+        (object) ['attribute_name' => 'category', 'attribute_label' => __('Category Options', 'gm-ajax-product-filter-for-woocommerce')],
+        (object) ['attribute_name' => 'tag', 'attribute_label' => __('Tag Options', 'gm-ajax-product-filter-for-woocommerce')],
     ];
 
-    foreach ($fields as $key => $label) {
-        add_settings_field($key, $label, "wcapf_{$key}_render", 'wcapf-admin', 'wcapf_section');
-    }
+    // Combine attributes and extra options
+    $all_options = array_merge($attributes, $extra_options);
 
-    // Pages List Field
-        // Add Page Management Section
-        add_settings_section('wcapf_page_section_before', null, function() {
-            global $options;
-            echo '<div class="page_manage" style="' . ($options['use_url_filter'] === "permalinks" ? 'display:block;' : 'display:none;') . '">';
-        }, 'wcapf-admin');
-        add_settings_section('wcapf_page_section', __('Pages Manage', 'gm-ajax-product-filter-for-woocommerce'), function() {
-            echo '<p>' . esc_html__('Add the pages below where you have added the shortcode.', 'gm-ajax-product-filter-for-woocommerce') . '</p>';
-        }, 'wcapf-admin');
-    add_settings_field('pages', __('Pages List', 'gm-ajax-product-filter-for-woocommerce'), 'wcapf_pages_render', 'wcapf-admin', 'wcapf_page_section');
-    add_settings_section('wcapf_page_section_after', null, function() {
-        echo '</div>';
-    }, 'wcapf-admin');
-    // Default Filter List Field
-    add_settings_section('wcapf_default_filters_section', __('Default Filters for Pages', 'gm-ajax-product-filter-for-woocommerce'), function() {
-        echo '<p>' . esc_html__('Define default filters for each listed page below.', 'gm-ajax-product-filter-for-woocommerce') . '</p>';
-    }, 'wcapf-admin');
-    add_settings_field('default_filters', __('Default Filter List', 'gm-ajax-product-filter-for-woocommerce'), 'wcapf_default_filters_render', 'wcapf-admin', 'wcapf_default_filters_section');
+    // Get the first attribute for default display
+    $first_attribute = !empty($all_options) ? $all_options[0]->attribute_name : '';
+    ?>    
 
-    // custom code template
-    add_settings_field('custom_template_code', __('product custom template code', 'gm-ajax-product-filter-for-woocommerce'), 'wcapf_custom_template_code_render', 'wcapf-admin', 'wcapf_section');
-}
-add_action('admin_init', 'wcapf_settings_init');
+    <?php if (!empty($all_options)) : ?>
+        <div class="attribute-selection">
+            <label for="attribute-dropdown">
+                <strong><?php esc_html_e('Select Attribute:', 'gm-ajax-product-filter-for-woocommerce'); ?></strong>
+            </label>
+            <select id="attribute-dropdown" style="margin-bottom: 20px;">
+                <?php foreach ($all_options as $option) : ?>
+                    <option value="<?php echo esc_attr($option->attribute_name); ?>">
+                        <?php echo esc_html($option->attribute_label); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
 
-function wcapf_render_checkbox($key) {
-    $options = get_option('wcapf_options');
-    ?>
-    <label class="switch <?php echo esc_attr($key); ?>">
-    <input type='checkbox' name='wcapf_options[<?php echo esc_attr($key); ?>]' <?php checked(isset($options[$key]) && $options[$key] === "on"); ?>>
-    <span class="slider round"></span>
-    </label>
-    <?php
-}
+        <!-- Style Options Container -->
+        <div id="style-options-container">
+            <?php foreach ($all_options as $option) :
+                $attribute_name = $option->attribute_name;
+                $selected_style = $form_styles[$attribute_name]['type'] ?? 'dropdown';
+                $sub_option = $form_styles[$attribute_name]['sub_option'] ?? '';
 
-function wcapf_show_categories_render() { wcapf_render_checkbox('show_categories'); }
-function wcapf_show_attributes_render() { wcapf_render_checkbox('show_attributes'); }
-function wcapf_show_tags_render() { wcapf_render_checkbox('show_tags'); }
-function wcapf_update_filter_options_render() {
-    wcapf_render_checkbox('update_filter_options');
-}
-function wcapf_show_loader_render() { wcapf_render_checkbox('show_loader'); }
-// Render functions for new fields
-function wcapf_use_custom_template_render() {
-    wcapf_render_checkbox('use_custom_template');
-}
+                // Define sub-options
+                $sub_options = [
+                    'checkbox' => [
+                        'checkbox' => __('Checkbox', 'gm-ajax-product-filter-for-woocommerce'),
+                        'radio_check' => __('Radio Check', 'gm-ajax-product-filter-for-woocommerce'),
+                        'radio' => __('Radio', 'gm-ajax-product-filter-for-woocommerce'),
+                        'square_check' => __('Square Check', 'gm-ajax-product-filter-for-woocommerce'),
+                        'square' => __('Square', 'gm-ajax-product-filter-for-woocommerce'),
+                        'checkbox_hide' => __('Checkbox Hide', 'gm-ajax-product-filter-for-woocommerce'),
+                    ],
+                    'color' => [
+                        'color' => __('Color', 'gm-ajax-product-filter-for-woocommerce'),
+                        'color_no_border' => __('Color Without Border', 'gm-ajax-product-filter-for-woocommerce'),
+                    ],
+                    'image' => [
+                        'image' => __('Image', 'gm-ajax-product-filter-for-woocommerce'),
+                        'image_no_border' => __('Image Without Border', 'gm-ajax-product-filter-for-woocommerce'),
+                    ],
+                    'dropdown' => [
+                        'select' => __('Select', 'gm-ajax-product-filter-for-woocommerce'),
+                        'select2' => __('Select 2', 'gm-ajax-product-filter-for-woocommerce'),
+                        'select2_classic' => __('Select 2 Classic', 'gm-ajax-product-filter-for-woocommerce'),
+                    ],
+                ];
+                ?>
+                <div class="style-options" id="options-<?php echo esc_attr($attribute_name); ?>" style="display: <?php echo $attribute_name === $first_attribute && $attribute_name !== "category" ? 'block' : 'none'; ?>;">
+                    <h3><?php echo esc_html($option->attribute_label); ?></h3>
 
-function wcapf_custom_template_code_render() {
-    $options = get_option('wcapf_options');
-    echo '    
-    <div class="custom_template_code" style="' . (isset($options['use_custom_template']) ? 'display:block;' : 'display:none;') . '">';
-    ?>
-        <!-- Placeholder List -->
-        <div id="placeholder-list" style="margin-bottom: 10px;">
-        <span class="placeholder" onclick="insertPlaceholder('{{product_link}}')">{{product_link}}</span>
-        <span class="placeholder" onclick="insertPlaceholder('{{product_title}}')">{{product_title}}</span>
-        <span class="placeholder" onclick="insertPlaceholder('{{product_image}}')">{{product_image}}</span>
-        <span class="placeholder" onclick="insertPlaceholder('{{product_price}}')">{{product_price}}</span>
-        <span class="placeholder" onclick="insertPlaceholder('{{product_excerpt}}')">{{product_excerpt}}</span>
-        <span class="placeholder" onclick="insertPlaceholder('{{product_category}}')">{{product_category}}</span>
-        <span class="placeholder" onclick="insertPlaceholder('{{product_sku}}')">{{product_sku}}</span>
-        <span class="placeholder" onclick="insertPlaceholder('{{product_stock}}')">{{product_stock}}</span>
-        <span class="placeholder" onclick="insertPlaceholder('{{add_to_cart_url}}')">{{add_to_cart_url}}</span>
-    </div>
-    <textarea style="display:none;" id="custom_template_input" name="wcapf_options[custom_template_code]" rows="10" cols="50" class="large-text"><?php if(isset($options['custom_template_code'])){echo esc_textarea($options['custom_template_code']); } ?></textarea>
-    <div id="code-editor"></div>
-    <p class="description"><?php esc_html_e('Enter your custom template code here.', 'gm-ajax-product-filter-for-woocommerce'); ?></p>
+                    <!-- Primary Options -->
+                    <div class="primary_options">
+                        <?php foreach ($sub_options as $key => $label) : ?>
+                            <label class="<?php echo $selected_style === $key ? 'active' : ''; ?>">
+                                <span class="active" style="display:none;"><i class="fa fa-check"></i></span>
+                                <input type="radio" name="wcapf_style_options[<?php echo esc_attr($attribute_name); ?>][type]" value="<?php echo esc_html($key); ?>" <?php checked($selected_style, $key); ?> data-type="<?php echo esc_html($key); ?>">
+                                <img src="<?php echo esc_url(plugins_url('../assets/images/' . $key . '.png', __FILE__)); ?>" alt="<?php echo esc_attr($key); ?>">
+                                <div class="title"><?php echo esc_html($key); ?></div>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <!-- Sub-Options -->
+                    <div class="sub-options" style="margin-left: 20px;">
+                        <p><strong><?php esc_html_e('Additional Options:', 'gm-ajax-product-filter-for-woocommerce'); ?></strong></p>
+                        <div class="dynamic-sub-options">
+                            <?php foreach ($sub_options[$selected_style] as $key => $label) : ?>
+                                
+                                <label class="<?php echo $sub_option === $key ? 'active' : ''; ?>">
+                                    <span class="active" style="display:none;"><i class="fa fa-check"></i></span>
+                                    <input type="radio" class="optionselect" name="wcapf_style_options[<?php echo esc_attr($attribute_name); ?>][sub_option]" value="<?php echo esc_attr($key); ?>" <?php checked($sub_option, $key); ?>>
+                                    <img src="<?php echo esc_url(plugins_url('../assets/images/' . $key . '.png', __FILE__)); ?>" alt="<?php echo esc_attr($label); ?>">
+                                    <div class="title"><?php echo esc_html($label); ?></div>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <!-- Advanced Options for Color/Image -->
+                     <div class="flex">
+                    <?php 
+                    $terms = [];
+                    if($attribute_name==="category"){
+                        $terms = get_terms( array(
+                            'taxonomy'   => 'product_cat',
+                            'hide_empty' => false,
+                        ) );
+                    }
+                    elseif($attribute_name==="tag"){
+                        $terms =  get_terms( array(
+                            'taxonomy'   => 'product_tag',
+                            'hide_empty' => false,
+                        ) );
+                    }
+                    else $terms = get_terms(['taxonomy' => 'pa_' . $attribute_name, 'hide_empty' => false]);?>
+                    <div class="advanced-options <?php echo $attribute_name ?>" style="display: <?php echo $selected_style === 'color' || $selected_style === 'image' ? 'block' : 'none'; ?>;">
+    <h4><?php esc_html_e('Advanced Options for Terms', 'gm-ajax-product-filter-for-woocommerce'); ?></h4>
+    <?php if (!empty($terms)) : ?>
+        
+        <!-- Color Options -->
+        <div class="color" style="display: <?php echo $selected_style === 'color' ? 'block' : 'none'; ?>;">
+            <h5><?php esc_html_e('Set Colors for Terms', 'gm-ajax-product-filter-for-woocommerce'); ?></h5>
+            <?php foreach ($terms as $term) :
+                $color_value = $form_styles[$attribute_name]['colors'][$term->slug] ?? color_name_to_hex(esc_attr($term->slug)) ; // Fetch stored color or default
+                ?>
+                <div class="term-option">
+                    <label for="color-<?php echo esc_attr($term->slug); ?>">
+                        <strong><?php echo esc_html($term->name); ?></strong>
+                    </label>
+                    <input type="color" id="color-<?php echo esc_attr($term->slug); ?>" name="wcapf_style_options[<?php echo esc_attr($attribute_name); ?>][colors][<?php echo esc_attr($term->slug); ?>]" value="<?php echo esc_attr($color_value); ?>">
+                </div>
+            <?php endforeach; ?>
+        </div>
+
+        <!-- Image Options -->
+        <div class="image" style="display: <?php echo $selected_style === 'image' ? 'block' : 'none'; ?>;">
+            <h5><?php esc_html_e('Set Images for Terms', 'gm-ajax-product-filter-for-woocommerce'); ?></h5>
+            <?php foreach ($terms as $term) :
+                $image_value = $form_styles[$attribute_name]['images'][$term->slug] ?? ''; // Fetch stored image URL
+                ?>
+                <div class="term-option">
+                    <label for="image-<?php echo esc_attr($term->slug); ?>">
+                        <strong><?php echo esc_html($term->name); ?></strong>
+                    </label>
+                    <input type="text" id="image-<?php echo esc_attr($term->slug); ?>" name="wcapf_style_options[<?php echo esc_attr($attribute_name); ?>][images][<?php echo esc_attr($term->slug); ?>]" value="<?php echo esc_attr($image_value); ?>" placeholder="<?php esc_attr_e('Image URL', 'gm-ajax-product-filter-for-woocommerce'); ?>">
+                    <button type="button" class="upload-image-button"><?php esc_html_e('Upload', 'gm-ajax-product-filter-for-woocommerce'); ?></button>
+                </div>
+            <?php endforeach; ?>
+        </div>
+
+    <?php else : ?>
+        <p><?php esc_html_e('No terms found. Please create terms for this attribute first.', 'gm-ajax-product-filter-for-woocommerce'); ?></p>
+    <?php endif; ?>
 </div>
 
-    <?php
-}
+            <!-- Advanced Options for Color/Image Ends -->
 
-function wcapf_use_url_filter_render() {
-    $options = get_option('wcapf_options');
-    ?>
-    <fieldset>
-    <legend><?php esc_html_e('Select URL Filter Type', 'gm-ajax-product-filter-for-woocommerce'); ?></legend>
-        <?php
-        $types = [
-            'query_string' => __('With Query String (e.g., ?filters)', 'gm-ajax-product-filter-for-woocommerce'),
-            'permalinks' => __('With Permalinks (e.g., canada/toronto/feb-2024)', 'gm-ajax-product-filter-for-woocommerce'),
-            'ajax' => __('With Ajax', 'gm-ajax-product-filter-for-woocommerce'),
-        ];
-        foreach ($types as $value => $label) {
-            echo "<label><input type='radio' name='wcapf_options[use_url_filter]' value='" . esc_attr($value) . "' " . checked($options['use_url_filter'], $value, false) . "> " . esc_html($label) . "</label><br>";
-        }
-        ?>
-    </fieldset>
-    <?php
-}
-function wcapf_pages_render() {
-    $options = get_option('wcapf_options');
-    $pages = isset($options['pages']) ? array_filter($options['pages']) : []; // Filter out empty values
-    ?>
-    <div class="page-listing">
-    <legend>Manage Pages</legend>
-    <div class="page-inputs">
-        <input type="text" name="wcapf_options[pages][]" value="" placeholder="Add new page" />
-        <button type="button" class="add-page">Add Page</button>
+            <!-- Optional Settings -->
+<div class="optional_settings">
+    <h4><?php esc_html_e('Optional Settings:', 'gm-ajax-product-filter-for-woocommerce'); ?></h4>
+
+    <!-- Enable Minimization Option -->
+    <div class="setting-item">
+        <p><strong><?php esc_html_e('Enable Minimization Option:', 'gm-ajax-product-filter-for-woocommerce'); ?></strong></p>
+        <label>
+            <input type="radio" name="wcapf_style_options[<?php echo esc_attr($attribute_name); ?>][minimize][type]" value="disabled" 
+                <?php checked($form_styles[esc_attr($attribute_name)]['minimize']['type'] ?? '', 'disabled'); ?>>
+            <?php esc_html_e('Disabled', 'gm-ajax-product-filter-for-woocommerce'); ?>
+        </label>
+        <label>
+            <input type="radio" name="wcapf_style_options[<?php echo esc_attr($attribute_name); ?>][minimize][type]" value="arrow" 
+                <?php checked($form_styles[esc_attr($attribute_name)]['minimize']['type'] ?? '', 'arrow'); ?>>
+            <?php esc_html_e('Enabled with Arrow', 'gm-ajax-product-filter-for-woocommerce'); ?>
+        </label>
+        <label>
+            <input type="radio" name="wcapf_style_options[<?php echo esc_attr($attribute_name); ?>][minimize][type]" value="no_arrow" 
+                <?php checked($form_styles[esc_attr($attribute_name)]['minimize']['type'] ?? '', 'no_arrow'); ?>>
+            <?php esc_html_e('Enabled without Arrow', 'gm-ajax-product-filter-for-woocommerce'); ?>
+        </label>
     </div>
-    <div class="page-list">
-        <?php foreach ($pages as $page) : ?>
-            <div class="page-item">
-                <input type="text" name="wcapf_options[pages][]" value="<?php echo esc_attr($page); ?>" />
-                <button type="button" class="remove-page">Remove</button>
-            </div>
-        <?php endforeach; ?>
+
+    <!-- Single Selection Option -->
+    <div class="setting-item single-selection">
+        <p><strong><?php esc_html_e('Single Selection:', 'gm-ajax-product-filter-for-woocommerce'); ?></strong></p>
+        <label>
+            <input type="checkbox" name="wcapf_style_options[<?php echo esc_attr($attribute_name); ?>][single_selection]" value="yes" 
+                <?php checked($form_styles[esc_attr($attribute_name)]['single_selection'] ?? '', 'yes'); ?>>
+            <?php esc_html_e('Only one value can be selected at a time', 'gm-ajax-product-filter-for-woocommerce'); ?>
+        </label>
     </div>
+
+    <!-- Show/Hide Number of Products -->
+    <div class="setting-item">
+        <p><strong><?php esc_html_e('Show/Hide Number of Products:', 'gm-ajax-product-filter-for-woocommerce'); ?></strong></p>
+        <label>
+            <input type="checkbox" name="wcapf_style_options[<?php echo esc_attr($attribute_name); ?>][show_product_count]" value="yes" 
+                <?php checked($form_styles[esc_attr($attribute_name)]['show_product_count'] ?? '', 'yes'); ?>>
+            <?php esc_html_e('Show number of products', 'gm-ajax-product-filter-for-woocommerce'); ?>
+        </label>
+    </div>
+</div>
+<!-- optional ends -->
+    </div>
+
+
+                </div>
+            <?php endforeach; ?>
         </div>
-    <script>
-        document.querySelector('.page-inputs .add-page').addEventListener('click', function() {
-            var newPage = document.createElement('div');
-            newPage.classList.add('page-item');
-            newPage.innerHTML = '<input type="text" name="wcapf_options[pages][]" value="" placeholder="Add new page" /> <button type="button" class="remove-page">Remove</button>';
-            document.querySelector('.page-list').appendChild(newPage);
+    <?php else : ?>
+        <p><?php esc_html_e('No attributes found. Please create attributes in WooCommerce first.', 'gm-ajax-product-filter-for-woocommerce'); ?></p>
+    <?php endif; ?>
+    <?php submit_button(); ?>
+</form>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const dropdown = document.getElementById('attribute-dropdown');
+    const firstAttribute = dropdown.value;
+
+    // Show first attribute's options on load
+    document.querySelector(`#options-${firstAttribute}`).style.display = 'block';
+
+    // Handle dropdown change
+    dropdown.addEventListener('change', function () {
+        const selectedAttribute = this.value;
+
+        // Hide all options
+        document.querySelectorAll('.style-options').forEach(function (el) {
+            el.style.display = 'none';
         });
 
-        document.querySelector('.page-list').addEventListener('click', function(e) {
-            if (e.target.classList.contains('remove-page')) {
-                e.target.closest('.page-item').remove();
+        // Show the selected attribute's options
+        if (selectedAttribute) {
+            const selectedOptions = document.getElementById(`options-${selectedAttribute}`);
+            if (selectedOptions) {
+                selectedOptions.style.display = 'block';
+            }
+        }
+    });
+    // Handle primary option change
+    document.querySelectorAll('.style-options .primary_options input[type="radio"][name^="wcapf_style_options"]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+            const selectedType = this.value;
+            const attributeName = this.name.match(/\[(.*?)\]/)[1];
+            const subOptionsContainer = document.querySelector(`#options-${attributeName} .dynamic-sub-options`);
+
+            // Remove 'active' class from all labels
+            document.querySelectorAll('.primary_options label').forEach(label => {
+                label.classList.remove('active');
+                const checkIcon = label.querySelector('.active');
+                if (checkIcon) {
+                    checkIcon.style.display = 'none'; // Hide check icon
+                }
+            });
+            // Add 'active' class to the selected label
+            const selectedLabel = radio.closest('label');
+            selectedLabel.classList.add('active');
+
+            const subOptions = <?php echo json_encode($sub_options); ?>;
+
+            const currentOptions = subOptions[selectedType] || {};
+            subOptionsContainer.innerHTML = '';
+
+            const fragment = document.createDocumentFragment();
+            for (const key in currentOptions) {
+                const label = document.createElement('label');
+                label.innerHTML = `
+                    <span class="active" style="display:none;"><i class="fa fa-check"></i></span>
+                    <input type="radio" class="optionselect" name="wcapf_style_options[${attributeName}][sub_option]" value="${key}">
+                    <img src="/wp-content/plugins/gm-ajax-product-filter-for-woocommerce/assets/images/${key}.png" alt="${currentOptions[key]}">
+                    <div class="title">${currentOptions[key]}</div>
+                `;
+                fragment.appendChild(label);
+            }
+            subOptionsContainer.appendChild(fragment);
+
+            // Re-attach event listeners to the new radio buttons
+            attachSubOptionListeners();
+
+           if(selectedType==="color" || selectedType==="image") {
+            document.querySelector(`.advanced-options.${attributeName}`).style.display = 'block';
+            document.querySelector(`.advanced-options.${attributeName} .color`).style.display = 'none';
+            document.querySelector(`.advanced-options.${attributeName} .image`).style.display = 'none';
+            document.querySelector(`.advanced-options.${attributeName} .${selectedType}`).style.display = 'block';
+
+           }else {
+            document.querySelectorAll('.advanced-options').forEach(advanceoptions =>{
+                advanceoptions.style.display = 'none';
+            })
+           }
+        });
+    });
+
+    // Function to attach listeners to sub-option radio buttons
+    function attachSubOptionListeners() {
+    const radioButtons = document.querySelectorAll('.optionselect');
+    
+    
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', function() {
+            // Remove 'active' class from all labels
+            document.querySelectorAll('.dynamic-sub-options label').forEach(label => {
+                label.classList.remove('active');
+                const checkIcon = label.querySelector('.active');
+                if (checkIcon) {
+                    checkIcon.style.display = 'none'; // Hide check icon
+                }
+            });
+
+            // Add 'active' class to the selected label
+            const selectedLabel = this.closest('label');
+            selectedLabel.classList.add('active');
+            const checkIcon = selectedLabel.querySelector('.active');
+            if (checkIcon) {
+                checkIcon.style.display = 'inline'; // Show check icon
+            }
+
+            // Managing single selection checkbox
+            const singleSelectionCheckbox = this.closest('.style-options').querySelector('.setting-item.single-selection input');
+            console.log(this.value);
+            if (this.value === 'select') {
+                singleSelectionCheckbox.checked = true;
+            } else {
+                singleSelectionCheckbox.checked = false; // Uncheck if other options are selected
             }
         });
-    </script>
+    });
+}
+
+// Call the function to attach listeners
+attachSubOptionListeners();
+
+});
+</script>
+
+                <?php
+            }
+            ?>
+        </div>
+    </div>
     <?php
 }
-// Render function for default filters
-function wcapf_default_filters_render() {
-    $options = get_option('wcapf_options');
-    $default_filters = isset($options['default_filters']) ? $options['default_filters'] : [];
-    $pages = isset($options['pages']) ? $options['pages'] : [];
+// init settings first
+include(plugin_dir_path(__FILE__) . 'settings-init.php');
+// include form_manage content
+include(plugin_dir_path(__FILE__) . 'form-manage.php');
+// color converter include
+include(plugin_dir_path(__FILE__) . 'color_name_to_hex.php');
+// before save image & color
+function save_wcapf_style_options($input) {
+    foreach ($input as $attribute => $data) {
+        // Handle color data
+        if (isset($data['colors'])) {
+            foreach ($data['colors'] as $term_slug => $value) {
+                $input[$attribute]['colors'][$term_slug] = sanitize_hex_color($value); // Sanitize color
+            }
+        }
 
-    echo '<table class="form-table">';
-    foreach ($pages as $page_name) {
-        $filters = isset($default_filters[$page_name]) ? $default_filters[$page_name] : [];
-        $filters_string = implode(',', $filters); // Convert array to comma-separated string for editing.
-
-        echo '<tr>';
-        echo '<th>' . esc_html($page_name) . '</th>';
-        echo '<td>';
-        echo '<input type="text" name="wcapf_options[default_filters][' . esc_attr($page_name) . ']" value="' . esc_attr($filters_string) . '" placeholder="' . esc_html__('Enter default filters, comma-separated', 'gm-ajax-product-filter-for-woocommerce') . '" />';
-        echo '</td>';
-        echo '</tr>';
-    }
-    echo '</table>';
-}
-function wcapf_options_sanitize($input) {
-    if (isset($input['default_filters'])) {
-        foreach ($input['default_filters'] as $page_name => $filters_value) {
-            // Ensure $filters_value is a string before calling explode
-            if (is_string($filters_value)) {
-                $input['default_filters'][$page_name] = array_filter(array_map('trim', explode(',', $filters_value)));
-            } elseif (is_array($filters_value)) {
-                // If already an array, clean up empty values and trim items
-                $input['default_filters'][$page_name] = array_filter(array_map('trim', $filters_value));
-            } else {
-                // Invalid type, fallback to an empty array
-                $input['default_filters'][$page_name] = [];
+        // Handle image data
+        if (isset($data['images'])) {
+            foreach ($data['images'] as $term_slug => $value) {
+                $input[$attribute]['images'][$term_slug] = esc_url_raw($value); // Sanitize URL
             }
         }
     }
     return $input;
 }
-add_filter('pre_update_option_wcapf_options', 'wcapf_options_sanitize');
+add_filter('pre_update_option_wcapf_style_options', 'save_wcapf_style_options');
+
+
+
+
 
 
 
