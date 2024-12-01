@@ -105,7 +105,9 @@ function wcapf_default_filters_render() {
     $options = get_option('wcapf_options');
     $default_filters = isset($options['default_filters']) ? $options['default_filters'] : [];
     $pages = isset($options['pages']) ? $options['pages'] : [];
-
+    echo "<pre>";
+    print_r($default_filters);
+    echo "</pre>";
     echo '<table class="form-table">';
     foreach ($pages as $page_name) {
         $filters = isset($default_filters[$page_name]) ? $default_filters[$page_name] : [];

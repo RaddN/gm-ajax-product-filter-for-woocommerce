@@ -1,6 +1,12 @@
 <?php
 function wcapf_product_filter_shortcode($atts) {
-    global $styleoptions,$product_count;
+    global $styleoptions,$product_count,$post,$options;
+    // Check if the post object is available
+    if (isset($post)) {
+        // Get the post slug
+        $slug = $post->post_name;
+    }
+    $default_filter =$options["default_filters"][$slug] ?? [] ;
     $downarrow = '<svg class="rotatable" xmlns="https://www.w3.org/2000/svg" viewBox="0 0 448 512" role="graphics-symbol" aria-hidden="false" aria-label=""><path d="M224 416c-8.188 0-16.38-3.125-22.62-9.375l-192-192c-12.5-12.5-12.5-32.75 0-45.25s32.75-12.5 45.25 0L224 338.8l169.4-169.4c12.5-12.5 32.75-12.5 45.25 0s12.5 32.75 0 45.25l-192 192C240.4 412.9 232.2 416 224 416z"></path></svg>';
     // Define default attributes and merge with user-defined attributes
     $atts = shortcode_atts(array(
@@ -16,7 +22,6 @@ function wcapf_product_filter_shortcode($atts) {
         'posts_per_page' => -1,
         'tax_query' => array('relation' => 'AND'),
     );
-
     // Add category filter if specified
     if (!empty($atts['category'])) {
         $categories = array_map('sanitize_text_field', explode(',', $atts['category']));
@@ -57,7 +62,6 @@ function wcapf_product_filter_shortcode($atts) {
     $products = new WP_Query($args);
     
     ob_start(); // Start output buffering
-
     if (!empty($atts['attribute'])|| !empty($atts['terms']) || !empty($atts['category']) || !empty($atts['tag'])) {
         echo "<script> rfilterindex = 1;</script>";
     }
@@ -75,7 +79,7 @@ function wcapf_product_filter_shortcode($atts) {
     echo '<div class="filter-group category" style="display: ' . (!empty($options['show_categories']) ? 'block' : 'none') . ';">';
     echo '<div class="title collapsable_'.$minimizable.'">Category '.($minimizable === "arrow" ? '<div class="collaps">' . $downarrow . '</div>' : '').'</div>';
     $categories = get_terms(array('taxonomy' => 'product_cat', 'hide_empty' => true));
-    $selected_categories = explode(',', $atts['category']);
+    $selected_categories = !empty($default_filter) ?  $default_filter : explode(',', $atts['category']);
     if ($sub_option==="select"||$sub_option==="select2"||$sub_option==="select2_classic") {
         echo '<select name="category[]" id="'.$sub_option.'" class="items '.$sub_option.' filter-select" '.($singlevaluecataSelect!=="yes" ? 'multiple="multiple"' : '').'>';
         echo '<option class="filter-checkbox" value=""> Any </option>';
@@ -116,7 +120,7 @@ function wcapf_product_filter_shortcode($atts) {
         if ($attributes) {
             foreach ($attributes as $attribute) {
                 $terms = get_terms(array('taxonomy' => 'pa_' . $attribute->attribute_name, 'hide_empty' => true));
-                $selected_terms = explode(',', $atts['terms']);
+                $selected_terms = !empty($default_filter) ?  $default_filter : explode(',', $atts['terms']);
                 $sub_optionattr = $styleoptions[$attribute->attribute_name]["sub_option"];
                 $minimizable = $styleoptions[$attribute->attribute_name]["minimize"]["type"];
                 $show_count = $styleoptions[$attribute->attribute_name]["show_product_count"];
@@ -130,7 +134,7 @@ function wcapf_product_filter_shortcode($atts) {
                     ($minimizable === "arrow" ? '<div class="collaps">' . $downarrow . '</div>' : '') . 
                     '</div>';
                     if ($sub_optionattr==="select"||$sub_optionattr==="select2"||$sub_optionattr==="select2_classic") {
-                        echo '<select name="category[]" id="'.$sub_optionattr.'" class="items '.$sub_optionattr.' filter-select" '.($singlevalueattrSelect!=="yes" ? 'multiple="multiple"' : '').'>';
+                        echo '<select name="attribute['.esc_attr($attribute->attribute_name).'][]" id="'.$sub_optionattr.'" class="items '.$sub_optionattr.' filter-select" '.($singlevalueattrSelect!=="yes" ? 'multiple="multiple"' : '').'>';
                         echo '<option class="filter-checkbox" value=""> Any </option>';
                     }else{
                         echo '<div class="items '.$sub_optionattr.'">';
@@ -138,7 +142,7 @@ function wcapf_product_filter_shortcode($atts) {
                     foreach ($terms as $term) {
                         $checked = in_array($term->slug, $selected_terms) ? ' checked' : '';
                         $count = $show_count === "yes" ? $product_count["attributes"]['pa_' . esc_attr($attribute->attribute_name)][esc_attr($term->slug)]: 0;
-                        echo render_filter_option($sub_optionattr, esc_html($term->name) , esc_attr($term->slug), $checked, $styleoptions , "attribute[' . esc_attr($attribute->attribute_name) . ']",$attribute->attribute_name,$singlevalueattrSelect,$count);
+                        echo render_filter_option($sub_optionattr, esc_html($term->name) , esc_attr($term->slug), $checked, $styleoptions , "attribute[$attribute->attribute_name]",$attribute->attribute_name,$singlevalueattrSelect,$count);
                     }
                     if ($sub_optionattr==="select"||$sub_optionattr==="select2"||$sub_optionattr==="select2_classic") {
                         echo '</select>';
@@ -151,14 +155,14 @@ function wcapf_product_filter_shortcode($atts) {
         echo '</div>';
 // display tags
         $tags = get_terms(array('taxonomy' => 'product_tag', 'hide_empty' => true));
-        $selected_tags = explode(',', $atts['tag']);
+        $selected_tags = !empty($default_filter) ?  $default_filter : explode(',', $atts['tag']);
         $sub_option = $styleoptions["tag"]["sub_option"]; // Fetch the sub_option value
         $minimizable = $styleoptions["tag"]["minimize"]["type"];
         $show_count = $styleoptions["tag"]["show_product_count"];
         $singlevalueSelect = $styleoptions["tag"]["single_selection"];
         echo '<div class="filter-group tags" style="display: ' . (!empty($options['show_tags']) ? 'block' : 'none') . ';"><div class="title collapsable_'.$minimizable.'">Tags '.($minimizable === "arrow" ? '<div class="collaps">' . $downarrow . '</div>' : '').'</div>';
         if ($sub_option==="select"||$sub_option==="select2"||$sub_option==="select2_classic") {
-            echo '<select name="category[]" id="'.$sub_option.'" class="items '.$sub_option.' filter-select" '.($singlevalueSelect!=="yes" ? 'multiple="multiple"' : '').'>';
+            echo '<select name="tag[]" id="'.$sub_option.'" class="items '.$sub_option.' filter-select" '.($singlevalueSelect!=="yes" ? 'multiple="multiple"' : '').'>';
             echo '<option class="filter-checkbox" value=""> Any </option>';
         }else{
             echo '<div class="items '.$sub_option.'">';

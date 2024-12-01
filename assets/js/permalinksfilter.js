@@ -1,13 +1,11 @@
 jQuery(document).ready(function($) {
     let styleoptions = [];
-    let product_count = [];
     if (typeof wcapf_data !== 'undefined' && wcapf_data.styleoptions) {
         styleoptions = wcapf_data.styleoptions;
     }
     if (typeof wcapf_data !== 'undefined' && wcapf_data.product_count) {
         product_count = wcapf_data.product_count;
     }
- 
     var rfilterbuttonsId = $('.rfilterbuttons').attr('id');
     // Initialize filters and handle changes
     $('#product-filter, .rfilterbuttons').on('change', handleFilterChange);
@@ -22,7 +20,6 @@ jQuery(document).ready(function($) {
     if (typeof wcapf_data !== 'undefined' && wcapf_data.slug) {
         
         const slugArray = wcapf_data.slug.split('/').filter(value => value !== '');
-        console.log(slugArray);
         if (slugArray.length > 0) {
             const filtersString = slugArray.join(',');
             applyFiltersFromUrl(filtersString);
@@ -30,7 +27,6 @@ jQuery(document).ready(function($) {
         } 
     }else if(gmfilter){
         const slugtoArray = gmfilter.split('/').filter(value => value !== '');
-        console.log(slugtoArray);
         if (slugtoArray.length > 0) {
             const filtersString = slugtoArray.join(',');
             applyFiltersFromUrl(filtersString);
@@ -50,8 +46,7 @@ jQuery(document).ready(function($) {
 
     function anyFilterSelected() {
         return $('#product-filter input:checked').length > 0 ||
-               $('.rfilterbuttons input:checked').length > 0 ||
-               $('#product-filter select option:selected').length > 0; 
+               $('.rfilterbuttons input:checked').length > 0;
     }
 
     function fetchFilteredProducts(page = 1) {
@@ -98,7 +93,6 @@ jQuery(document).ready(function($) {
         $('#loader').hide();
         console.error('AJAX Error:', status, error);
     }
-
     function renderFilterOption(
         subOption,
         title,
@@ -112,13 +106,14 @@ jQuery(document).ready(function($) {
     ) {
         let output = '';
         const inputType = singleValueSelect === 'yes' ? 'radio' : 'checkbox';
+        // console.log(attribute + checked);
     
         switch (subOption) {
             case 'checkbox':
             case 'radio_check':
             case 'radio':
                 output += `<label>
-                    <input type="${inputType}" class="filter-${subOption}" name="${name}" value="${value}"${checked}>
+                    <input type="${inputType}" class="filter-${subOption}" name="${name}" value="${value}" ${checked}>
                     ${title}${count ? ` (${count})` : ''}
                 </label>`;
                 break;
@@ -126,7 +121,7 @@ jQuery(document).ready(function($) {
             case 'square_check':
             case 'square':
                 output += `<label class="square-option">
-                    <input type="${inputType}" class="filter-${subOption}" name="${name}" value="${value}"${checked}>
+                    <input type="${inputType}" class="filter-${subOption}" name="${name}" value="${value}" ${checked}>
                     <span>${title}${count ? ` (${count})` : ''}</span>
                 </label>`;
                 break;
@@ -184,24 +179,26 @@ jQuery(document).ready(function($) {
         let styleSettings = styleoptions;
         updateFilterGroup('.filter-group.category .items', filters.categories, 'category[]',subOptioncata, singlevaluecataSelect,attribute="category",show_count, styleSettings);
         // updateFilterGroup('.filter-group.category .items', filters.categories, 'category[]');
-        updateFilterGroup('.filter-group.tags .items', filters.tags, 'tags[]',subOptiontag, singlevaluetagSelect,attribute="tag",show_counttag, styleSettings);
+        updateFilterGroup('.filter-group.tags .items', filters.tags, 'tag[]',subOptiontag, singlevaluetagSelect,attribute="tag",show_counttag, styleSettings);
         // updateFilterGroup('.filter-group.tags .items', filters.tags, 'tags[]');
         updateAttributes(filters.attributes);
         syncCheckboxSelections();
     }
     
-    function updateFilterGroup(selector, items, name, subOption, singleValueSelect = 'no', attribute = '', show_count, styleOptions) {
-        
-        
+    function updateFilterGroup(selector, items, name, subOption, singleValueSelect = 'no', attribute = '', show_count, styleOptions) {       
         // Create filter options based on fetched counts
         const filterOptions = items.map(item => {
-            const checked = isChecked(name, item.slug) ? ' checked="checked"' : '';
+            const checked = isChecked(name, item.slug) ? 'checked' : '';
             let TotalNumProduct = 0; 
             // Fetch product counts if necessary
             if (show_count === "yes" && attribute==="category") {
                 TotalNumProduct = product_count["categories"][item.slug];
             }else if(show_count === "yes" && attribute==="tag"){
                 TotalNumProduct = product_count["tags"][item.slug];
+            }
+            console.log(item.slug + name +  checked);
+            if (subOption === "select" || subOption === "select2" || subOption === "select2_classic") {
+                filterOptions.push('<option class="filter-checkbox" value=""> Any </option>');
             }
             return renderFilterOption(
                 subOption,
@@ -226,50 +223,18 @@ jQuery(document).ready(function($) {
     //         return `<label class="${checked}"><input type="checkbox" name="${name}" value="${item.slug}" ${checked}> ${item.name}</label>`;
     //     }).join(''));
     // }
-
-    // function updateAttributes(attributes) {
-    //     sortValues(attributes);
-    //     $('.filter-group.attributes').html(Object.keys(attributes).map(name => {
-    //         let subOptionattr = styleoptions[name]["sub_option"];
-    //         const termsHtml = attributes[name].map(term => {
-
-    //     let show_count = styleoptions[name]["show_product_count"];
-    //     let singleValueSelect = styleoptions[name]["single_selection"];
-    //     let styleSettings = styleoptions;
-    //             const checked = isChecked(`attribute[${name}][]`, term.slug) ? 'checked' : '';
-    //             // return `<label class="${checked}"><input type="checkbox" name="attribute[${name}][]" value="${term.slug}" ${checked}> ${term.name}</label>`;
-    //             return renderFilterOption(
-    //                 subOptionattr,
-    //                 term.name,  // title
-    //                 term.slug,  // value
-    //                 checked,
-    //                 name,
-    //                 name,
-    //                 singleValueSelect,
-    //                 0,
-    //                 styleSettings
-    //             );
-    //         }).join('');
-    //        let title = name.replace(/-/g, ' ');
-    //        title = title.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-    //        if(subOptionattr==="select"||subOptionattr==="select2"||subOptionattr==="select2_classic"){
-    //         return `<div id="${name}"><div class="title">${title}</div><select class="items ${subOptionattr}">${termsHtml}</select></div>`;
-    //        }
-    //         return `<div id="${name}"><div class="title">${title}</div><div class="items ${subOptionattr}"><option class="filter-checkbox" value=""> Any </option> ${termsHtml}</div></div>`;
-    //     }).join(''));
-    // }
-    // function updateAttributes(attributes) {
-    //     sortValues(attributes);
-    //     const filterHtml = Object.keys(attributes).map(name => {
-    //         const subOptionattr = styleoptions[name]["sub_option"];
-    //         const termsHtml = generateTermsHtml(attributes[name], name, subOptionattr);
-    //         const title = formatAttributeTitle(name);
+  function updateAttributes(attributes) {
+        sortValues(attributes);
+        const filterHtml = Object.keys(attributes).map(name => {
+            const subOptionattr = styleoptions[name]["sub_option"];
+            const termsHtml = generateTermsHtml(attributes[name], name, subOptionattr);
+            const title = formatAttributeTitle(name);
     
-    //         return generateAttributeHtml(name, title, termsHtml, subOptionattr);
-    //     }).join('');
+            return generateAttributeHtml(name, title, termsHtml, subOptionattr);
+        }).join('');
     
-    //     $('.filter-group.attributes').html(filterHtml);
-    // }
+        $('.filter-group.attributes').html(filterHtml);
+    }
     
     function generateTermsHtml(terms, attributeName, subOptionattr) {
         return terms.map(term => {
@@ -287,7 +252,7 @@ jQuery(document).ready(function($) {
                 term.name,  // title
                 term.slug,  // value
                 checked,
-                attributeName,
+               `attribute[${attributeName}][]`,
                 attributeName,
                 singleValueSelect,
                 TotalNumProduct, // Assuming count is 0 as you have not shown the count logic
@@ -305,7 +270,7 @@ jQuery(document).ready(function($) {
         if (subOptionattr === "select" || subOptionattr === "select2" || subOptionattr === "select2_classic") {
             return `<div id="${name}">
                         <div class="title">${title}</div>
-                        <select class="items ${subOptionattr}"><option class="filter-checkbox" value=""> Any </option>${termsHtml}</select>
+                        <select name="attribute[${name}][]" id="${subOptionattr}" class="items ${subOptionattr} filter-select"><option class="filter-checkbox" value=""> Any </option>${termsHtml}</select>
                     </div>`;
         }
         return `<div id="${name}">
@@ -351,18 +316,78 @@ jQuery(document).ready(function($) {
     function isChecked(name, value) {
         return $(`input[name="${name}"][value="${value}"]`).is(':checked');
     }
+    function isSelected(selectName, optionValue) {
+        return $(`select[name="${selectName}"] option[value="${optionValue}"]`).is(':selected');
+    }
+    
+    // function updateAttributes(attributes) {
+    //     sortValues(attributes);
+    //     $('.filter-group.attributes').html(Object.keys(attributes).map(name => {
+    //         const termsHtml = attributes[name].map(term => {
+    //             const checked = isChecked(`attribute[${name}][]`, term.slug) ? 'checked' : '';
+    //             return `<label class="${checked}"><input type="checkbox" name="attribute[${name}][]" value="${term.slug}" ${checked}> ${term.name}</label>`;
+    //         }).join('');
+    //        let title = name.replace(/-/g, ' ');
+    //        title = title.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    //         return `<div id="${name}"><div class="title">${title}</div><div class="items">${termsHtml}</div></div>`;
+    //     }).join(''));
+    // }
+
+        // Function to sort values
+        function sortValues(data) {
+            const sortedData = {};
+    
+            $.each(data, function(key, values) {
+                // Sort each array based on the name
+                sortedData[key] = values.sort(function(a, b) {
+                    return customSort(a.name, b.name);
+                });
+            });
+    
+            return sortedData;
+        }
+    
+        // Custom sorting function
+        function customSort(a, b) {
+            // Check if both are dates
+            const dateA = Date.parse(a);
+            const dateB = Date.parse(b);
+            if (!isNaN(dateA) && !isNaN(dateB)) {
+                return dateA - dateB; // Sort as dates
+            }
+    
+            // Check if both are numbers
+            if (!isNaN(a) && !isNaN(b)) {
+                return a - b; // Sort as numbers
+            }
+    
+            // Otherwise, sort as strings
+            return a.localeCompare(b);
+        }
 
     function syncCheckboxSelections() {
         const $list = $('.rfilterbuttons ul').empty();
-        $('#' + rfilterbuttonsId + ' input').each(function() {
+        $('#product-filter #' + rfilterbuttonsId + ' input').each(function() {
             const value = $(this).val();
             const checked = $(this).is(':checked');
-            $list.append(createCheckboxListItem(value, checked));
+            const type = this.type;
+            $list.append(createCheckboxListItem(value, checked, type));
+        });
+        $('#product-filter #' + rfilterbuttonsId + ' option').each(function(index) {
+            // Skip the first option (index 0)
+            if (index === 0) {
+                return; // Skip this iteration
+            }
+            const value = $(this).val();
+            const checked = $(this).is(':checked');
+            const type = this.type;
+        
+            $list.append(createCheckboxListItem(value, checked, type));
         });
         attachCheckboxClickEvents();
         attachMainFilterChangeEvents();
     }
-    function createCheckboxListItem(value, checked) {
+    function createCheckboxListItem(value, checked, type) {
         const formattedLabel = value.split('-').map(word => 
             word.charAt(0).toUpperCase() + word.slice(1)
         ).join(' ');
@@ -382,7 +407,8 @@ jQuery(document).ready(function($) {
     }
 
     function syncToMainFilter() {
-        $(`#${rfilterbuttonsId} input[value="${$(this).val()}"]`).prop('checked', $(this).is(':checked'));
+        $(`#product-filter #${rfilterbuttonsId} input[value="${$(this).val()}"]`).prop('checked', $(this).is(':checked'));
+        $(`#product-filter #${rfilterbuttonsId} select option[value="${$(this).val()}"]`).prop('selected', $(this).is(':checked'));
     }
 
     function attachCheckboxClickEvents() {
@@ -399,20 +425,28 @@ jQuery(document).ready(function($) {
             relatedCheckbox.prop('checked', $(this).is(':checked')).closest('li').toggleClass('checked', $(this).is(':checked'));
         });
     }
-    function applyFiltersFromUrl(filtersString) {
-        filtersString.split(',').forEach(value => {
-            // Check the corresponding checkbox
-            if(`input[value="${value}"]`){
-                $(`input[value="${value}"]`).prop('checked', true);
-                console.log(value);
-            }else{
-            // Select the corresponding option in the dropdown
-            $(`select option[value="${value}"]`).prop('selected', true);
-            }
 
-            
+    function applyFiltersFromUrl(filtersString) {
+        if (!filtersString) {
+            console.log("No filters provided.");
+            return; // Early return if the string is empty
+        }
+    
+        const filterValues = filtersString.split(',');
+    
+        filterValues.forEach(value => {
+                // Check the input checkbox
+                if ($(`input[value="${value}"]`).length) {
+                    $(`input[value="${value}"]`).attr('checked', true);
+                } else if ($(`select option[value="${value}"]`).length) {
+                    // If no input found, check dropdown option
+                    $(`select option[value="${value}"]`).prop('selected', true);
+                } else {
+                    console.log(`Filter "${value}" not found in inputs or dropdown.`);
+                }
         });
-        fetchFilteredProducts();
+    
+        fetchFilteredProducts(); // Fetch products after applying filters
     }
     function updateUrlFilters() {
         const selectedFilters = new Set();
@@ -426,7 +460,7 @@ jQuery(document).ready(function($) {
                 selectedFilters.add($(this).val());
             });
         });
-        let filtersArray = Array.from(selectedFilters);
+        let filtersArray = Array.from(selectedFilters).filter(Boolean);;
         if (typeof wcapf_data !== 'undefined' && wcapf_data.options) {
             const options = wcapf_data.options;
             if (options.default_filters) {
@@ -441,10 +475,7 @@ jQuery(document).ready(function($) {
         const newUrl = rfiltercurrentUrl?`${rfiltercurrentUrl}${filtersArray.join('/')}`:`${filtersArray.join('/')}`;
         history.replaceState(null, '', newUrl);
     }
-});
-
-
-jQuery(document).ready(function($) {
+    // for responsive
     function isMobile() {
         return $(window).width() <= 768;
     }

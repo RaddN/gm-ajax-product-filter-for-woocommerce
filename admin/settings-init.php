@@ -35,17 +35,18 @@ function wcapf_settings_init() {
 
     // Pages List Field
         // Add Page Management Section
-        add_settings_section('wcapf_page_section_before', null, function() {
-            global $options;
-            echo '<div class="page_manage" style="' . ($options['use_url_filter'] === "permalinks" ? 'display:block;' : 'display:none;') . '">';
-        }, 'wcapf-admin');
-        add_settings_section('wcapf_page_section', __('Pages Manage', 'gm-ajax-product-filter-for-woocommerce'), function() {
-            echo '<p>' . esc_html__('Add the pages below where you have added the shortcode.', 'gm-ajax-product-filter-for-woocommerce') . '</p>';
-        }, 'wcapf-admin');
-    add_settings_field('pages', __('Pages List', 'gm-ajax-product-filter-for-woocommerce'), 'wcapf_pages_render', 'wcapf-admin', 'wcapf_page_section');
-    add_settings_section('wcapf_page_section_after', null, function() {
-        echo '</div>';
-    }, 'wcapf-admin');
+    //     add_settings_section('wcapf_page_section_before', null, function() {
+    //         global $options;
+    //         echo '<div class="page_manage" style="' . ($options['use_url_filter'] === "permalinks" ? 'display:block;' : 'display:none;') . '">';
+    //     }, 'wcapf-admin');
+    //     add_settings_section('wcapf_page_section', __('Pages Manage', 'gm-ajax-product-filter-for-woocommerce'), function() {
+    //         echo '<p>' . esc_html__('Add the pages below where you have added the shortcode.', 'gm-ajax-product-filter-for-woocommerce') . '</p>';
+    //     }, 'wcapf-admin');
+    // add_settings_field('pages', __('Pages List', 'gm-ajax-product-filter-for-woocommerce'), 'wcapf_pages_render', 'wcapf-admin', 'wcapf_page_section');
+    // add_settings_section('wcapf_page_section_after', null, function() {
+    //     echo '</div>';
+    // }, 'wcapf-admin');
+    
     // Default Filter List Field
     add_settings_section('wcapf_default_filters_section', __('Default Filters for Pages', 'gm-ajax-product-filter-for-woocommerce'), function() {
         echo '<p>' . esc_html__('Define default filters for each listed page below.', 'gm-ajax-product-filter-for-woocommerce') . '</p>';
