@@ -1,6 +1,6 @@
 # GM AJAX Product Filter for WooCommerce
 
-Contributors: Plugincy, raddp
+Contributors: Plugincy
 Plugin URI: https://plugincy.com/
 Tags: woocommerce, product filter, permalinks filter
 Requires at least: 5.0
