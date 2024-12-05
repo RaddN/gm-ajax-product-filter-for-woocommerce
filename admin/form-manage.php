@@ -22,6 +22,8 @@ function wcapf_use_custom_template_render() {
     wcapf_render_checkbox('use_custom_template');
 }
 
+function wcapf_pages_filter_auto_render() { wcapf_render_checkbox('pages_filter_auto'); }
+
 function wcapf_custom_template_code_render() {
     $options = get_option('wcapf_options');
     echo '    
@@ -97,6 +99,30 @@ function wcapf_pages_render() {
                 e.target.closest('.page-item').remove();
             }
         });
+
+        document.addEventListener("DOMContentLoaded", function () {
+    // Get the checkbox element
+    const pagesFilterAutoCheckbox = document.querySelector('input[name="wcapf_options[pages_filter_auto]"]');
+    // Get all table rows
+    const rows = document.querySelectorAll(".page_manage .form-table > tbody > tr");
+
+    // Function to toggle row visibility
+    function toggleRows() {
+        rows.forEach((row, index) => {
+            if (index === 0 || !pagesFilterAutoCheckbox.checked) {
+                row.style.display = "table-row";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    }
+
+    // Attach change event to the checkbox
+    pagesFilterAutoCheckbox.addEventListener("change", toggleRows);
+
+    // Initial toggle based on the checkbox state
+    toggleRows();
+});
     </script>
     <?php
 }
@@ -105,9 +131,6 @@ function wcapf_default_filters_render() {
     $options = get_option('wcapf_options');
     $default_filters = isset($options['default_filters']) ? $options['default_filters'] : [];
     $pages = isset($options['pages']) ? $options['pages'] : [];
-    echo "<pre>";
-    print_r($default_filters);
-    echo "</pre>";
     echo '<table class="form-table">';
     foreach ($pages as $page_name) {
         $filters = isset($default_filters[$page_name]) ? $default_filters[$page_name] : [];

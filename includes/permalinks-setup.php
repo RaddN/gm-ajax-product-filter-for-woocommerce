@@ -12,7 +12,7 @@ function myplugin_register_template() {
             $slug = substr($request, strlen($page) + 1);
             set_transient('gmfilter_slug', $slug, 30);
             // Redirect to the main page
-            wp_redirect(home_url("/$page?gmfilter=$slug"), 301);
+            wp_redirect(home_url("/$page?filters=$slug"), 301);
             exit;
         }
     }

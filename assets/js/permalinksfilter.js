@@ -1,7 +1,11 @@
 jQuery(document).ready(function($) {
     let styleoptions = [];
+    let advancesettings;
     if (typeof wcapf_data !== 'undefined' && wcapf_data.styleoptions) {
         styleoptions = wcapf_data.styleoptions;
+    }
+    if (typeof wcapf_data !== 'undefined' && wcapf_data.advance_settings) {
+        advancesettings = wcapf_data.advance_settings;
     }
     if (typeof wcapf_data !== 'undefined' && wcapf_data.product_count) {
         product_count = wcapf_data.product_count;
@@ -15,7 +19,7 @@ jQuery(document).ready(function($) {
     var path = window.location.pathname;
     rfiltercurrentUrl = rfiltercurrentUrl.split('?')[0];
     const urlParams = new URLSearchParams(window.location.search);
-    const gmfilter = urlParams.get('gmfilter');
+    const gmfilter = urlParams.get('filters');
     
     if (typeof wcapf_data !== 'undefined' && wcapf_data.slug) {
         
@@ -48,14 +52,15 @@ jQuery(document).ready(function($) {
         return $('#product-filter input:checked').length > 0 ||
                $('.rfilterbuttons input:checked').length > 0;
     }
-
+    let product_selector = advancesettings ? advancesettings["product_selector"] ?? 'ul.products':'ul.products';
+    let pagination_selector = advancesettings ? advancesettings["pagination_selector"] ?? 'ul.page-numbers' : 'ul.page-numbers';
     function fetchFilteredProducts(page = 1) {
         $.post(wcapf_ajax.ajax_url, gatherFormData() +  `&paged=${page}&action=wcapf_filter_products`, function(response) {
             $('#roverlay').hide();
             $('#loader').hide();
             if (response.success) {
-                $('ul.products').html(response.data.products);
-                $('ul.page-numbers').html(response.data.pagination);
+                $(product_selector).html(response.data.products);
+                $(pagination_selector).html(response.data.pagination);
                 if (typeof wcapf_data !== 'undefined' && wcapf_data.options) {
                     const options = wcapf_data.options;
                     if (!options.update_filter_options && rfilterindex<1) {
@@ -106,7 +111,6 @@ jQuery(document).ready(function($) {
     ) {
         let output = '';
         const inputType = singleValueSelect === 'yes' ? 'radio' : 'checkbox';
-        // console.log(attribute + checked);
     
         switch (subOption) {
             case 'checkbox':
@@ -196,7 +200,6 @@ jQuery(document).ready(function($) {
             }else if(show_count === "yes" && attribute==="tag"){
                 TotalNumProduct = product_count["tags"][item.slug];
             }
-            console.log(item.slug + name +  checked);
             if (subOption === "select" || subOption === "select2" || subOption === "select2_classic") {
                 filterOptions.push('<option class="filter-checkbox" value=""> Any </option>');
             }
@@ -428,7 +431,6 @@ jQuery(document).ready(function($) {
 
     function applyFiltersFromUrl(filtersString) {
         if (!filtersString) {
-            console.log("No filters provided.");
             return; // Early return if the string is empty
         }
     
@@ -464,7 +466,9 @@ jQuery(document).ready(function($) {
         if (typeof wcapf_data !== 'undefined' && wcapf_data.options) {
             const options = wcapf_data.options;
             if (options.default_filters) {
-                var currentPage = path.replace(/^\/|\/$/g, '');
+                console.log(path);
+                var currentPage = path==="/"? path : path.replace(/^\/|\/$/g, '');
+                console.log("your current page is:"+currentPage);
                 var defaultFilters = options.default_filters[currentPage];
                 // Remove values from filtersArray that are present in defaultFilters
                 filtersArray = filtersArray.filter(function (value) {
