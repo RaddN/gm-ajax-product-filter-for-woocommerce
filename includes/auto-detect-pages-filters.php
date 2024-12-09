@@ -39,8 +39,7 @@ function update_wcapf_options_with_page_slugs() {
 add_action('admin_init', 'update_wcapf_options_with_page_slugs');
 
 
-// count product & store
-include_once plugin_dir_path(__FILE__) . 'includes/count_product.php';
+
 
 
 // Step 1: Find pages containing a specific shortcode

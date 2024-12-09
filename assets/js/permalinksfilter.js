@@ -10,6 +10,7 @@ jQuery(document).ready(function($) {
     if (typeof wcapf_data !== 'undefined' && wcapf_data.product_count) {
         product_count = wcapf_data.product_count;
     }
+    let use_anchor = advancesettings["use_anchor"];
     var rfilterbuttonsId = $('.rfilterbuttons').attr('id');
     // Initialize filters and handle changes
     $('#product-filter, .rfilterbuttons').on('change', handleFilterChange);
@@ -90,7 +91,17 @@ jQuery(document).ready(function($) {
     // Call this function after updating the product listings
     attachPaginationEvents();
     function gatherFormData() {
-        return $('#product-filter').serialize();
+        const currentPageSlug = path === "/" ? path : path.replace(/^\/|\/$/g, '');
+        
+        const formData = $('#product-filter').serialize();
+        const minPrice = $('#min-price').val();
+        const maxPrice = $('#max-price').val();
+        // Append price filters if values exist
+        let priceParams = '';
+        if (minPrice) priceParams += `&min_price=${encodeURIComponent(minPrice)}`;
+        if (maxPrice) priceParams += `&max_price=${encodeURIComponent(maxPrice)}`;
+        
+        return formData + priceParams + `&current-page=${encodeURIComponent(currentPageSlug)}`;
     }
 
     function handleAjaxError(xhr, status, error) {
@@ -110,6 +121,9 @@ jQuery(document).ready(function($) {
         styleOptions
     ) {
         let output = '';
+        if (use_anchor==="on") {
+            output+=`<a href="${value}">`;
+        }
         const inputType = singleValueSelect === 'yes' ? 'radio' : 'checkbox';
     
         switch (subOption) {
@@ -170,16 +184,19 @@ jQuery(document).ready(function($) {
                 </label>`;
                 break;
         }
+        if (use_anchor==="on") {
+            output+=`</a>`;
+        }
     
         return output;
     }
     function updateFilterOptions(filters) {
-        let subOptioncata = styleoptions["category"]["sub_option"];
-        let subOptiontag = styleoptions["tag"]["sub_option"];
-        let show_count = styleoptions["category"]["show_product_count"];
-        let show_counttag = styleoptions["tag"]["show_product_count"];
-        let singlevaluecataSelect = styleoptions["category"]["single_selection"];
-        let singlevaluetagSelect = styleoptions["tag"]["single_selection"];
+        let subOptioncata = styleoptions["category"] ? styleoptions["category"]["sub_option"]??"":"";
+        let subOptiontag = styleoptions["tag"]? styleoptions["tag"]["sub_option"]??"":"";
+        let show_count = styleoptions["category"] ? styleoptions["category"]["show_product_count"]:"";
+        let show_counttag = styleoptions["tag"]? styleoptions["tag"]["show_product_count"]:"";
+        let singlevaluecataSelect = styleoptions["category"]?styleoptions["category"]["single_selection"]:"";
+        let singlevaluetagSelect = styleoptions["tag"]?styleoptions["tag"]["single_selection"]:"";
         let styleSettings = styleoptions;
         updateFilterGroup('.filter-group.category .items', filters.categories, 'category[]',subOptioncata, singlevaluecataSelect,attribute="category",show_count, styleSettings);
         // updateFilterGroup('.filter-group.category .items', filters.categories, 'category[]');
@@ -229,7 +246,7 @@ jQuery(document).ready(function($) {
   function updateAttributes(attributes) {
         sortValues(attributes);
         const filterHtml = Object.keys(attributes).map(name => {
-            const subOptionattr = styleoptions[name]["sub_option"];
+            const subOptionattr =styleoptions[name]? styleoptions[name]["sub_option"]??"":"";
             const termsHtml = generateTermsHtml(attributes[name], name, subOptionattr);
             const title = formatAttributeTitle(name);
     
@@ -242,8 +259,8 @@ jQuery(document).ready(function($) {
     function generateTermsHtml(terms, attributeName, subOptionattr) {
         return terms.map(term => {
             const checked = isChecked(`attribute[${attributeName}][]`, term.slug) ? 'checked' : '';
-            const singleValueSelect = styleoptions[attributeName]["single_selection"];
-            let show_count = styleoptions[attributeName]["show_product_count"];
+            const singleValueSelect = styleoptions[attributeName]?styleoptions[attributeName]["single_selection"]:"";
+            let show_count = styleoptions[attributeName]? styleoptions[attributeName]["show_product_count"]:"";
             const styleSettings = styleoptions;
             let TotalNumProduct = 0; 
             if (show_count === "yes") {
@@ -335,38 +352,6 @@ jQuery(document).ready(function($) {
     //         return `<div id="${name}"><div class="title">${title}</div><div class="items">${termsHtml}</div></div>`;
     //     }).join(''));
     // }
-
-        // Function to sort values
-        function sortValues(data) {
-            const sortedData = {};
-    
-            $.each(data, function(key, values) {
-                // Sort each array based on the name
-                sortedData[key] = values.sort(function(a, b) {
-                    return customSort(a.name, b.name);
-                });
-            });
-    
-            return sortedData;
-        }
-    
-        // Custom sorting function
-        function customSort(a, b) {
-            // Check if both are dates
-            const dateA = Date.parse(a);
-            const dateB = Date.parse(b);
-            if (!isNaN(dateA) && !isNaN(dateB)) {
-                return dateA - dateB; // Sort as dates
-            }
-    
-            // Check if both are numbers
-            if (!isNaN(a) && !isNaN(b)) {
-                return a - b; // Sort as numbers
-            }
-    
-            // Otherwise, sort as strings
-            return a.localeCompare(b);
-        }
 
     function syncCheckboxSelections() {
         const $list = $('.rfilterbuttons ul').empty();
@@ -466,9 +451,7 @@ jQuery(document).ready(function($) {
         if (typeof wcapf_data !== 'undefined' && wcapf_data.options) {
             const options = wcapf_data.options;
             if (options.default_filters) {
-                console.log(path);
                 var currentPage = path==="/"? path : path.replace(/^\/|\/$/g, '');
-                console.log("your current page is:"+currentPage);
                 var defaultFilters = options.default_filters[currentPage];
                 // Remove values from filtersArray that are present in defaultFilters
                 filtersArray = filtersArray.filter(function (value) {

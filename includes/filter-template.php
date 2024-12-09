@@ -1,6 +1,7 @@
 <?php
 function wcapf_product_filter_shortcode($atts) {
-    global $styleoptions,$product_count,$post,$options;
+    global $styleoptions,$product_count,$post,$options, $advance_settings;
+    $use_anchor = $advance_settings["use_anchor"];
     // Check if the post object is available
     if (isset($post)) {
         // Get the post slug
@@ -68,23 +69,45 @@ function wcapf_product_filter_shortcode($atts) {
     ?>
 
     <form id="product-filter" method="POST">
-    <?php wp_nonce_field('gm-product-filter-action', 'gm-product-filter-nonce'); ?>
+    <?php wp_nonce_field('gm-product-filter-action', 'gm-product-filter-nonce'); 
+    $options = get_option('wcapf_options');
+    $sub_option = $styleoptions["price"]["sub_option"]??""; // Fetch the sub_option value
+    $minimizable_price = $styleoptions["price"]["minimize"]["type"]??"";
+    $sub_option_rating = $styleoptions["rating"]["sub_option"]??""; // Fetch the sub_option value
+    $minimizable_rating = $styleoptions["rating"]["minimize"]["type"]??"";
+    ?>
+    <!-- display rating -->
+     <!-- Filter by Rating -->
+<?php echo '<div id="rating" class="filter-group rating" style="display: ' . (!empty($options['show_rating']) ? 'block' : 'none') . ';">'; ?>
+ <?php echo '<div class="title collapsable_' . esc_attr($minimizable_rating) . '">Rating ' . ($minimizable_rating === "arrow" ? '<div class="collaps">' . $downarrow . '</div>' : '') .'</div>';?>
+    <div class="items rating <?php echo $sub_option_rating;?>">
+        <?php echo  render_filter_option($sub_option_rating, "", "", "", $styleoptions, "", "","",""); ?>
+    </div>
+</div>
+    <!-- display price range -->
+
+   <?php echo '<div id="price-range" class="filter-group price-range" style="display: ' . (!empty($options['show_price_range']) ? 'block' : 'none') . ';">'; ?>
+ <?php echo '<div class="title collapsable_' . esc_attr($minimizable_price) . '">Price Range ' . ($minimizable_price === "arrow" ? '<div class="collaps">' . $downarrow . '</div>' : '') .'</div>';?>
+    <div class="items">
+        <?php echo  render_filter_option($sub_option, "", "", "", $styleoptions, "", "","",""); ?>
+    </div>
+</div>
 <?php
     $options = get_option('wcapf_options');
-    $sub_option = $styleoptions["category"]["sub_option"]; // Fetch the sub_option value
-    $minimizable = $styleoptions["category"]["minimize"]["type"];
-    $show_count = $styleoptions["category"]["show_product_count"];
-    $singlevaluecataSelect = $styleoptions["category"]["single_selection"];
+    $sub_option = $styleoptions["category"]["sub_option"]??""; // Fetch the sub_option value
+    $minimizable = $styleoptions["category"]["minimize"]["type"]??"";
+    $show_count = $styleoptions["category"]["show_product_count"]??"";
+    $singlevaluecataSelect = $styleoptions["category"]["single_selection"]??"";
     // Display categories
-    echo '<div class="filter-group category" style="display: ' . (!empty($options['show_categories']) ? 'block' : 'none') . ';">';
-    echo '<div class="title collapsable_'.$minimizable.'">Category '.($minimizable === "arrow" ? '<div class="collaps">' . $downarrow . '</div>' : '').'</div>';
+    echo '<div id="category" class="filter-group category" style="display: ' . (!empty($options['show_categories']) ? 'block' : 'none') . ';">';
+    echo '<div class="title collapsable_' . esc_attr($minimizable) . '">Category ' . ($minimizable === "arrow" ? '<div class="collaps">' . $downarrow . '</div>' : '') .'</div>';
     $categories = get_terms(array('taxonomy' => 'product_cat', 'hide_empty' => true));
     $selected_categories = !empty($default_filter) ?  $default_filter : explode(',', $atts['category']);
     if ($sub_option==="select"||$sub_option==="select2"||$sub_option==="select2_classic") {
-        echo '<select name="category[]" id="'.$sub_option.'" class="items '.$sub_option.' filter-select" '.($singlevaluecataSelect!=="yes" ? 'multiple="multiple"' : '').'>';
+        echo '<select name="category[]" id="'.esc_attr($sub_option).'" class="items '.esc_attr($sub_option).' filter-select" '.($singlevaluecataSelect!=="yes" ? 'multiple="multiple"' : '').'>';
         echo '<option class="filter-checkbox" value=""> Any </option>';
     }else{
-        echo '<div class="items '.$sub_option.'">';
+        echo '<div class="items '.esc_attr($sub_option).'">';
     }
     if ($categories) {
         foreach ($categories as $category) {
@@ -104,7 +127,7 @@ function wcapf_product_filter_shortcode($atts) {
             $title = esc_html($category->name);
             $count = $show_count==="yes"? $product_count["categories"][$value] : 0;
             
-            echo  render_filter_option($sub_option, $title, $value, $checked, $styleoptions, "category", "category",$singlevaluecataSelect,$count);
+            echo $use_anchor==="on" ? '<a href="'.$value.'">'.render_filter_option($sub_option, $title, $value, $checked, $styleoptions, "category", "category",$singlevaluecataSelect,$count).'</a>' : render_filter_option($sub_option, $title, $value, $checked, $styleoptions, "category", "category",$singlevaluecataSelect,$count);
         }
     }
     if ($sub_option==="select"||$sub_option==="select2"||$sub_option==="select2_classic") {
@@ -121,28 +144,28 @@ function wcapf_product_filter_shortcode($atts) {
             foreach ($attributes as $attribute) {
                 $terms = get_terms(array('taxonomy' => 'pa_' . $attribute->attribute_name, 'hide_empty' => true));
                 $selected_terms = !empty($default_filter) ?  $default_filter : explode(',', $atts['terms']);
-                $sub_optionattr = $styleoptions[$attribute->attribute_name]["sub_option"];
-                $minimizable = $styleoptions[$attribute->attribute_name]["minimize"]["type"];
-                $show_count = $styleoptions[$attribute->attribute_name]["show_product_count"];
-                $singlevalueattrSelect = $styleoptions[$attribute->attribute_name]["single_selection"];
+                $sub_optionattr = $styleoptions[$attribute->attribute_name]["sub_option"]??"";
+                $minimizable = $styleoptions[$attribute->attribute_name]["minimize"]["type"]??"";
+                $show_count = $styleoptions[$attribute->attribute_name]["show_product_count"]??"";
+                $singlevalueattrSelect = $styleoptions[$attribute->attribute_name]["single_selection"]??"";
                 if ($terms) {
                     usort($terms, function($a, $b) {
                         return customSort($a->name, $b->name);
                     });
                     echo '<div id="' . esc_attr($attribute->attribute_name) . '">
-                    <div class="title collapsable_'.$minimizable.'">' . esc_html($attribute->attribute_label) . 
+                    <div class="title collapsable_'.esc_attr($minimizable).'">' . esc_html($attribute->attribute_label) . 
                     ($minimizable === "arrow" ? '<div class="collaps">' . $downarrow . '</div>' : '') . 
                     '</div>';
                     if ($sub_optionattr==="select"||$sub_optionattr==="select2"||$sub_optionattr==="select2_classic") {
-                        echo '<select name="attribute['.esc_attr($attribute->attribute_name).'][]" id="'.$sub_optionattr.'" class="items '.$sub_optionattr.' filter-select" '.($singlevalueattrSelect!=="yes" ? 'multiple="multiple"' : '').'>';
+                        echo '<select name="attribute['.esc_attr($attribute->attribute_name).'][]" id="'.esc_attr($sub_optionattr).'" class="items '.esc_attr($sub_optionattr).' filter-select" '.($singlevalueattrSelect!=="yes" ? 'multiple="multiple"' : '').'>';
                         echo '<option class="filter-checkbox" value=""> Any </option>';
                     }else{
-                        echo '<div class="items '.$sub_optionattr.'">';
+                        echo '<div class="items '.esc_attr($sub_optionattr).'">';
                     }
                     foreach ($terms as $term) {
                         $checked = in_array($term->slug, $selected_terms) ? ' checked' : '';
                         $count = $show_count === "yes" ? $product_count["attributes"]['pa_' . esc_attr($attribute->attribute_name)][esc_attr($term->slug)]: 0;
-                        echo render_filter_option($sub_optionattr, esc_html($term->name) , esc_attr($term->slug), $checked, $styleoptions , "attribute[$attribute->attribute_name]",$attribute->attribute_name,$singlevalueattrSelect,$count);
+                        echo $use_anchor==="on" ? '<a href="'.$value.'">'. render_filter_option($sub_optionattr, esc_html($term->name) , esc_attr($term->slug), $checked, $styleoptions , "attribute[$attribute->attribute_name]",$attribute->attribute_name,$singlevalueattrSelect,$count).'</a>' :  render_filter_option($sub_optionattr, esc_html($term->name) , esc_attr($term->slug), $checked, $styleoptions , "attribute[$attribute->attribute_name]",$attribute->attribute_name,$singlevalueattrSelect,$count);
                     }
                     if ($sub_optionattr==="select"||$sub_optionattr==="select2"||$sub_optionattr==="select2_classic") {
                         echo '</select>';
@@ -156,16 +179,16 @@ function wcapf_product_filter_shortcode($atts) {
 // display tags
         $tags = get_terms(array('taxonomy' => 'product_tag', 'hide_empty' => true));
         $selected_tags = !empty($default_filter) ?  $default_filter : explode(',', $atts['tag']);
-        $sub_option = $styleoptions["tag"]["sub_option"]; // Fetch the sub_option value
-        $minimizable = $styleoptions["tag"]["minimize"]["type"];
-        $show_count = $styleoptions["tag"]["show_product_count"];
-        $singlevalueSelect = $styleoptions["tag"]["single_selection"];
-        echo '<div class="filter-group tags" style="display: ' . (!empty($options['show_tags']) ? 'block' : 'none') . ';"><div class="title collapsable_'.$minimizable.'">Tags '.($minimizable === "arrow" ? '<div class="collaps">' . $downarrow . '</div>' : '').'</div>';
+        $sub_option = $styleoptions["tag"]["sub_option"]??""; // Fetch the sub_option value
+        $minimizable = $styleoptions["tag"]["minimize"]["type"]??"";
+        $show_count = $styleoptions["tag"]["show_product_count"]??"";
+        $singlevalueSelect = $styleoptions["tag"]["single_selection"]??"";
+        echo '<div id="tags" class="filter-group tags" style="display: ' . (!empty($options['show_tags']) ? 'block' : 'none') . ';"><div class="title collapsable_'.esc_attr($minimizable).'">Tags '.($minimizable === "arrow" ? '<div class="collaps">' . $downarrow . '</div>' : '').'</div>';
         if ($sub_option==="select"||$sub_option==="select2"||$sub_option==="select2_classic") {
-            echo '<select name="tag[]" id="'.$sub_option.'" class="items '.$sub_option.' filter-select" '.($singlevalueSelect!=="yes" ? 'multiple="multiple"' : '').'>';
+            echo '<select name="tag[]" id="'.esc_attr($sub_option).'" class="items '.esc_attr($sub_option).' filter-select" '.($singlevalueSelect!=="yes" ? 'multiple="multiple"' : '').'>';
             echo '<option class="filter-checkbox" value=""> Any </option>';
         }else{
-            echo '<div class="items '.$sub_option.'">';
+            echo '<div class="items '.esc_attr($sub_option).'">';
         }
         if ($tags) {
             foreach ($tags as $tag) {
@@ -173,8 +196,7 @@ function wcapf_product_filter_shortcode($atts) {
             $value = esc_attr($tag->slug);
             $title = esc_html($tag->name);
             $count = $show_count==="yes"? $product_count["tags"][$value]: 0;
-            
-            echo  render_filter_option($sub_option, $title, $value, $checked, $styleoptions, "tag", $attribute="tag",$singlevalueSelect,$count);
+            echo $use_anchor==="on" ? '<a href="'.$value.'">'. render_filter_option($sub_option, $title, $value, $checked, $styleoptions, "tag", $attribute="tag",$singlevalueSelect,$count).'</a>' :  render_filter_option($sub_option, $title, $value, $checked, $styleoptions, "tag", $attribute="tag",$singlevalueSelect,$count);
             }
         }
         if ($sub_option==="select"||$sub_option==="select2"||$sub_option==="select2_classic") {
@@ -186,7 +208,51 @@ function wcapf_product_filter_shortcode($atts) {
 <!-- Loader HTML -->
 <div id="loader" style="display:none;"></div>
 <div id="roverlay" style="display: none;"></div>
+<!-- for price range -->
+<script>
+const rangeInput = document.querySelectorAll(".range-input input"),
+  priceInput = document.querySelectorAll(".price-input input"),
+  range = document.querySelector(".slider .progress");
+let priceGap = 1000;
 
+priceInput.forEach((input) => {
+  input.addEventListener("input", (e) => {
+    let minPrice = parseInt(priceInput[0].value),
+      maxPrice = parseInt(priceInput[1].value);
+
+    if (maxPrice - minPrice >= priceGap && maxPrice <= rangeInput[1].max) {
+      if (e.target.className === "input-min") {
+        rangeInput[0].value = minPrice;
+        range.style.left = (minPrice / rangeInput[0].max) * 100 + "%";
+      } else {
+        rangeInput[1].value = maxPrice;
+        range.style.right = 100 - (maxPrice / rangeInput[1].max) * 100 + "%";
+      }
+    }
+  });
+});
+
+rangeInput.forEach((input) => {
+  input.addEventListener("input", (e) => {
+    let minVal = parseInt(rangeInput[0].value),
+      maxVal = parseInt(rangeInput[1].value);
+
+    if (maxVal - minVal < priceGap) {
+      if (e.target.className === "range-min") {
+        rangeInput[0].value = maxVal - priceGap;
+      } else {
+        rangeInput[1].value = minVal + priceGap;
+      }
+    } else {
+      priceInput[0].value = minVal;
+      priceInput[1].value = maxVal;
+      range.style.left = (minVal / rangeInput[0].max) * 100 + "%";
+      range.style.right = 100 - (maxVal / rangeInput[1].max) * 100 + "%";
+    }
+  });
+});
+
+</script>
 <div id="filtered-products">
     <!-- AJAX results will be displayed here -->
 </div>
@@ -265,7 +331,83 @@ function render_filter_option($sub_option, $title, $value, $checked, $styleoptio
         case 'select':
             $output .= '<option class="filter-option" value="' . $value . '"' . $checked . '> ' . $title . ($count!=0?' ('.$count.')':''). '</option>';
             break;
-
+        case 'input-price-range':
+                $output .= '<label for="min-price">Min Price:</label>
+        <input type="number" id="min-price" name="min_price" min="0" step="1" placeholder="Min">
+        
+        <label for="max-price">Max Price:</label>
+        <input type="number" id="max-price" name="max_price" min="0" step="1" placeholder="Max">';
+                break;
+        case 'slider':
+            $output .= '<div class="price-input">
+        <div class="field">
+          <span>Min</span>
+          <input type="number" id="min-price" name="min_price" class="input-min" min="0" value="0">
+        </div>
+        <div class="separator">-</div>
+        <div class="field">
+          <span>Max</span>
+          <input type="number" id="max-price" name="max_price" min="0" class="input-max" value="10000">
+        </div>
+      </div>
+      <div class="slider">
+        <div class="progress"></div>
+      </div>
+      <div class="range-input">
+        <input type="range" id="price-range-min" class="range-min" min="0" max="10000" value="0" >
+        <input type="range" id="price-range-max" class="range-max" min="0" max="10000" value="10000">
+      </div>';
+            break;
+        case 'price':
+            $output .= '<div class="price-input">
+        <div class="field">
+            <input type="number" id="min-price" name="min_price" class="input-min" min="0" value="0">
+        </div>
+        <div class="separator">-</div>
+        <div class="field">
+            <input type="number" id="max-price" name="max_price" min="0" class="input-max" value="10000">
+        </div>
+        </div>
+        <div class="slider">
+        <div class="progress"></div>
+        </div>
+        <div class="range-input">
+        <input type="range" id="price-range-min" class="range-min" min="0" max="10000" value="0">
+        <input type="range" id="price-range-max" class="range-max" min="0" max="10000" value="10000">
+        </div>';
+            break;
+        case 'rating-text':
+            $output .= '<label><input type="checkbox" name="rating[]" value="5"> 5 Stars 
+    </label>
+        <label><input type="checkbox" name="rating[]" value="4"> 4 Stars & Up</label>
+        <label><input type="checkbox" name="rating[]" value="3"> 3 Stars & Up</label>
+        <label><input type="checkbox" name="rating[]" value="2"> 2 Stars & Up</label>
+        <label><input type="checkbox" name="rating[]" value="1"> 1 Star & Up</label>';
+            break;
+        case 'rating':
+            for ( $i = 5; $i >= 1; $i-- ) {
+                $output .= '<label>';
+                $output .= '<input type="checkbox" name="rating[]" value="' . esc_attr( $i ) . '">';
+                $output .= '<span class="stars">';
+                for ( $j = 1; $j <= $i; $j++ ) {
+                    $output .= '<i class="fa fa-star" aria-hidden="true"></i>';
+                }
+                $output .= '</span>';
+                $output .= '</label>';
+            }
+            break;
+        case 'dynamic-rating':
+            $output .= '<input type="radio" id="star5" name="rating[]" value="5" />
+  <label class="star" for="star5" title="Awesome" aria-hidden="true"></label>
+  <input type="radio" id="star4" name="rating[]" value="4" />
+  <label class="star" for="star4" title="Great" aria-hidden="true"></label>
+  <input type="radio" id="star3" name="rating[]" value="3" />
+  <label class="star" for="star3" title="Very good" aria-hidden="true"></label>
+  <input type="radio" id="star2" name="rating[]" value="2" />
+  <label class="star" for="star2" title="Good" aria-hidden="true"></label>
+  <input type="radio" id="star1" name="rating[]" value="1" />
+  <label class="star" for="star1" title="Bad" aria-hidden="true"></label>';
+            break;
         default:
             $output .= '<label><input type="checkbox" class="filter-checkbox" name="' . $name . '[]" value="' . $value . '"' . $checked . '> ' . $title . ($count!=0?' ('.$count.')':''). '</label>';
             break;

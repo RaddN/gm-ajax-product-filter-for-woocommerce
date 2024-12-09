@@ -5,6 +5,7 @@ function wcapf_settings_init() {
         'show_categories' => 0,
         'show_attributes' => 1,
         'show_tags' => 0,
+        'show_price_range' => 0,
         'use_url_filter' => '',
         'update_filter_options' => 0,
         'show_loader' => 1,
@@ -26,6 +27,8 @@ function wcapf_settings_init() {
         'show_categories' => __('Show Categories', 'gm-ajax-product-filter-for-woocommerce'),
         'show_attributes' => __('Show Attributes', 'gm-ajax-product-filter-for-woocommerce'),
         'show_tags' => __('Show Tags', 'gm-ajax-product-filter-for-woocommerce'),
+        'show_price_range' => __('Show Price Range', 'gm-ajax-product-filter-for-woocommerce'),
+        'show_rating' => __('Show Rating', 'gm-ajax-product-filter-for-woocommerce'),
         'use_url_filter' => __('Use URL-Based Filter', 'gm-ajax-product-filter-for-woocommerce'),
         'update_filter_options' => __('Update filter options', 'gm-ajax-product-filter-for-woocommerce'),
         'show_loader' => __('Show Loader', 'gm-ajax-product-filter-for-woocommerce'),
@@ -77,6 +80,7 @@ function wcapf_settings_init() {
 $Advance_options = get_option('wcapf_advance_options') ?: [
     'product_selector' => '.products',
     'pagination_selector' => '.woocommerce-pagination ul.page-numbers',
+    'use_anchor' => 0,
 ];
     update_option('wcapf_advance_options', $Advance_options);
     register_setting('wcapf_advance_settings', 'wcapf_advance_options');
@@ -104,6 +108,8 @@ $Advance_options = get_option('wcapf_advance_options') ?: [
         'wcapf-advance-settings',
         'wcapf_advance_settings_section'
     );
+
+    add_settings_field('use_anchor', __('Make filter link indexable for best SEO', 'gm-ajax-product-filter-for-woocommerce'), "wcapf_use_anchor_render", 'wcapf-advance-settings', 'wcapf_advance_settings_section');
 }
 add_action('admin_init', 'wcapf_settings_init');
 

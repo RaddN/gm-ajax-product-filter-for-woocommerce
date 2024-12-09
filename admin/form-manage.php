@@ -13,6 +13,8 @@ function wcapf_render_checkbox($key) {
 function wcapf_show_categories_render() { wcapf_render_checkbox('show_categories'); }
 function wcapf_show_attributes_render() { wcapf_render_checkbox('show_attributes'); }
 function wcapf_show_tags_render() { wcapf_render_checkbox('show_tags'); }
+function wcapf_show_price_range_render() { wcapf_render_checkbox('show_price_range'); }
+function wcapf_show_rating_render() { wcapf_render_checkbox('show_rating'); }
 function wcapf_update_filter_options_render() {
     wcapf_render_checkbox('update_filter_options');
 }
@@ -40,6 +42,7 @@ function wcapf_custom_template_code_render() {
         <span class="placeholder" onclick="insertPlaceholder('{{product_sku}}')">{{product_sku}}</span>
         <span class="placeholder" onclick="insertPlaceholder('{{product_stock}}')">{{product_stock}}</span>
         <span class="placeholder" onclick="insertPlaceholder('{{add_to_cart_url}}')">{{add_to_cart_url}}</span>
+        <span class="placeholder" onclick="insertPlaceholder('{{product_id}}')">{{product_id}}</span>
     </div>
     <textarea style="display:none;" id="custom_template_input" name="wcapf_options[custom_template_code]" rows="10" cols="50" class="large-text"><?php if(isset($options['custom_template_code'])){echo esc_textarea($options['custom_template_code']); } ?></textarea>
     <div id="code-editor"></div>

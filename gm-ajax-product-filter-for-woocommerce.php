@@ -25,6 +25,28 @@
 if (!defined('ABSPATH')) {
     exit;
 }
+
+// Check if WooCommerce is active
+add_action('plugins_loaded', 'gm_filter_check_woocommerce');
+
+function gm_filter_check_woocommerce() {
+    // Check if WooCommerce is active
+    if (!class_exists('WooCommerce')) {
+        add_action('admin_notices', 'missing_woocommerce_notice');
+    }else{
+        include_once plugin_dir_path(__FILE__) . 'admin/admin-notice.php';
+
+        // count product & store
+        include_once plugin_dir_path(__FILE__) . 'includes/count_product.php';
+    }
+}
+
+function missing_woocommerce_notice() {
+    echo '<div class="notice notice-error"><p><strong>Filter Plugin</strong> requires WooCommerce to be installed and activated.</p></div>';
+}
+
+
+
 // Retrieve the 'use_url_filter' setting from the options
 $options = get_option('wcapf_options');
 $advance_settings = get_option('wcapf_advance_options');
@@ -74,6 +96,7 @@ function wcapf_enqueue_scripts() {
         'product_count' => $product_count,
         'advance_settings' => $advance_settings
      ));
+     
     // Localize the script for AJAX functionality
     wp_localize_script(
         $script_handle,
@@ -85,8 +108,8 @@ function wcapf_enqueue_scripts() {
 
 
     // Enqueue Select2 CSS and JS
-    wp_enqueue_style('select2-css', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css');
-    wp_enqueue_script('select2-js', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js', array('jquery'), null, true);
+    wp_enqueue_style('select2-css', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css',array(),'1.0.6');
+    wp_enqueue_script('select2-js', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js', array('jquery'), '1.0.6', true);
 
     // Enqueue your custom script to initialize Select2
     wp_add_inline_script('select2-js', '
@@ -140,10 +163,6 @@ function wcapf_filter_products() {
     $filter->process_filter();
 }
 
-// Admin page for filter settings
-
-include(plugin_dir_path(__FILE__) . 'admin/admin-page.php');
-
 // Register settings for filter management in admin
 function wcapf_register_settings() {
     register_setting('wcapf_options_group', 'wcapf_filters', 'sanitize_text_field');
@@ -154,8 +173,6 @@ add_action('admin_init', 'wcapf_register_settings');
 if ($use_url_filter === 'permalinks' && !empty($options['pages'])){
     include(plugin_dir_path(__FILE__) . 'includes/permalinks-setup.php');
 }
-
-include_once plugin_dir_path(__FILE__) . 'admin/admin-notice.php';
 
 
 // Hook into the 'plugin_action_links' filter
@@ -178,5 +195,6 @@ if ($use_url_filter === 'permalinks' && $auto_detect_pages_filters === "on"){
 include(plugin_dir_path(__FILE__) . 'includes/auto-detect-pages-filters.php');
 }
 
+// Admin page for filter settings
 
-
+include(plugin_dir_path(__FILE__) . 'admin/admin-page.php');

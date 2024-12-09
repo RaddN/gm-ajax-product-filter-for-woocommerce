@@ -21,59 +21,55 @@ function custom_admin_notice() {
 function check_woocommerce_duplicate_slugs() {
     // Only run in admin area
     if (is_admin()) {
-        global $wpdb;
-
         // Get all product category slugs
-        $category_slugs = $wpdb->get_col("
-            SELECT slug
-            FROM {$wpdb->terms} 
-            WHERE term_id IN (
-                SELECT term_id
-                FROM {$wpdb->term_taxonomy}
-                WHERE taxonomy = 'product_cat'
-            )
-        ");
+        $category_terms = get_terms(array(
+            'taxonomy'   => 'product_cat',
+            'fields'      => 'slugs',
+            'hide_empty'  => false, // Include empty categories
+            'orderby'     => 'name', // Optional, sorts the terms
+        ));
 
         // Get all product tag slugs
-        $tag_slugs = $wpdb->get_col("
-            SELECT slug
-            FROM {$wpdb->terms} 
-            WHERE term_id IN (
-                SELECT term_id
-                FROM {$wpdb->term_taxonomy}
-                WHERE taxonomy = 'product_tag'
-            )
-        ");
+        $tag_terms = get_terms(array(
+            'taxonomy'   => 'product_tag',
+            'fields'      => 'slugs',
+            'hide_empty'  => false, // Include empty tags
+            'orderby'     => 'name', // Optional, sorts the terms
+        ));
 
-        // Get all attribute terms slugs
-        $attribute_slugs = $wpdb->get_col("
-            SELECT slug
-            FROM {$wpdb->terms} 
-            WHERE term_id IN (
-                SELECT term_id
-                FROM {$wpdb->term_taxonomy}
-                WHERE taxonomy LIKE 'pa_%'
-            )
-        ");
+        // Get all attribute slugs (We need to loop through each attribute)
+        $attribute_terms = [];
+        $attribute_taxonomies = wc_get_attribute_taxonomies(); // Get all product attributes
+        foreach ($attribute_taxonomies as $attribute) {
+            $terms = get_terms(array(
+                'taxonomy'   => 'pa_' . $attribute->attribute_name,
+                'fields'      => 'slugs',
+                'hide_empty'  => false,
+            ));
+            $attribute_terms = array_merge($attribute_terms, $terms);
+        }
 
         // Merge all slugs into one array
-        $all_slugs = array_merge($category_slugs, $tag_slugs, $attribute_slugs);
+        $all_slugs = array_merge($category_terms, $tag_terms, $attribute_terms);
 
         // Find duplicate slugs
-        $duplicate_slugs = array_unique(array_diff_assoc($all_slugs, array_unique($all_slugs)));
+        $slug_counts = array_count_values($all_slugs); // Count occurrences of each slug
+        $duplicate_slugs = array_filter($slug_counts, function($count) {
+            return $count > 1; // Only keep slugs that appear more than once
+        });
 
         // Show admin notice if duplicates exist
         if (!empty($duplicate_slugs)) {
             add_action('admin_notices', function() use ($duplicate_slugs) {
                 ?>
                 <div class="notice notice-error">
-                    <p><?php esc_html_e('The following slugs are duplicated across categories, tags, or attributes:', 'text-domain'); ?></p>
+                    <p><?php esc_html_e('The following slugs are duplicated across categories, tags, or attributes:', 'gm-ajax-product-filter-for-woocommerce'); ?></p>
                     <ul>
-                        <?php foreach ($duplicate_slugs as $slug) : ?>
+                        <?php foreach (array_keys($duplicate_slugs) as $slug) : ?>
                             <li><?php echo esc_html($slug); ?></li>
                         <?php endforeach; ?>
                     </ul>
-                    <p><?php esc_html_e('Please ensure each slug is unique to avoid filtering issues.', 'text-domain'); ?></p>
+                    <p><?php esc_html_e('Please ensure each slug is unique to avoid filtering issues.', 'gm-ajax-product-filter-for-woocommerce'); ?></p>
                 </div>
                 <?php
             });
@@ -81,3 +77,4 @@ function check_woocommerce_duplicate_slugs() {
     }
 }
 add_action('admin_init', 'check_woocommerce_duplicate_slugs');
+

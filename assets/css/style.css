@@ -1,8 +1,5 @@
 .filter-group {
     margin-bottom: 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
 }
 .filter-group label {
     display: flex;
@@ -69,7 +66,7 @@ div#roverlay {
     background: red;
     color: #fff !important;
 }
-.filter-group.attributes .title, .filter-group.category .title,.filter-group.tags .title {
+.filter-group.attributes .title, .filter-group.category .title,.filter-group.tags .title,.filter-group.price-range .title,div#rating .title {
     background: linear-gradient(90deg, #501A73 9%, #432FB8 37%);
     color: white !important;
     text-align: center;
@@ -85,25 +82,28 @@ div#roverlay {
     height: 16px;
     fill: #fff;
 }
-.filter-group.attributes>div,.filter-group.category,.filter-group.tags {
+.filter-group.attributes>div,.filter-group.category,.filter-group.tags,.filter-group.price-range, div#rating {
     background: rgba(255, 255, 255, 0.7);
     padding-bottom: 1px;
     box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+    overflow: hidden;
 }
-.filter-group.attributes  .items ,.filter-group.category .items, .filter-group.tags .items{
+.filter-group.attributes  .items ,.filter-group.category .items, .filter-group.tags .items,.filter-group.price-range .items, div#rating .items{
     padding: 20px 10px;
 }
 .filter-group.attributes .items>label,.filter-group.category .items>label,.filter-group.tags .items>label,.rfilterbuttons label {
     text-transform: capitalize;
+    cursor: pointer ;
+}
+.items label {
     cursor: pointer;
 }
-
 /* responsive filter */
 @media (max-width: 781px) {
     form#conference-by-month {
         display: none;
     }
-    #product-filter .filter-group div .title{cursor:pointer;}
+    #product-filter .filter-group div .title{cursor:pointer !important;}
     #product-filter:before {
         content: "Filter";
         background: linear-gradient(90deg, #041a57, #d62229);
@@ -267,3 +267,124 @@ input#searchFilter {
 .title.collapsable_no_arrow {
     cursor: pointer;
 }
+
+.filter-group a {
+    color: unset;
+}
+/* for price range */
+.price-input {
+    width: 100%;
+    display: flex;
+    margin: 0px 0 35px;
+  }
+  .price-input .field {
+    display: flex;
+    width: 100%;
+    height: 45px;
+    align-items: center;
+    flex-direction: column;
+  }
+  .field input {
+    width: 100%;
+    height: 100%;
+    outline: none;
+    font-size: 19px;
+    margin-left: 12px;
+    border-radius: 5px;
+    text-align: center;
+    border: 1px solid #999;
+    -moz-appearance: textfield;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+  }
+  .price-input .separator {
+    width: 130px;
+    display: flex;
+    font-size: 19px;
+    align-items: center;
+    justify-content: center;
+  }
+  .slider {
+    height: 5px;
+    position: relative;
+    background: #ddd;
+    border-radius: 5px;
+  }
+  .slider .progress {
+    height: 100%;
+    left: 0%;
+    right: 0%;
+    position: absolute;
+    border-radius: 5px;
+    background: #432fb8;
+  }
+  .range-input {
+    position: relative;
+  }
+  .range-input input {
+    position: absolute;
+    width: 100%;
+    height: 5px;
+    top: -5px;
+    background: none;
+    pointer-events: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    height: 17px;
+    width: 17px;
+    border-radius: 50%;
+    background: #432fb8;
+    pointer-events: auto;
+    -webkit-appearance: none;
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
+    margin-left:-5px;
+  }
+  input[type="range"]::-moz-range-thumb {
+    height: 17px;
+    width: 17px;
+    border: none;
+    border-radius: 50%;
+    background: #432fb8;
+    pointer-events: auto;
+    -moz-appearance: none;
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
+  }
+/* Dynamic Rating */
+ .dynamic-rating {
+    border: none;
+    float: left;
+  }
+  
+  .dynamic-rating > label {
+    color: #90A0A3;
+    float: right;
+  }
+  
+  .dynamic-rating > label:before {
+    margin: 5px;
+    font-size: 2em;
+    font-family: FontAwesome;
+    content: "\f005";
+    display: inline-block;
+  }
+  
+  .dynamic-rating > input {
+    display: none;
+  }
+  
+  .dynamic-rating > input:checked ~ label,
+  .dynamic-rating:not(:checked) > label:hover,
+  .dynamic-rating:not(:checked) > label:hover ~ label {
+    color: #F79426;
+  }
+  
+  .dynamic-rating > input:checked + label:hover,
+  .dynamic-rating > input:checked ~ label:hover,
+  .dynamic-rating > label:hover ~ input:checked ~ label,
+  .dynamic-rating > input:checked ~ label:hover ~ label {
+    color: #FECE31;
+  }

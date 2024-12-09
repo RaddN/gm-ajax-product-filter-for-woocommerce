@@ -11,6 +11,8 @@
     $extra_options = [
         (object) ['attribute_name' => 'category', 'attribute_label' => __('Category Options', 'gm-ajax-product-filter-for-woocommerce')],
         (object) ['attribute_name' => 'tag', 'attribute_label' => __('Tag Options', 'gm-ajax-product-filter-for-woocommerce')],
+        (object) ['attribute_name' => 'price', 'attribute_label' => __('Price', 'gm-ajax-product-filter-for-woocommerce')],
+        (object) ['attribute_name' => 'rating', 'attribute_label' => __('Rating', 'gm-ajax-product-filter-for-woocommerce')],
     ];
 
     // Combine attributes and extra options
@@ -64,6 +66,16 @@
                         'select2' => __('Select 2', 'gm-ajax-product-filter-for-woocommerce'),
                         'select2_classic' => __('Select 2 Classic', 'gm-ajax-product-filter-for-woocommerce'),
                     ],
+                    'price' => [
+                        'price' => __('Price', 'gm-ajax-product-filter-for-woocommerce'),
+                        'slider' => __('Slider', 'gm-ajax-product-filter-for-woocommerce'),
+                        'input-price-range' => __('input price range', 'gm-ajax-product-filter-for-woocommerce'),
+                    ],
+                    'rating' => [
+                        'rating' => __('Rating Star', 'gm-ajax-product-filter-for-woocommerce'),
+                        'rating-text' => __('Rating Text', 'gm-ajax-product-filter-for-woocommerce'),
+                        'dynamic-rating' => __('Dynamic Rating', 'gm-ajax-product-filter-for-woocommerce'),
+                    ],
                 ];
                 ?>
                 <div class="style-options" id="options-<?php echo esc_attr($attribute_name); ?>" style="display: <?php echo $attribute_name === $first_attribute && $attribute_name !== "category" ? 'block' : 'none'; ?>;">
@@ -72,7 +84,7 @@
                     <!-- Primary Options -->
                     <div class="primary_options">
                         <?php foreach ($sub_options as $key => $label) : ?>
-                            <label class="<?php echo $selected_style === $key ? 'active' : ''; ?>">
+                            <label class="<?php echo esc_attr($key);echo $selected_style === $key ? ' active' : ''; ?>" style="display:<?php echo $key==='price' || $key==='rating'?'none':'block'; ?>;">
                                 <span class="active" style="display:none;"><i class="fa fa-check"></i></span>
                                 <input type="radio" name="wcapf_style_options[<?php echo esc_attr($attribute_name); ?>][type]" value="<?php echo esc_html($key); ?>" <?php checked($selected_style, $key); ?> data-type="<?php echo esc_html($key); ?>">
                                 <img src="<?php echo esc_url(plugins_url('../assets/images/' . $key . '.png', __FILE__)); ?>" alt="<?php echo esc_attr($key); ?>">
@@ -113,7 +125,7 @@
                         ) );
                     }
                     else $terms = get_terms(['taxonomy' => 'pa_' . $attribute_name, 'hide_empty' => false]);?>
-                    <div class="advanced-options <?php echo $attribute_name ?>" style="display: <?php echo $selected_style === 'color' || $selected_style === 'image' ? 'block' : 'none'; ?>;">
+                  <div class="advanced-options <?php echo esc_attr($attribute_name); ?>" style="display: <?php echo $selected_style === 'color' || $selected_style === 'image' ? 'block' : 'none'; ?>;">
     <h4><?php esc_html_e('Advanced Options for Terms', 'gm-ajax-product-filter-for-woocommerce'); ?></h4>
     <?php if (!empty($terms)) : ?>
         
@@ -221,30 +233,50 @@ document.addEventListener('DOMContentLoaded', function () {
     // Show first attribute's options on load
     document.querySelector(`#options-${firstAttribute}`).style.display = 'block';
 
+    // Utility function to toggle display of elements
+    function toggleDisplay(selector, display) {
+        document.querySelectorAll(selector).forEach(el => {
+            el.style.display = display;
+        });
+    }
+
     // Handle dropdown change
     dropdown.addEventListener('change', function () {
-        const selectedAttribute = this.value;
+    const selectedAttribute = this.value;
 
-        // Hide all options
-        document.querySelectorAll('.style-options').forEach(function (el) {
-            el.style.display = 'none';
-        });
+    // Hide all style options
+    toggleDisplay('.style-options', 'none');
 
-        // Show the selected attribute's options
-        if (selectedAttribute) {
-            const selectedOptions = document.getElementById(`options-${selectedAttribute}`);
-            if (selectedOptions) {
-                selectedOptions.style.display = 'block';
-            }
+    // Show the relevant style option based on selection
+    if (selectedAttribute) {
+        const selectedOptions = document.getElementById(`options-${selectedAttribute}`);
+        if (selectedOptions) {
+            selectedOptions.style.display = 'block';
         }
-    });
+    }
+
+    // Handle primary option labels visibility
+    if (selectedAttribute === "price") {
+        toggleDisplay('.primary_options label', 'none');
+        toggleDisplay('.primary_options label.price', 'block');
+    }
+    else if (selectedAttribute === "rating") {
+        toggleDisplay('.primary_options label', 'none');
+        toggleDisplay('.primary_options label.rating', 'block');
+    } else {
+        toggleDisplay('.primary_options label', 'block');
+        toggleDisplay('.primary_options label.price', 'none');
+        toggleDisplay('.primary_options label', 'block');
+        toggleDisplay('.primary_options label.rating', 'none');
+    }
+});
+
     // Handle primary option change
     document.querySelectorAll('.style-options .primary_options input[type="radio"][name^="wcapf_style_options"]').forEach(function (radio) {
         radio.addEventListener('change', function () {
             const selectedType = this.value;
             const attributeName = this.name.match(/\[(.*?)\]/)[1];
             const subOptionsContainer = document.querySelector(`#options-${attributeName} .dynamic-sub-options`);
-
             // Remove 'active' class from all labels
             document.querySelectorAll('.primary_options label').forEach(label => {
                 label.classList.remove('active');
@@ -257,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const selectedLabel = radio.closest('label');
             selectedLabel.classList.add('active');
 
-            const subOptions = <?php echo json_encode($sub_options); ?>;
+            const subOptions = <?php echo wp_json_encode($sub_options); ?>;
 
             const currentOptions = subOptions[selectedType] || {};
             subOptionsContainer.innerHTML = '';

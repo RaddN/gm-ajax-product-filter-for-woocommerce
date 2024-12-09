@@ -24,7 +24,7 @@ function wcapf_admin_page_content() {
 
         <div class="tab-content">
             <?php
-            $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'form_manage';
+            $active_tab = isset($_GET['tab']) ? sanitize_text_field(wp_unslash($_GET['tab'])) : 'form_manage';
 
             if ($active_tab == 'form_manage') {
                 ?>
@@ -40,10 +40,7 @@ function wcapf_admin_page_content() {
                 <?php
             } 
             elseif ($active_tab == 'form_style') {
-                
                 include(plugin_dir_path(__FILE__) . 'form_style_tab.php');
-
-                
             }
             elseif ($active_tab == 'advance_settings') {
                 ?>

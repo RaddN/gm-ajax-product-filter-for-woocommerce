@@ -2,6 +2,8 @@
 class WCAPF_Filter_Functions {
 
     public function process_filter() {
+        global $options;
+        $update_filter_options = $options["update_filter_options"];
 
         if (!isset($_POST['gm-product-filter-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['gm-product-filter-nonce'])), 'gm-product-filter-action')) {
             wp_send_json_error(array('message' => 'Security check failed'), 403);
@@ -9,6 +11,7 @@ class WCAPF_Filter_Functions {
         }
             // Determine the current page number
     $paged = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
+    $currentpage_slug = isset($_POST['current-page']) ? sanitize_text_field(wp_unslash($_POST['current-page'])) : "";
         $args = array(
             'post_type' => 'product',
             'posts_per_page' => 12,
@@ -29,7 +32,7 @@ class WCAPF_Filter_Functions {
             )
         );
         $args = $this->apply_filters_to_args($args);
-        $argsOptions = $this->apply_filters_to_args($argsOptions);
+        $argsOptions =$update_filter_options==="on"?$this->apply_filters_to_args($args) : $this->update_options_args($argsOptions,$currentpage_slug);
 
         $query = new WP_Query($args);
         $OptionsQuery = new WP_Query($argsOptions);
@@ -65,6 +68,39 @@ class WCAPF_Filter_Functions {
             wp_send_json_error(array('message' => 'Security check failed'), 403);
             wp_die();
         }
+    
+        // Minimum Price Filter
+        if (isset($_POST['min_price']) && $_POST['min_price'] !== '') {
+            $args['meta_query'][] = array(
+                'key' => '_price',
+                'value' => floatval($_POST['min_price']),
+                'compare' => '>=',
+                'type' => 'NUMERIC',
+            );
+        }
+    
+        // Maximum Price Filter
+        if (isset($_POST['max_price']) && $_POST['max_price'] !== '') {
+            $args['meta_query'][] = array(
+                'key' => '_price',
+                'value' => floatval($_POST['max_price']),
+                'compare' => '<=',
+                'type' => 'NUMERIC',
+            );
+        }
+    
+        // Rating Filter
+        if (isset($_POST['rating']) && !empty($_POST['rating'])) {
+            $ratings = array_map('intval', $_POST['rating']);
+            $args['meta_query'][] = array(
+                'key'     => '_wc_average_rating',
+                'value'   => min($ratings),  // Minimum rating selected
+                'compare' => '>=',
+                'type'    => 'DECIMAL(2,1)',
+            );
+        }
+    
+        // Category Filter
         if (!empty($_POST['category'])) {
             $args['tax_query'][] = array(
                 'taxonomy' => 'product_cat',
@@ -73,6 +109,7 @@ class WCAPF_Filter_Functions {
             );
         }
     
+        // Attribute Filters
         if (!empty($_POST['attribute']) && is_array($_POST['attribute'])) {
             $attributes = map_deep(wp_unslash($_POST['attribute']), 'sanitize_text_field');
             foreach ($attributes as $attribute_name => $attribute_values) {
@@ -87,12 +124,63 @@ class WCAPF_Filter_Functions {
             }
         }
     
+        // Tag Filter
         if (!empty($_POST['tags'])) {
             $args['tax_query'][] = array(
                 'taxonomy' => 'product_tag',
                 'field' => 'slug',
                 'terms' => array_map('sanitize_text_field', wp_unslash($_POST['tags']))
             );
+        }
+    
+        return $args;
+    }
+    private function update_options_args($args,$currentpage_slug) {
+        global $options;
+        $default_filters = isset($options["default_filters"][$currentpage_slug]) ? $options["default_filters"][$currentpage_slug] : [];
+        if (!isset($_POST['gm-product-filter-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['gm-product-filter-nonce'])), 'gm-product-filter-action')) {
+            wp_send_json_error(array('message' => 'Security check failed'), 403);
+            wp_die();
+        }
+        
+        if (!empty($_POST['category'])) {
+            $categories = array_map('sanitize_text_field', wp_unslash($_POST['category']));
+            $filtercategories = array_intersect($categories, $default_filters); // Use array_intersect to find common values
+            if(!empty($filtercategories)){
+            $args['tax_query'][] = array(
+                'taxonomy' => 'product_cat',
+                'field' => 'slug',
+                'terms' => $filtercategories
+            );
+        }
+        }
+        if (!empty($_POST['attribute']) && is_array($_POST['attribute'])) {
+            $attributes = map_deep(wp_unslash($_POST['attribute']), 'sanitize_text_field');
+            foreach ($attributes as $attribute_name => $attribute_values) {
+                if (!empty($attribute_values) && is_array($attribute_values)) {
+                    $sanitized_values = array_map('sanitize_text_field', $attribute_values);
+                    $filtersanitized_values = array_intersect($sanitized_values, $default_filters);
+                    if(!empty($filtersanitized_values)){
+                    $args['tax_query'][] = array(
+                        'taxonomy' => 'pa_' . sanitize_key($attribute_name),
+                        'field' => 'slug',
+                        'terms' => $filtersanitized_values,
+                    );
+                }
+                }
+            }
+        }
+    
+        if (!empty($_POST['tags'])) {
+            $tags = array_map('sanitize_text_field', wp_unslash($_POST['tags']));
+            $filtertags = array_intersect($tags, $default_filters);
+            if(!empty($filtertags)){
+            $args['tax_query'][] = array(
+                'taxonomy' => 'product_tag',
+                'field' => 'slug',
+                'terms' => $filtertags
+            );
+        }
         }
     
         return $args;
@@ -125,6 +213,7 @@ class WCAPF_Filter_Functions {
             $custom_template = str_replace('{{product_sku}}', esc_html($product_sku), $custom_template);
             $custom_template = str_replace('{{product_stock}}', esc_html($product_stock), $custom_template);
             $custom_template = str_replace('{{add_to_cart_url}}', $add_to_cart_url, $custom_template);
+            $custom_template = str_replace('{{product_id}}', esc_html($post->ID), $custom_template);
             $allowed_tags = array(
                 'a' => array(
                     'href' => array(),
@@ -183,7 +272,7 @@ class WCAPF_Filter_Functions {
                 'script' => array(), // Be cautious with scripts
             );
             
-            echo wp_kses($custom_template, $allowed_tags);;
+            echo wp_kses(do_shortcode($custom_template), $allowed_tags);
             } else {
                 wc_get_template_part('content', 'product');
             }
