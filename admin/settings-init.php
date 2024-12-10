@@ -109,6 +109,32 @@ $Advance_options = get_option('wcapf_advance_options') ?: [
     );
 
     add_settings_field('use_anchor', __('Make filter link indexable for best SEO', 'gm-ajax-product-filter-for-woocommerce'), "wcapf_use_anchor_render", 'wcapf-advance-settings', 'wcapf_advance_settings_section');
+
+    // Import & Export Settings Section
+    add_settings_section(
+        'wcapf_import_export_section',
+        __('Import & Export Settings', 'gm-ajax-product-filter-for-woocommerce'),
+        null,
+        'wcapf-advance-settings'
+    );
+
+    // Add Import Button
+    add_settings_field(
+        'import_settings',
+        __('Import Settings', 'gm-ajax-product-filter-for-woocommerce'),
+        'wcapf_import_settings_callback',
+        'wcapf-advance-settings',
+        'wcapf_import_export_section'
+    );
+
+    // Add Export Button
+    add_settings_field(
+        'export_settings',
+        __('Export Settings', 'gm-ajax-product-filter-for-woocommerce'),
+        'wcapf_export_settings_callback',
+        'wcapf-advance-settings',
+        'wcapf_import_export_section'
+    );
 }
 add_action('admin_init', 'wcapf_settings_init');
 

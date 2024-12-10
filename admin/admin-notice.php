@@ -15,7 +15,6 @@ function custom_admin_notice() {
     }
 }
 
-
 // check duplicate slugs
 
 function check_woocommerce_duplicate_slugs() {
