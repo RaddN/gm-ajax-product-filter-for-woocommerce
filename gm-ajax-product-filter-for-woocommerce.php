@@ -38,6 +38,11 @@ function gm_filter_check_woocommerce() {
 
         // count product & store
         include_once plugin_dir_path(__FILE__) . 'includes/count_product.php';
+
+        // Create shortcode for filter
+        include(plugin_dir_path(__FILE__) . 'includes/filter-template.php');
+        // add css & script
+        add_action('wp_enqueue_scripts', 'wcapf_enqueue_scripts');
     }
 }
 
@@ -135,8 +140,6 @@ $(this).siblings(".items").slideToggle(300); // Smooth toggle effect
     ');
 }
 
-add_action('wp_enqueue_scripts', 'wcapf_enqueue_scripts');
-
 // Enqueue admin scripts
 function wcapf_admin_scripts() {
     wp_enqueue_style('wcapf-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css',array(),'1.0.6');
@@ -148,9 +151,6 @@ function wcapf_admin_scripts() {
     wp_enqueue_script('wcapf-media-uploader', plugin_dir_url(__FILE__) . 'assets/js/media-uploader.js', ['jquery'], '1.0.0', true);
 }
 add_action('admin_enqueue_scripts', 'wcapf_admin_scripts');
-
-// Create shortcode for filter
-include(plugin_dir_path(__FILE__) . 'includes/filter-template.php');
 
 // Include filter processing class
 include(plugin_dir_path(__FILE__) . 'includes/class-filter-functions.php');
@@ -198,3 +198,7 @@ include(plugin_dir_path(__FILE__) . 'includes/auto-detect-pages-filters.php');
 // Admin page for filter settings
 
 include(plugin_dir_path(__FILE__) . 'admin/admin-page.php');
+
+
+
+
