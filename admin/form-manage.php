@@ -1,7 +1,7 @@
 <?php
 
 function wcapf_render_checkbox($key) {
-    $options = get_option('wcapf_options');
+    global $options;
     ?>
     <label class="switch <?php echo esc_attr($key); ?>">
     <input type='checkbox' name='wcapf_options[<?php echo esc_attr($key); ?>]' <?php checked(isset($options[$key]) && $options[$key] === "on"); ?>>
@@ -15,45 +15,71 @@ function wcapf_show_attributes_render() { wcapf_render_checkbox('show_attributes
 function wcapf_show_tags_render() { wcapf_render_checkbox('show_tags'); }
 function wcapf_show_price_range_render() { wcapf_render_checkbox('show_price_range'); }
 function wcapf_show_rating_render() { wcapf_render_checkbox('show_rating'); }
-function wcapf_update_filter_options_render() {
-    wcapf_render_checkbox('update_filter_options');
-}
+function wcapf_update_filter_options_render() {wcapf_render_checkbox('update_filter_options');}
 function wcapf_show_loader_render() { wcapf_render_checkbox('show_loader'); }
-// Render functions for new fields
-function wcapf_use_custom_template_render() {
-    wcapf_render_checkbox('use_custom_template');
-}
-
+function wcapf_use_custom_template_render() {wcapf_render_checkbox('use_custom_template');}
 function wcapf_pages_filter_auto_render() { wcapf_render_checkbox('pages_filter_auto'); }
 
 function wcapf_custom_template_code_render() {
-    $options = get_option('wcapf_options');
+    global $options;
     echo '    
     <div class="custom_template_code" style="' . (isset($options['use_custom_template']) ? 'display:block;' : 'display:none;') . '">';
     ?>
         <!-- Placeholder List -->
         <div id="placeholder-list" style="margin-bottom: 10px;">
-        <span class="placeholder" onclick="insertPlaceholder('{{product_link}}')">{{product_link}}</span>
-        <span class="placeholder" onclick="insertPlaceholder('{{product_title}}')">{{product_title}}</span>
-        <span class="placeholder" onclick="insertPlaceholder('{{product_image}}')">{{product_image}}</span>
-        <span class="placeholder" onclick="insertPlaceholder('{{product_price}}')">{{product_price}}</span>
-        <span class="placeholder" onclick="insertPlaceholder('{{product_excerpt}}')">{{product_excerpt}}</span>
-        <span class="placeholder" onclick="insertPlaceholder('{{product_category}}')">{{product_category}}</span>
-        <span class="placeholder" onclick="insertPlaceholder('{{product_sku}}')">{{product_sku}}</span>
-        <span class="placeholder" onclick="insertPlaceholder('{{product_stock}}')">{{product_stock}}</span>
-        <span class="placeholder" onclick="insertPlaceholder('{{add_to_cart_url}}')">{{add_to_cart_url}}</span>
-        <span class="placeholder" onclick="insertPlaceholder('{{product_id}}')">{{product_id}}</span>
+        <?php
+            $placeholders = [
+                '{{product_link}}' => 'Product Link',
+                '{{product_title}}' => 'Product Title',
+                '{{product_image}}' => 'Product Image',
+                '{{product_price}}' => 'Product Price',
+                '{{product_excerpt}}' => 'Product Excerpt',
+                '{{product_category}}' => 'Product Category',
+                '{{product_sku}}' => 'Product SKU',
+                '{{product_stock}}' => 'Product Stock',
+                '{{add_to_cart_url}}' => 'Add to Cart URL',
+                '{{product_id}}' => 'Product ID'
+            ];
+            foreach ($placeholders as $placeholder => $label) {
+                echo "<span class='placeholder' onclick=\"insertPlaceholder('$placeholder')\">$placeholder</span>";
+            }
+            ?>
     </div>
     <textarea style="display:none;" id="custom_template_input" name="wcapf_options[custom_template_code]" rows="10" cols="50" class="large-text"><?php if(isset($options['custom_template_code'])){echo esc_textarea($options['custom_template_code']); } ?></textarea>
     <div id="code-editor"></div>
     <p class="description"><?php esc_html_e('Enter your custom template code here.', 'gm-ajax-product-filter-for-woocommerce'); ?></p>
 </div>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const checkbox = document.querySelector('input[name="wcapf_options[use_custom_template]"]');
+    
+    // Function to show or hide the closest <tr> with the .custom_template_code class
+    function toggleTemplateRow() {
+      const closestTr = document.querySelector(".custom_template_code").closest('tr');
+      
+      // Check if the next sibling has the class 'custom_template_code'
+      if (closestTr) {
+        if (checkbox.checked) {
+          closestTr.style.display = ''; // Show the row
+        } else {
+          closestTr.style.display = 'none'; // Hide the row
+        }
+      }
+    }
+    // Event listener for checkbox change
+    checkbox.addEventListener('change', toggleTemplateRow);
+
+    // Initialize the state on page load
+    toggleTemplateRow();
+  });
+</script>
+
 
     <?php
 }
 
 function wcapf_use_url_filter_render() {
-    $options = get_option('wcapf_options');
+    global $options;
     ?>
     <fieldset>
     <legend><?php esc_html_e('Select URL Filter Type', 'gm-ajax-product-filter-for-woocommerce'); ?></legend>
@@ -71,7 +97,7 @@ function wcapf_use_url_filter_render() {
     <?php
 }
 function wcapf_pages_render() {
-    $options = get_option('wcapf_options');
+    global $options;
     $pages = isset($options['pages']) ? array_filter($options['pages']) : []; // Filter out empty values
     ?>
     <div class="page-listing">
@@ -131,7 +157,7 @@ function wcapf_pages_render() {
 }
 // Render function for default filters
 function wcapf_default_filters_render() {
-    $options = get_option('wcapf_options');
+    global $options;
     $default_filters = isset($options['default_filters']) ? $options['default_filters'] : [];
     $pages = isset($options['pages']) ? $options['pages'] : [];
     echo '<table class="form-table">';

@@ -122,9 +122,9 @@ function wcapf_add_settings_link($links) {
     return $links;
 }
 
-if ($use_url_filter === 'permalinks' && !empty($options['pages'])) {
+if ($use_url_filter !== '' && !empty($options['pages'])) {
     include(plugin_dir_path(__FILE__) . 'includes/permalinks-setup.php');
 }
-if ($use_url_filter === 'permalinks' && $auto_detect_pages_filters === "on") {
+if ($auto_detect_pages_filters === "on") {
     include(plugin_dir_path(__FILE__) . 'includes/auto-detect-pages-filters.php');
 }

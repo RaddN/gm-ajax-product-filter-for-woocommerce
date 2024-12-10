@@ -33,7 +33,6 @@ function wcapf_settings_init() {
         'update_filter_options' => __('Update filter options', 'gm-ajax-product-filter-for-woocommerce'),
         'show_loader' => __('Show Loader', 'gm-ajax-product-filter-for-woocommerce'),
         'use_custom_template' => __('Use Custom Product Template', 'gm-ajax-product-filter-for-woocommerce'),
-
     ];
 
     foreach ($fields as $key => $label) {
@@ -44,7 +43,7 @@ function wcapf_settings_init() {
         // Add Page Management Section
         add_settings_section('wcapf_page_section_before', null, function() {
             global $options;
-            echo '<div class="page_manage" style="' . ($options['use_url_filter'] === "permalinks" ? 'display:block;' : 'display:none;') . '">';
+            echo '<div class="page_manage">';
         }, 'wcapf-admin');
         add_settings_section('wcapf_page_section', __('Pages Manage', 'gm-ajax-product-filter-for-woocommerce'), function() {
             echo '<p>' . esc_html__('Add the pages below where you have added the shortcode.', 'gm-ajax-product-filter-for-woocommerce') . '</p>';
