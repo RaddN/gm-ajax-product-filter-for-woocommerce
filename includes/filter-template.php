@@ -1,7 +1,7 @@
 <?php
 function wcapf_product_filter_shortcode($atts) {
     global $styleoptions,$product_count,$post,$options, $advance_settings;
-    $use_anchor = $advance_settings["use_anchor"];
+    $use_anchor = $advance_settings["use_anchor"] ?? "";
     // Check if the post object is available
     if (isset($post)) {
         // Get the post slug
