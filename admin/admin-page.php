@@ -51,6 +51,26 @@ function wcapf_admin_page_content() {
                     submit_button();
                     ?>
                 </form>
+                <h2>Import &amp; Export Settings</h2>
+                <table class="form-table" role="presentation">
+                    <tbody>
+                        <tr>
+                            <th scope="row">Import Settings</th>
+                            <td>    
+                            <form method="post" enctype="multipart/form-data" action="<?php echo admin_url('admin-post.php'); ?>">
+                                <input type="hidden" name="action" value="import_wcapf_settings">
+                                <input type="file" name="wcapf_import_file" accept=".json" required>
+                                <button type="submit" name="wcapf_import_button" id="wcapf_import_button" class="button button-primary">Import Settings</button>
+                            </form>
+                            </td>
+                        </tr>
+                        <tr><th scope="row">Export Settings</th>
+                        <td>
+                            <form method="post" action="admin-post.php">
+                                <input type="hidden" name="action" value="export_wcapf_settings">
+                                <button type="submit" name="wcapf_export_button" id="wcapf_export_button" class="button button-primary">Export Settings</button>
+                            </form>
+                        </td></tr></tbody></table>
                 <?php
             }
             ?>

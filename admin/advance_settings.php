@@ -22,6 +22,17 @@ function wcapf_pagination_selector_callback() {
     </p>
     <?php
 }
+// Render the "Product Shortcode Selector" field
+function wcapf_product_shortcode_callback() {
+    $options = get_option('wcapf_advance_options');
+    $product_shortcode = isset($options['product_shortcode']) ? esc_attr($options['product_shortcode']) : 'products';
+    ?>
+    <input type="text" name="wcapf_advance_options[product_shortcode]" value="<?php echo esc_attr($product_shortcode); ?>" placeholder="products">
+    <p class="description">
+        <?php esc_html_e('Enter the selector for the products shortcode. Default is products', 'gm-ajax-product-filter-for-woocommerce'); ?>
+    </p>
+    <?php
+}
 
 function wcapf_use_anchor_render() { wcapf_render_advance_checkbox('use_anchor'); }
 
@@ -36,26 +47,6 @@ function wcapf_render_advance_checkbox($key) {
     <?php
 }
 
-// Callback function for Import settings
-function wcapf_import_settings_callback() {
-    ?>
-    <form method="post" enctype="multipart/form-data">
-        <input type="file" name="wcapf_import_file" id="wcapf_import_file" accept=".json" required />
-        <button type="submit" name="wcapf_import_button" id="wcapf_import_button" class="button button-primary">Import Settings</button>
-    </form>
-    <?php
-}
-
-
-// Callback function for Export settings
-function wcapf_export_settings_callback() {
-    ?>
-    <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
-        <input type="hidden" name="action" value="export_wcapf_settings">
-        <button type="submit" name="wcapf_export_button" id="wcapf_export_button" class="button button-primary">Export Settings</button>
-    </form>
-    <?php
-}
 
 
 // Handle the export settings action
@@ -81,4 +72,70 @@ function wcapf_export_settings_action() {
 
 // Hook the export function to admin_post action
 add_action('admin_post_export_wcapf_settings', 'wcapf_export_settings_action');
+
+
+// Handle the import settings action
+function wcapf_import_settings_action() {
+    // Check if the file was uploaded
+    if (isset($_FILES['wcapf_import_file']) && $_FILES['wcapf_import_file']['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES['wcapf_import_file']['tmp_name'];
+
+        // Read the file contents
+        $json_data = file_get_contents($file);
+        
+        // Decode the JSON data
+        $options = json_decode($json_data, true);
+
+        // Validate the JSON structure before updating the options
+        if (isset($options['wcapf_options'], $options['wcapf_style_options'], $options['wcapf_advance_options'])) {
+            // Update the WordPress options with the imported data
+            update_option('wcapf_options', $options['wcapf_options']);
+            update_option('wcapf_style_options', $options['wcapf_style_options']);
+            update_option('wcapf_advance_options', $options['wcapf_advance_options']);
+
+            // Redirect back with a success message
+            wp_redirect(add_query_arg('import', 'success', wp_get_referer()));
+            exit;
+        } else {
+            // Redirect back with an error message
+            wp_redirect(add_query_arg('import', 'error', wp_get_referer()));
+            exit;
+        }
+    } else {
+        // Handle file upload error
+        wp_redirect(add_query_arg('import', 'upload_error', wp_get_referer()));
+        exit;
+    }
+}
+
+// Hook the import function to admin_post action
+add_action('admin_post_import_wcapf_settings', 'wcapf_import_settings_action');
+
+
+// Display success or error messages
+function wcapf_display_import_message() {
+    if (isset($_GET['import'])) {
+        $message = '';
+        $class = '';
+
+        switch ($_GET['import']) {
+            case 'success':
+                $message = 'Settings imported successfully.';
+                $class = 'updated';
+                break;
+            case 'error':
+                $message = 'Invalid JSON structure. Please check your file.';
+                $class = 'error';
+                break;
+            case 'upload_error':
+                $message = 'File upload error. Please try again.';
+                $class = 'error';
+                break;
+        }
+        if ($message) {
+            echo '<div class="' . $class . '"><p>' . esc_html($message) . '</p></div>';
+        }
+    }
+}
+add_action('admin_notices', 'wcapf_display_import_message');
 

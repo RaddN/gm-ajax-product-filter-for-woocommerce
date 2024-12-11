@@ -68,7 +68,8 @@ function get_shortcode_attributes_from_page($content, $shortcode) {
 
 // Step 3: Update options with slug and shortcode attributes
 function update_wcapf_options_with_filters() {
-    $shortcode = 'products'; // Shortcode to search for
+    global $advance_settings;
+    $shortcode = $advance_settings["product_shortcode"] ?? 'products'; // Shortcode to search for
     $pages_with_shortcode = find_shortcode_pages($shortcode);
 
     // Get the current options
