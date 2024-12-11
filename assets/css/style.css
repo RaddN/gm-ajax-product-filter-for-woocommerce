@@ -66,6 +66,9 @@ div#roverlay {
     background: red;
     color: #fff !important;
 }
+.rfilterbuttons ul li.checked label{
+    color: #fff !important;
+}
 .filter-group.attributes .title, .filter-group.category .title,.filter-group.tags .title,.filter-group.price-range .title,div#rating .title {
     background: linear-gradient(90deg, #501A73 9%, #432FB8 37%);
     color: white !important;
