@@ -11,6 +11,7 @@ jQuery(document).ready(function($) {
         product_count = wcapf_data.product_count;
     }
     var rfilterbuttonsId = $('.rfilterbuttons').attr('id');
+    var path = window.location.pathname;
     // Initialize filters
     $('#product-filter, .rfilterbuttons').on('change', handleFilterChange);
     var rfilterindex = 0;
@@ -64,7 +65,7 @@ jQuery(document).ready(function($) {
         }).fail(handleAjaxError);
     }
     function attachPaginationEvents() {
-        $(document).on('click', '.woocommerce-pagination a.page-numbers', function(e) {
+        $(document).on('click', `${pagination_selector} a.page-numbers`, function(e) {
             e.preventDefault(); // Prevent the default anchor click behavior
             const url = $(this).attr('href'); // Get the URL from the link
             const page = new URL(url).searchParams.get('paged'); // Extract the page number
@@ -78,7 +79,7 @@ jQuery(document).ready(function($) {
     attachPaginationEvents();
 
     function gatherFormData() {
-        const currentPageSlug = "upcoming-conferences";
+        const currentPageSlug = path === "/" ? path : path.replace(/^\/|\/$/g, '');
         
         const formData = $('#product-filter').serialize();
         const minPrice = $('#min-price').val();

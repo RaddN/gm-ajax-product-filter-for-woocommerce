@@ -14,10 +14,10 @@ class WCAPF_Filter_Functions {
     $currentpage_slug = isset($_POST['current-page']) ? sanitize_text_field(wp_unslash($_POST['current-page'])) : "";
         $args = array(
             'post_type' => 'product',
-            'posts_per_page' => 12,
+            'posts_per_page' => intval($options["product_show_settings"][$currentpage_slug]["per_page"]) ?? 12,
             'post_status' => 'publish',
-            'orderby' => 'date',
-            'order' => 'ASC',
+            'orderby' => $options["product_show_settings"][$currentpage_slug]["orderby"] ?? 'date',
+            'order' => strtoupper($options["product_show_settings"][$currentpage_slug]["order"]) ?? 'ASC',
             'paged' => $paged,
             'tax_query' => array(
                 'relation' => 'AND'
@@ -31,8 +31,9 @@ class WCAPF_Filter_Functions {
                 'relation' => 'AND'
             )
         );
-        $args = $this->apply_filters_to_args($args);
-        $argsOptions =$update_filter_options==="on"?$this->apply_filters_to_args($args) : $this->update_options_args($argsOptions,$currentpage_slug);
+        $second_operator = strtoupper($options["product_show_settings"][$currentpage_slug]["operator_second"]) ?? "IN";
+        $args = $this->apply_filters_to_args($args,$second_operator);
+        $argsOptions =$update_filter_options==="on"?$this->apply_filters_to_args($args) : $this->update_options_args($argsOptions,$currentpage_slug,$second_operator);
 
         $query = new WP_Query($args);
         $OptionsQuery = new WP_Query($argsOptions);
@@ -63,7 +64,7 @@ class WCAPF_Filter_Functions {
 
         wp_die();
     }
-    private function apply_filters_to_args($args) {
+    private function apply_filters_to_args($args,$second_operator) {
         if (!isset($_POST['gm-product-filter-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['gm-product-filter-nonce'])), 'gm-product-filter-action')) {
             wp_send_json_error(array('message' => 'Security check failed'), 403);
             wp_die();
@@ -105,7 +106,8 @@ class WCAPF_Filter_Functions {
             $args['tax_query'][] = array(
                 'taxonomy' => 'product_cat',
                 'field' => 'slug',
-                'terms' => array_map('sanitize_text_field', wp_unslash($_POST['category']))
+                'terms' => array_map('sanitize_text_field', wp_unslash($_POST['category'])),
+                'operator' => $second_operator,
             );
         }
     
@@ -119,6 +121,7 @@ class WCAPF_Filter_Functions {
                         'taxonomy' => 'pa_' . sanitize_key($attribute_name),
                         'field' => 'slug',
                         'terms' => $sanitized_values,
+                        'operator' => $second_operator,
                     );
                 }
             }
@@ -129,13 +132,14 @@ class WCAPF_Filter_Functions {
             $args['tax_query'][] = array(
                 'taxonomy' => 'product_tag',
                 'field' => 'slug',
-                'terms' => array_map('sanitize_text_field', wp_unslash($_POST['tags']))
+                'terms' => array_map('sanitize_text_field', wp_unslash($_POST['tags'])),
+                'operator' => $second_operator,
             );
         }
     
         return $args;
     }
-    private function update_options_args($args,$currentpage_slug) {
+    private function update_options_args($args,$currentpage_slug,$second_operator) {
         global $options;
         $default_filters = isset($options["default_filters"][$currentpage_slug]) ? $options["default_filters"][$currentpage_slug] : [];
         if (!isset($_POST['gm-product-filter-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['gm-product-filter-nonce'])), 'gm-product-filter-action')) {
@@ -150,7 +154,8 @@ class WCAPF_Filter_Functions {
             $args['tax_query'][] = array(
                 'taxonomy' => 'product_cat',
                 'field' => 'slug',
-                'terms' => $filtercategories
+                'terms' => $filtercategories,
+                'operator' => $second_operator,
             );
         }
         }
@@ -165,6 +170,7 @@ class WCAPF_Filter_Functions {
                         'taxonomy' => 'pa_' . sanitize_key($attribute_name),
                         'field' => 'slug',
                         'terms' => $filtersanitized_values,
+                        'operator' => $second_operator,
                     );
                 }
                 }
@@ -178,7 +184,8 @@ class WCAPF_Filter_Functions {
             $args['tax_query'][] = array(
                 'taxonomy' => 'product_tag',
                 'field' => 'slug',
-                'terms' => $filtertags
+                'terms' => $filtertags,
+                'operator' => $second_operator,
             );
         }
         }

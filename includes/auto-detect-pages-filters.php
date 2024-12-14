@@ -25,10 +25,21 @@ function update_wcapf_options_with_page_slugs() {
 
     // Extract slugs from the pages with the shortcode
     $slugs = array_map(function($page) {
-        return $page->post_name;
+        // Get the current page slug
+        $current_slug = $page->post_name;
+
+        // Get the parent page slug if it exists
+        $parent_id = wp_get_post_parent_id($page->ID);
+        if ($parent_id) {
+            $parent_post = get_post($parent_id);
+            $parent_slug = $parent_post->post_name;
+            return $parent_slug . '/' . $current_slug; // Combine parent and current slug
+        }
+
+        return $current_slug; // Return only the current slug if no parent
     }, $pages_with_wcapf_shortcode);
 
-    // Update the pages array ensuring unique values
+    // Ensure unique values and update the pages array
     $options['pages'] = array_unique(array_merge($options['pages'], $slugs));
 
     // Update the options in the database
@@ -75,19 +86,45 @@ function update_wcapf_options_with_filters() {
     // Get the current options
     $options = get_option('wcapf_options');
     $options['default_filters'] = []; // Initialize if not set
+    $options['product_show_settings'] = [];
 
     foreach ($pages_with_shortcode as $page) {
         $attributes_list = get_shortcode_attributes_from_page($page->post_content, $shortcode);
 
+        // Get the current page slug
+        $current_slug = $page->post_name;
+
+        // Get the parent page slug if it exists
+        $parent_id = wp_get_post_parent_id($page->ID);
+        if ($parent_id) {
+            $parent_post = get_post($parent_id);
+            $parent_slug = $parent_post->post_name;
+            $full_slug = $parent_slug . '/' . $current_slug; // Combine parent and current slug
+        } else {
+            $full_slug = $current_slug; // Just use the current slug if no parent
+        }
+
         foreach ($attributes_list as $attributes) {
-              // Ensure that the 'category', 'attribute', and 'terms' keys exist
-              $arrayCata = isset($attributes['category']) ? explode(", ", $attributes['category']) : [];
-              $tagValue = isset($attributes['tags']) ? $attributes['tags'] : [];
-              $termsValue = isset($attributes['terms']) ? $attributes['terms'] : [];
-              $filters = !empty($arrayCata) ? $arrayCata : (!empty($tagValue) ? $tagValue : $termsValue);
-            $options['default_filters'][$page->post_name] = $filters;
+            // Ensure that the 'category', 'attribute', and 'terms' keys exist
+            $arrayCata = isset($attributes['category']) ? explode(", ", $attributes['category']) : [];
+            $tagValue = isset($attributes['tags']) ? $attributes['tags'] : [];
+            $termsValue = isset($attributes['terms']) ? $attributes['terms'] : [];
+            $filters = !empty($arrayCata) ? $arrayCata : (!empty($tagValue) ? $tagValue : $termsValue);
+
+            // Use the combined full slug as the key in default_filters
+            $options['default_filters'][$full_slug] = $filters;
+
+
+             // Set display settings
+             $options['product_show_settings'][$full_slug] = [
+                'per_page'        => $attributes['limit'] ?? $attributes['per_page'] ?? '',
+                'orderby'         => $attributes['orderby'] ?? '',
+                'order'           => $attributes['order'] ?? '',
+                'operator_second' => $attributes['terms_operator'] ?? $attributes['tag_operator'] ?? $attributes['cat_operator'] ?? ''
+            ];
         }
     }
+
     // Save the updated options
     update_option('wcapf_options', $options);
 }
