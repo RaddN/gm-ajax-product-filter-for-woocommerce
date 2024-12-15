@@ -67,10 +67,13 @@ function find_shortcode_pages($shortcode) {
 
 // Step 2: Parse shortcode attributes
 function get_shortcode_attributes_from_page($content, $shortcode) {
-    preg_match_all('/\[' . $shortcode . '[^\]]*\]/', $content, $matches);
+    // Use regex to match the shortcode and capture its attributes
+    preg_match_all('/\[' . preg_quote($shortcode, '/') . '([^]]*)\]/', $content, $matches);
 
     $attributes_list = [];
-    foreach ($matches[0] as $shortcode_instance) {
+    foreach ($matches[1] as $shortcode_instance) {
+        // Clean up the attribute string and parse it
+        $shortcode_instance = trim($shortcode_instance);
         $attributes_list[] = shortcode_parse_atts($shortcode_instance);
     }
 
@@ -120,7 +123,7 @@ function update_wcapf_options_with_filters() {
                 'per_page'        => $attributes['limit'] ?? $attributes['per_page'] ?? '',
                 'orderby'         => $attributes['orderby'] ?? '',
                 'order'           => $attributes['order'] ?? '',
-                'operator_second' => $attributes['terms_operator'] ?? $attributes['tag_operator'] ?? $attributes['cat_operator'] ?? ''
+                'operator_second' => $attributes['terms_operator'] ?? $attributes['tag_operator'] ?? $attributes['cat_operator'] ?? 'IN'
             ];
         }
     }

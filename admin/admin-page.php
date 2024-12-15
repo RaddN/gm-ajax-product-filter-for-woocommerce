@@ -16,6 +16,7 @@ function wcapf_admin_page_content() {
     ?>
     <div class="wrap wcapf_admin">
         <h1>Manage WooCommerce Product Filters</h1>
+        <?php settings_errors(); // Displays success or error notices ?>
         <h2 class="nav-tab-wrapper">
             <a href="?page=wcapf-admin&tab=form_manage" class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] == 'form_manage' ? 'nav-tab-active' : ''; ?>">Form Manage</a>
             <a href="?page=wcapf-admin&tab=form_style" class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] == 'form_style' ? 'nav-tab-active' : ''; ?>">Form Style</a>

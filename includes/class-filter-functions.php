@@ -3,7 +3,7 @@ class WCAPF_Filter_Functions {
 
     public function process_filter() {
         global $options;
-        $update_filter_options = $options["update_filter_options"];
+        $update_filter_options = $options["update_filter_options"]??"";
 
         if (!isset($_POST['gm-product-filter-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['gm-product-filter-nonce'])), 'gm-product-filter-action')) {
             wp_send_json_error(array('message' => 'Security check failed'), 403);
@@ -33,7 +33,7 @@ class WCAPF_Filter_Functions {
         );
         $second_operator = strtoupper($options["product_show_settings"][$currentpage_slug]["operator_second"]) ?? "IN";
         $args = $this->apply_filters_to_args($args,$second_operator);
-        $argsOptions =$update_filter_options==="on"?$this->apply_filters_to_args($args) : $this->update_options_args($argsOptions,$currentpage_slug,$second_operator);
+        $argsOptions =$update_filter_options==="on"?$this->apply_filters_to_args($args,$second_operator) : $this->update_options_args($argsOptions,$currentpage_slug,$second_operator);
 
         $query = new WP_Query($args);
         $OptionsQuery = new WP_Query($argsOptions);
