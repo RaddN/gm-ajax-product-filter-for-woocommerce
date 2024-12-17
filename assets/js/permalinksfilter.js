@@ -1,8 +1,16 @@
 jQuery(document).ready(function($) {
     let styleoptions = [];
     let advancesettings;
+    let options ;
+    let front_page_slug;
     if (typeof wcapf_data !== 'undefined' && wcapf_data.styleoptions) {
         styleoptions = wcapf_data.styleoptions;
+    }
+    if (typeof wcapf_data !== 'undefined' && wcapf_data.front_page_slug) {
+        front_page_slug = wcapf_data.front_page_slug;
+    }
+    if (typeof wcapf_data !== 'undefined' && wcapf_data.options) {
+        options = wcapf_data.options;
     }
     if (typeof wcapf_data !== 'undefined' && wcapf_data.advance_settings) {
         advancesettings = wcapf_data.advance_settings;
@@ -25,6 +33,7 @@ jQuery(document).ready(function($) {
     if (typeof wcapf_data !== 'undefined' && wcapf_data.slug) {
         
         const slugArray = wcapf_data.slug.split('/').filter(value => value !== '');
+        console.log(slugArray);
         if (slugArray.length > 0) {
             const filtersString = slugArray.join(',');
             applyFiltersFromUrl(filtersString);
@@ -32,6 +41,7 @@ jQuery(document).ready(function($) {
         } 
     }else if(gmfilter){
         const slugtoArray = gmfilter.split('/').filter(value => value !== '');
+        console.log(slugtoArray);
         if (slugtoArray.length > 0) {
             const filtersString = slugtoArray.join(',');
             applyFiltersFromUrl(filtersString);
@@ -62,8 +72,6 @@ jQuery(document).ready(function($) {
             if (response.success) {
                 $(product_selector).html(response.data.products);
                 $(pagination_selector).html(response.data.pagination);
-                if (typeof wcapf_data !== 'undefined' && wcapf_data.options) {
-                    const options = wcapf_data.options;
                     if (!options.update_filter_options && rfilterindex<1) {
                 updateFilterOptions(response.data.filters);
                  rfilterindex++;
@@ -71,7 +79,6 @@ jQuery(document).ready(function($) {
                     if (options.update_filter_options) {
                         updateFilterOptions(response.data.filters);
                     }
-                }
             } else {
                 console.error('Error:', response.message);
             }
@@ -450,7 +457,8 @@ jQuery(document).ready(function($) {
         if (typeof wcapf_data !== 'undefined' && wcapf_data.options) {
             const options = wcapf_data.options;
             if (options.default_filters) {
-                var currentPage = path==="/"? path : path.replace(/^\/|\/$/g, '');
+                var currentPage = path==="/"? front_page_slug : path.replace(/^\/|\/$/g, '');
+                console.log(currentPage);
                 var defaultFilters = options.default_filters[currentPage];
                 // Remove values from filtersArray that are present in defaultFilters
                 filtersArray = filtersArray.filter(function (value) {
@@ -458,7 +466,8 @@ jQuery(document).ready(function($) {
                 });
             }
         }
-        const newUrl = rfiltercurrentUrl?`${rfiltercurrentUrl}${filtersArray.join('/')}`:`${filtersArray.join('/')}`;
+        const filterUse = options?options.use_filters_word_in_permalinks==="on"?"filters/":"":"";
+        const newUrl = rfiltercurrentUrl?`${rfiltercurrentUrl}${filterUse}${filtersArray.join('/')}`:`${filtersArray.join('/')}`;
         history.replaceState(null, '', newUrl);
     }
     // for responsive

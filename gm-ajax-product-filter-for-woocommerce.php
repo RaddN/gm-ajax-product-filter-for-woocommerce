@@ -26,6 +26,15 @@ $use_url_filter = isset($options['use_url_filter']) ? $options['use_url_filter']
 $auto_detect_pages_filters = $options['pages_filter_auto'] ?? '';
 $slug = "";
 
+// Get the ID of the front page
+$front_page_id = get_option('page_on_front');
+// Get the front page object
+$front_page = get_post($front_page_id);
+// Get the slug of the front page
+$front_page_slug = $front_page->post_name;
+
+
+
 // Check if WooCommerce is active
 add_action('plugins_loaded', 'gm_filter_check_woocommerce');
 
@@ -58,7 +67,7 @@ function missing_woocommerce_notice() {
 
 // Enqueue scripts and styles
 function wcapf_enqueue_scripts() {
-    global $use_url_filter, $options, $slug, $styleoptions, $product_count, $advance_settings;
+    global $use_url_filter, $options, $slug, $styleoptions, $product_count, $advance_settings,$front_page_slug;
 
     $script_handle = 'filter-ajax';
     $script_path = 'assets/js/filter.js';
@@ -73,7 +82,7 @@ function wcapf_enqueue_scripts() {
     }
 
     wp_enqueue_script($script_handle, plugin_dir_url(__FILE__) . $script_path, ['jquery'], '1.0.6', true);
-    wp_localize_script($script_handle, 'wcapf_data', compact('options', 'slug', 'styleoptions', 'product_count', 'advance_settings'));
+    wp_localize_script($script_handle, 'wcapf_data', compact('options', 'slug', 'styleoptions', 'product_count', 'advance_settings','front_page_slug'));
     wp_localize_script($script_handle, 'wcapf_ajax', ['ajax_url' => admin_url('admin-ajax.php')]);
 
     wp_enqueue_style('filter-style', plugin_dir_url(__FILE__) . 'assets/css/style.css', [], '1.0.6');

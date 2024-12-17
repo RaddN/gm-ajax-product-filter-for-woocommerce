@@ -8,6 +8,9 @@ function wcapf_render_checkbox($key) {
     <span class="slider round"></span>
     </label>
     <?php
+    if($key ==="use_filters_word_in_permalinks") {
+        echo "<p>if you want to use permalinks filter in your front page turn it on.</p>";
+    }
 }
 
 function wcapf_show_categories_render() { wcapf_render_checkbox('show_categories'); }
@@ -15,10 +18,12 @@ function wcapf_show_attributes_render() { wcapf_render_checkbox('show_attributes
 function wcapf_show_tags_render() { wcapf_render_checkbox('show_tags'); }
 function wcapf_show_price_range_render() { wcapf_render_checkbox('show_price_range'); }
 function wcapf_show_rating_render() { wcapf_render_checkbox('show_rating'); }
+function wcapf_use_filters_word_in_permalinks_render() { wcapf_render_checkbox('use_filters_word_in_permalinks'); }
 function wcapf_update_filter_options_render() {wcapf_render_checkbox('update_filter_options');}
 function wcapf_show_loader_render() { wcapf_render_checkbox('show_loader'); }
 function wcapf_use_custom_template_render() {wcapf_render_checkbox('use_custom_template');}
 function wcapf_pages_filter_auto_render() { wcapf_render_checkbox('pages_filter_auto'); }
+
 
 function wcapf_custom_template_code_render() {
     global $options;

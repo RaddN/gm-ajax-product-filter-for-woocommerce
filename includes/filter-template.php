@@ -2,10 +2,20 @@
 function wcapf_product_filter_shortcode($atts) {
     global $styleoptions,$product_count,$post,$options, $advance_settings;
     $use_anchor = $advance_settings["use_anchor"] ?? "";
+    $slug = "";
     // Check if the post object is available
     if (isset($post)) {
-        // Get the post slug
+        // Get the current post slug
         $slug = $post->post_name;
+    
+        // Get the parent post slug if it exists
+        $parent_id = wp_get_post_parent_id($post->ID);
+        if ($parent_id) {
+            $parent_post = get_post($parent_id);
+            $parent_slug = $parent_post->post_name;
+            // Combine parent and current slug
+            $slug = $parent_slug . '/' . $slug;
+        }
     }
     $default_filter =$options["default_filters"][$slug] ?? [] ;
     $downarrow = '<svg class="rotatable" xmlns="https://www.w3.org/2000/svg" viewBox="0 0 448 512" role="graphics-symbol" aria-hidden="false" aria-label=""><path d="M224 416c-8.188 0-16.38-3.125-22.62-9.375l-192-192c-12.5-12.5-12.5-32.75 0-45.25s32.75-12.5 45.25 0L224 338.8l169.4-169.4c12.5-12.5 32.75-12.5 45.25 0s12.5 32.75 0 45.25l-192 192C240.4 412.9 232.2 416 224 416z"></path></svg>';

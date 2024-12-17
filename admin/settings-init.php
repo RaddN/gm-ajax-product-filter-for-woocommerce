@@ -16,6 +16,8 @@ function wcapf_settings_init() {
         'custom_template_code' => '',
         'product_selector' => '.products',
         'pagination_selector' => '.woocommerce-pagination ul.page-numbers',
+        'use_filters_word_in_permalinks' => 0,
+        'filters_word_in_permalinks' => 'filters',
     ];
     update_option('wcapf_options', $options);
 
@@ -30,6 +32,7 @@ function wcapf_settings_init() {
         'show_price_range' => __('Show Price Range', 'gm-ajax-product-filter-for-woocommerce'),
         'show_rating' => __('Show Rating', 'gm-ajax-product-filter-for-woocommerce'),
         'use_url_filter' => __('Use URL-Based Filter', 'gm-ajax-product-filter-for-woocommerce'),
+        'use_filters_word_in_permalinks' => __('use filters word in permalinks', 'gm-ajax-product-filter-for-woocommerce'),
         'update_filter_options' => __('Update filter options', 'gm-ajax-product-filter-for-woocommerce'),
         'show_loader' => __('Show Loader', 'gm-ajax-product-filter-for-woocommerce'),
         'use_custom_template' => __('Use Custom Product Template', 'gm-ajax-product-filter-for-woocommerce'),

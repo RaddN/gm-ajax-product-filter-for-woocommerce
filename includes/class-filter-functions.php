@@ -14,10 +14,11 @@ class WCAPF_Filter_Functions {
     $currentpage_slug = isset($_POST['current-page']) ? sanitize_text_field(wp_unslash($_POST['current-page'])) : "";
         $args = array(
             'post_type' => 'product',
-            'posts_per_page' => intval($options["product_show_settings"][$currentpage_slug]["per_page"]) ?? 12,
+            'posts_per_page' => isset($options["product_show_settings"][$currentpage_slug]["per_page"]) ? 
+            intval($options["product_show_settings"][$currentpage_slug]["per_page"]) : 12,
             'post_status' => 'publish',
             'orderby' => $options["product_show_settings"][$currentpage_slug]["orderby"] ?? 'date',
-            'order' => strtoupper($options["product_show_settings"][$currentpage_slug]["order"]) ?? 'ASC',
+            'order' => isset($options["product_show_settings"][$currentpage_slug]["order"])?strtoupper($options["product_show_settings"][$currentpage_slug]["order"]) : 'ASC',
             'paged' => $paged,
             'tax_query' => array(
                 'relation' => 'AND'
@@ -31,7 +32,7 @@ class WCAPF_Filter_Functions {
                 'relation' => 'AND'
             )
         );
-        $second_operator = strtoupper($options["product_show_settings"][$currentpage_slug]["operator_second"]) ?? "IN";
+        $second_operator = isset($options["product_show_settings"][$currentpage_slug]["operator_second"])?strtoupper($options["product_show_settings"][$currentpage_slug]["operator_second"]) : "IN";
         $args = $this->apply_filters_to_args($args,$second_operator);
         $argsOptions =$update_filter_options==="on"?$this->apply_filters_to_args($args,$second_operator) : $this->update_options_args($argsOptions,$currentpage_slug,$second_operator);
 
