@@ -1,3 +1,9 @@
+<?php
+if (!defined('ABSPATH')) {
+    exit;
+}
+?>
+
 <form method="post" action="options.php">
     <?php
     settings_fields('wcapf_style_options_group');
@@ -170,6 +176,31 @@
             <!-- Optional Settings -->
 <div class="optional_settings">
     <h4><?php esc_html_e('Optional Settings:', 'gm-ajax-product-filter-for-woocommerce'); ?></h4>
+    <!-- Hierarchical -->
+
+    <div class="setting-item hierarchical" style="display:none;">
+        <p><strong><?php esc_html_e('Enable Hierarchical:', 'gm-ajax-product-filter-for-woocommerce'); ?></strong></p>
+        <label>
+            <input type="radio" name="wcapf_style_options[<?php echo esc_attr($attribute_name); ?>][hierarchical][type]" value="disabled" 
+                <?php checked($form_styles[esc_attr($attribute_name)]['hierarchical']['type'] ?? '', 'disabled'); ?>>
+            <?php esc_html_e('Disabled', 'gm-ajax-product-filter-for-woocommerce'); ?>
+        </label>
+        <label>
+            <input type="radio" name="wcapf_style_options[<?php echo esc_attr($attribute_name); ?>][hierarchical][type]" value="enable" 
+                <?php checked($form_styles[esc_attr($attribute_name)]['hierarchical']['type'] ?? '', 'enable'); ?>>
+            <?php esc_html_e('Enabled', 'gm-ajax-product-filter-for-woocommerce'); ?>
+        </label>
+        <label>
+            <input type="radio" name="wcapf_style_options[<?php echo esc_attr($attribute_name); ?>][hierarchical][type]" value="enable_separate" 
+                <?php checked($form_styles[esc_attr($attribute_name)]['hierarchical']['type'] ?? '', 'enable_separate'); ?>>
+            <?php esc_html_e('Enabled & Seperate', 'gm-ajax-product-filter-for-woocommerce'); ?>
+        </label>
+        <label>
+            <input type="radio" name="wcapf_style_options[<?php echo esc_attr($attribute_name); ?>][hierarchical][type]" value="enable_hide_child" 
+                <?php checked($form_styles[esc_attr($attribute_name)]['hierarchical']['type'] ?? '', 'enable_hide_child'); ?>>
+            <?php esc_html_e('Enabled & hide child', 'gm-ajax-product-filter-for-woocommerce'); ?>
+        </label>
+    </div>
 
     <!-- Enable Minimization Option -->
     <div class="setting-item">
@@ -263,10 +294,13 @@ document.addEventListener('DOMContentLoaded', function () {
     else if (selectedAttribute === "rating") {
         toggleDisplay('.primary_options label', 'none');
         toggleDisplay('.primary_options label.rating', 'block');
-    } else {
+    } else if(selectedAttribute === "category"){
+        toggleDisplay('.hierarchical', 'block');
+    }
+    else {
+        toggleDisplay('.hierarchical', 'none');
         toggleDisplay('.primary_options label', 'block');
         toggleDisplay('.primary_options label.price', 'none');
-        toggleDisplay('.primary_options label', 'block');
         toggleDisplay('.primary_options label.rating', 'none');
     }
 });

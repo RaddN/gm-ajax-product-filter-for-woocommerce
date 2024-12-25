@@ -1,4 +1,7 @@
 <?php
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 function wcapf_render_checkbox($key) {
     global $options;

@@ -1,4 +1,7 @@
 <?php
+if (!defined('ABSPATH')) {
+    exit;
+}
 class WCAPF_Filter_Functions {
 
     public function process_filter() {

@@ -1,4 +1,8 @@
 <?php
+
+if (!defined('ABSPATH')) {
+    exit;
+}
 // Automatic add & remove pages slug list based on shortcode used
 function find_wcapf_shortcode_pages() {
     $shortcode = 'wcapf_product_filter';
@@ -25,18 +29,8 @@ function update_wcapf_options_with_page_slugs() {
 
     // Extract slugs from the pages with the shortcode
     $slugs = array_map(function($page) {
-        // Get the current page slug
-        $current_slug = $page->post_name;
-
-        // Get the parent page slug if it exists
-        $parent_id = wp_get_post_parent_id($page->ID);
-        if ($parent_id) {
-            $parent_post = get_post($parent_id);
-            $parent_slug = $parent_post->post_name;
-            return $parent_slug . '/' . $current_slug; // Combine parent and current slug
-        }
-
-        return $current_slug; // Return only the current slug if no parent
+        // Use the get_full_slug function to get the complete slug
+        return get_full_slug($page->ID);
     }, $pages_with_wcapf_shortcode);
 
     // Ensure unique values and update the pages array
@@ -81,6 +75,29 @@ function get_shortcode_attributes_from_page($content, $shortcode) {
 }
 
 // Step 3: Update options with slug and shortcode attributes
+function get_full_slug($post_id) {
+    $slug_parts = [];
+    $current_post_id = $post_id;
+
+    while ($current_post_id) {
+        $current_post = get_post($current_post_id);
+        
+        if (!$current_post) {
+            break; // Exit if no post is found
+        }
+        
+        // Prepend the current slug
+        array_unshift($slug_parts, $current_post->post_name);
+        
+        // Get the parent post ID
+        $current_post_id = wp_get_post_parent_id($current_post_id);
+
+        
+    }
+
+    return implode('/', $slug_parts); // Combine slugs with '/'
+}
+
 function update_wcapf_options_with_filters() {
     global $advance_settings;
     $shortcode = $advance_settings["product_shortcode"] ?? 'products'; // Shortcode to search for
@@ -94,18 +111,8 @@ function update_wcapf_options_with_filters() {
     foreach ($pages_with_shortcode as $page) {
         $attributes_list = get_shortcode_attributes_from_page($page->post_content, $shortcode);
 
-        // Get the current page slug
-        $current_slug = $page->post_name;
-
-        // Get the parent page slug if it exists
-        $parent_id = wp_get_post_parent_id($page->ID);
-        if ($parent_id) {
-            $parent_post = get_post($parent_id);
-            $parent_slug = $parent_post->post_name;
-            $full_slug = $parent_slug . '/' . $current_slug; // Combine parent and current slug
-        } else {
-            $full_slug = $current_slug; // Just use the current slug if no parent
-        }
+        // Get the full slug using the new function
+        $full_slug = get_full_slug($page->ID);
 
         foreach ($attributes_list as $attributes) {
             // Ensure that the 'category', 'attribute', and 'terms' keys exist
@@ -117,9 +124,8 @@ function update_wcapf_options_with_filters() {
             // Use the combined full slug as the key in default_filters
             $options['default_filters'][$full_slug] = $filters;
 
-
-             // Set display settings
-             $options['product_show_settings'][$full_slug] = [
+            // Set display settings
+            $options['product_show_settings'][$full_slug] = [
                 'per_page'        => $attributes['limit'] ?? $attributes['per_page'] ?? '',
                 'orderby'         => $attributes['orderby'] ?? '',
                 'order'           => $attributes['order'] ?? '',

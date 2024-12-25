@@ -1,4 +1,8 @@
 <?php
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 function color_name_to_hex($color_name) {
     $colors = [
         'aliceblue' => '#F0F8FF',

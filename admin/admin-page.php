@@ -1,4 +1,8 @@
 <?php
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 function wcapf_admin_menu() {
     add_menu_page(
         'WooCommerce Product Filters',

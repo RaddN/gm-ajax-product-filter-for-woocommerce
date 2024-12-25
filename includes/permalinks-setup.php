@@ -1,4 +1,9 @@
 <?php
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 function myplugin_register_template() {
     global $wp;
     global $options;

@@ -1,5 +1,7 @@
 <?php
-
+if (!defined('ABSPATH')) {
+    exit;
+}
 function wcapf_settings_init() {
     $options = get_option('wcapf_options') ?: [
         'show_categories' => 0,

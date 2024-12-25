@@ -1,4 +1,9 @@
 <?php
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 // Hook to admin_notices action
 add_action('admin_notices', 'custom_admin_notice');
 

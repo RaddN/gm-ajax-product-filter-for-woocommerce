@@ -1,4 +1,7 @@
 <?php
+if (!defined('ABSPATH')) {
+    exit;
+}
 // Render the "Product Selector" field
 function wcapf_product_selector_callback() {
     $options = get_option('wcapf_advance_options');
