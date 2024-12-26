@@ -391,3 +391,6 @@ input#searchFilter {
   .dynamic-rating > input:checked ~ label:hover ~ label {
     color: #FECE31;
   }
+  .child-categories {
+    margin-left: 25px;
+}

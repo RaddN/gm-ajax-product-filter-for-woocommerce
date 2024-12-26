@@ -27,22 +27,10 @@ class WCAPF_Filter_Functions {
                 'relation' => 'AND'
             )
         );
-        $argsOptions = array(
-            'post_type' => 'product',
-            'posts_per_page' => -1,
-            'post_status' => 'publish',
-            'tax_query' => array(
-                'relation' => 'AND'
-            )
-        );
         $second_operator = isset($options["product_show_settings"][$currentpage_slug]["operator_second"])?strtoupper($options["product_show_settings"][$currentpage_slug]["operator_second"]) : "IN";
         $args = $this->apply_filters_to_args($args,$second_operator);
-        $argsOptions =$update_filter_options==="on"?$this->apply_filters_to_args($args,$second_operator) : $this->update_options_args($argsOptions,$currentpage_slug,$second_operator);
 
         $query = new WP_Query($args);
-        $OptionsQuery = new WP_Query($argsOptions);
-        
-        $updated_filters = $this->get_updated_filters($OptionsQuery);
 
         // Capture the product listing
         ob_start();
@@ -62,7 +50,6 @@ class WCAPF_Filter_Functions {
         // Send both the filtered products and updated filters back to the AJAX request
         wp_send_json_success(array(
             'products' => $product_html,
-            'filters' => $updated_filters,
             'pagination' => $this->pagination($query,$paged)
         ));
 
@@ -139,59 +126,6 @@ class WCAPF_Filter_Functions {
                 'terms' => array_map('sanitize_text_field', wp_unslash($_POST['tags'])),
                 'operator' => $second_operator,
             );
-        }
-    
-        return $args;
-    }
-    private function update_options_args($args,$currentpage_slug,$second_operator) {
-        global $options;
-        $default_filters = isset($options["default_filters"][$currentpage_slug]) ? $options["default_filters"][$currentpage_slug] : [];
-        if (!isset($_POST['gm-product-filter-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['gm-product-filter-nonce'])), 'gm-product-filter-action')) {
-            wp_send_json_error(array('message' => 'Security check failed'), 403);
-            wp_die();
-        }
-        
-        if (!empty($_POST['category'])) {
-            $categories = array_map('sanitize_text_field', wp_unslash($_POST['category']));
-            $filtercategories = array_intersect($categories, $default_filters); // Use array_intersect to find common values
-            if(!empty($filtercategories)){
-            $args['tax_query'][] = array(
-                'taxonomy' => 'product_cat',
-                'field' => 'slug',
-                'terms' => $filtercategories,
-                'operator' => $second_operator,
-            );
-        }
-        }
-        if (!empty($_POST['attribute']) && is_array($_POST['attribute'])) {
-            $attributes = map_deep(wp_unslash($_POST['attribute']), 'sanitize_text_field');
-            foreach ($attributes as $attribute_name => $attribute_values) {
-                if (!empty($attribute_values) && is_array($attribute_values)) {
-                    $sanitized_values = array_map('sanitize_text_field', $attribute_values);
-                    $filtersanitized_values = array_intersect($sanitized_values, $default_filters);
-                    if(!empty($filtersanitized_values)){
-                    $args['tax_query'][] = array(
-                        'taxonomy' => 'pa_' . sanitize_key($attribute_name),
-                        'field' => 'slug',
-                        'terms' => $filtersanitized_values,
-                        'operator' => $second_operator,
-                    );
-                }
-                }
-            }
-        }
-    
-        if (!empty($_POST['tags'])) {
-            $tags = array_map('sanitize_text_field', wp_unslash($_POST['tags']));
-            $filtertags = array_intersect($tags, $default_filters);
-            if(!empty($filtertags)){
-            $args['tax_query'][] = array(
-                'taxonomy' => 'product_tag',
-                'field' => 'slug',
-                'terms' => $filtertags,
-                'operator' => $second_operator,
-            );
-        }
         }
     
         return $args;
@@ -287,43 +221,6 @@ class WCAPF_Filter_Functions {
             } else {
                 wc_get_template_part('content', 'product');
             }
-    }
-
-    // Function to get updated filter options based on the filtered products
-    private function get_updated_filters($query) {
-        // Get the current product IDs based on the filtered query
-        $product_ids = wp_list_pluck($query->posts, 'ID');
-        // Initialize arrays to store filter data
-        $categories = array();
-        $attributes = array();
-        $tags = array();
-
-        if (!empty($product_ids)) {
-            // Get categories for the filtered products
-            $categories = wp_get_object_terms($product_ids, 'product_cat', array('fields' => 'all'));
-
-            // Get attributes for the filtered products
-            $attributes_taxonomies = wc_get_attribute_taxonomies();
-            if ($attributes_taxonomies) {
-                foreach ($attributes_taxonomies as $attribute) {
-                    $attribute_terms = wp_get_object_terms($product_ids, 'pa_' . $attribute->attribute_name, array('fields' => 'all'));
-                    if (!empty($attribute_terms)) {
-                        $attributes[$attribute->attribute_name] = $attribute_terms;
-                    }
-                }
-            }
-            // Get tags for the filtered products
-            $tags = wp_get_object_terms($product_ids, 'product_tag', array('fields' => 'all'));
-        }
-        
-
-        $data = array(
-            'categories' => $categories,
-            'attributes' => $attributes,
-            'tags' => $tags
-        );
-
-        return $data;
     }
     // Function to generate pagination
     private function pagination($query,$paged) {
