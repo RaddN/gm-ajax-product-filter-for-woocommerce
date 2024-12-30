@@ -2,11 +2,11 @@
 if (!defined('ABSPATH')) {
     exit;
 }
-class WCAPF_Filter_Functions {
+class dapfforwc_Filter_Functions {
 
     public function process_filter() {
-        global $options;
-        $update_filter_options = $options["update_filter_options"]??"";
+        global $dapfforwc_options;
+        $update_filter_options = $dapfforwc_options["update_filter_options"]??"";
 
         if (!isset($_POST['gm-product-filter-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['gm-product-filter-nonce'])), 'gm-product-filter-action')) {
             wp_send_json_error(array('message' => 'Security check failed'), 403);
@@ -17,18 +17,20 @@ class WCAPF_Filter_Functions {
     $currentpage_slug = isset($_POST['current-page']) ? sanitize_text_field(wp_unslash($_POST['current-page'])) : "";
         $args = array(
             'post_type' => 'product',
-            'posts_per_page' => isset($options["product_show_settings"][$currentpage_slug]["per_page"]) ? 
-            intval($options["product_show_settings"][$currentpage_slug]["per_page"]) : 12,
+            'posts_per_page' => isset($dapfforwc_options["product_show_settings"][$currentpage_slug]["per_page"]) ? 
+            intval($dapfforwc_options["product_show_settings"][$currentpage_slug]["per_page"]) : 12,
             'post_status' => 'publish',
-            'orderby' => $options["product_show_settings"][$currentpage_slug]["orderby"] ?? 'date',
-            'order' => isset($options["product_show_settings"][$currentpage_slug]["order"])?strtoupper($options["product_show_settings"][$currentpage_slug]["order"]) : 'ASC',
+            'orderby' => $dapfforwc_options["product_show_settings"][$currentpage_slug]["orderby"] ?? 'date',
+            'order' => isset($dapfforwc_options["product_show_settings"][$currentpage_slug]["order"])?strtoupper($dapfforwc_options["product_show_settings"][$currentpage_slug]["order"]) : 'ASC',
             'paged' => $paged,
             'tax_query' => array(
                 'relation' => 'AND'
             )
         );
-        $second_operator = isset($options["product_show_settings"][$currentpage_slug]["operator_second"])?strtoupper($options["product_show_settings"][$currentpage_slug]["operator_second"]) : "IN";
+        $second_operator = isset($dapfforwc_options["product_show_settings"]["upcoming-conferences"]["operator_second"])?strtoupper($dapfforwc_options["product_show_settings"]["upcoming-conferences"]["operator_second"]) : "IN";
+
         $args = $this->apply_filters_to_args($args,$second_operator);
+
 
         $query = new WP_Query($args);
 
@@ -131,9 +133,9 @@ class WCAPF_Filter_Functions {
         return $args;
     }
     private function display_product($post) {
-        global $options;
+        global $dapfforwc_options;
         $product = wc_get_product($post->ID);
-        if(isset($options['use_custom_template'])){
+        if(isset($dapfforwc_options['use_custom_template'])){
         // Get product details
         $product_link = get_permalink();
         $product_title = get_the_title(); 
@@ -142,11 +144,11 @@ class WCAPF_Filter_Functions {
         $product_price = $product->get_price_html(); 
         $product_category = wp_strip_all_tags(get_the_term_list(get_the_ID(), 'product_cat', '', ', ')); 
         $product_sku = $product->get_sku(); 
-        $product_stock = $product->is_in_stock() ? __('In Stock', 'gm-ajax-product-filter-for-woocommerce') : __('Out of Stock', 'gm-ajax-product-filter-for-woocommerce'); 
+        $product_stock = $product->is_in_stock() ? __('In Stock', 'dynamic-ajax-product-filters-for-woocommerce') : __('Out of Stock', 'dynamic-ajax-product-filters-for-woocommerce'); 
         $add_to_cart_url = esc_url(add_query_arg('add-to-cart', get_the_ID(), $product_link)); 
 
             // Retrieve the custom template from the database
-            $custom_template = $options['custom_template_code'];
+            $custom_template = $dapfforwc_options['custom_template_code'];
             
             // Replace placeholders with actual values
             $custom_template = str_replace('{{product_link}}', esc_url($product_link), $custom_template);
@@ -230,8 +232,8 @@ class WCAPF_Filter_Functions {
             'format' => '?paged=%#%',
             'current' => max(1, $paged),
             'total' => $query->max_num_pages,
-            'prev_text' => __('« Prev','gm-ajax-product-filter-for-woocommerce'),
-            'next_text' => __('Next »', 'gm-ajax-product-filter-for-woocommerce'),
+            'prev_text' => __('« Prev','dynamic-ajax-product-filters-for-woocommerce'),
+            'next_text' => __('Next »', 'dynamic-ajax-product-filters-for-woocommerce'),
             'type' => 'array', // This returns an array of pagination links
         ));
     

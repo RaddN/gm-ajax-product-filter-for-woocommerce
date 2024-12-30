@@ -1,18 +1,15 @@
 jQuery(document).ready(function($) {
     let advancesettings;
-    let options ;
+    let dapfforwc_options ;
     let front_page_slug;
-    if (typeof wcapf_data !== 'undefined' && wcapf_data.front_page_slug) {
-        front_page_slug = wcapf_data.front_page_slug;
+    if (typeof dapfforwc_data !== 'undefined' && dapfforwc_data.front_page_slug) {
+        front_page_slug = dapfforwc_data.front_page_slug;
     }
-    if (typeof wcapf_data !== 'undefined' && wcapf_data.options) {
-        options = wcapf_data.options;
+    if (typeof dapfforwc_data !== 'undefined' && dapfforwc_data.dapfforwc_options) {
+        dapfforwc_options = dapfforwc_data.dapfforwc_options;
     }
-    if (typeof wcapf_data !== 'undefined' && wcapf_data.advance_settings) {
-        advancesettings = wcapf_data.advance_settings;
-    }
-    if (typeof wcapf_data !== 'undefined' && wcapf_data.product_count) {
-        product_count = wcapf_data.product_count;
+    if (typeof dapfforwc_data !== 'undefined' && dapfforwc_data.dapfforwc_advance_settings) {
+        advancesettings = dapfforwc_data.dapfforwc_advance_settings;
     }
     var rfilterbuttonsId = $('.rfilterbuttons').attr('id');
     // Initialize filters and handle changes
@@ -24,9 +21,9 @@ jQuery(document).ready(function($) {
     const urlParams = new URLSearchParams(window.location.search);
     const gmfilter = urlParams.get('filters');
     
-    if (typeof wcapf_data !== 'undefined' && wcapf_data.slug) {
+    if (typeof dapfforwc_data !== 'undefined' && dapfforwc_data.slug) {
         
-        const slugArray = wcapf_data.slug.split('/').filter(value => value !== '');
+        const slugArray = dapfforwc_data.slug.split('/').filter(value => value !== '');
         console.log(slugArray);
         if (slugArray.length > 0) {
             const filtersString = slugArray.join(',');
@@ -60,7 +57,7 @@ jQuery(document).ready(function($) {
     let product_selector = advancesettings ? advancesettings["product_selector"] ?? 'ul.products':'ul.products';
     let pagination_selector = advancesettings ? advancesettings["pagination_selector"] ?? 'ul.page-numbers' : 'ul.page-numbers';
     function fetchFilteredProducts(page = 1) {
-        $.post(wcapf_ajax.ajax_url, gatherFormData() +  `&paged=${page}&action=wcapf_filter_products`, function(response) {
+        $.post(dapfforwc_ajax.ajax_url, gatherFormData() +  `&paged=${page}&action=dapfforwc_filter_products`, function(response) {
             $('#roverlay').hide();
             $('#loader').hide();
             if (response.success) {
@@ -197,21 +194,25 @@ jQuery(document).ready(function($) {
                 selectedFilters.add($(this).val());
             });
         });
-        let filtersArray = Array.from(selectedFilters).filter(Boolean);;
-        if (typeof wcapf_data !== 'undefined' && wcapf_data.options) {
-            const options = wcapf_data.options;
-            if (options.default_filters) {
+        let filtersArray = Array.from(selectedFilters).filter(Boolean);
+        if (typeof dapfforwc_data !== 'undefined' && dapfforwc_data.dapfforwc_options) {
+            const dapfforwc_options = dapfforwc_data.dapfforwc_options;
+            if (dapfforwc_options.default_filters) {
                 var currentPage = path==="/"? front_page_slug : path.replace(/^\/|\/$/g, '');
                 console.log(currentPage);
-                var defaultFilters = options.default_filters[currentPage];
+                var defaultFilters = dapfforwc_options.default_filters[currentPage];
                 // Remove values from filtersArray that are present in defaultFilters
                 filtersArray = filtersArray.filter(function (value) {
                     return !defaultFilters.includes(value);
                 });
             }
         }
-        const filterUse = options?options.use_filters_word_in_permalinks==="on"?"filters/":"":"";
-        const newUrl = rfiltercurrentUrl?`${rfiltercurrentUrl}${filterUse}${filtersArray.join('/')}`:`${filtersArray.join('/')}`;
+        const filterUse = dapfforwc_options?dapfforwc_options.use_filters_word_in_permalinks==="on"?"filters/":"":"";
+        const newUrl = rfiltercurrentUrl 
+        ? (filtersArray.length !== 0 
+            ? `${rfiltercurrentUrl}${filterUse}${filtersArray.join('/')}` 
+            : `${rfiltercurrentUrl}${filtersArray.join('/')}`) 
+        : `${filtersArray.join('/')}`;
         history.replaceState(null, '', newUrl);
     }
     // for responsive
@@ -243,4 +244,65 @@ jQuery(document).ready(function($) {
                     $('.items').hide();
                 }
             });
+});
+
+
+
+
+// cateogry hide & show manage for herichical
+
+jQuery(document).ready(function($) {
+    $('.show-sub-cata').on('click', function(event) {
+        event.preventDefault();
+        const $childCategories = $(this).closest('a').next('.child-categories');
+        $childCategories.slideToggle(() => {
+            $(this).text($childCategories.is(':visible') ? '-' : '+');
+        });
+    });
+});
+
+
+
+//  for price range
+
+const rangeInput = document.querySelectorAll(".range-input input"),
+  priceInput = document.querySelectorAll(".price-input input"),
+  range = document.querySelector(".slider .progress");
+let priceGap = 1000;
+
+priceInput.forEach((input) => {
+  input.addEventListener("input", (e) => {
+    let minPrice = parseInt(priceInput[0].value),
+      maxPrice = parseInt(priceInput[1].value);
+
+    if (maxPrice - minPrice >= priceGap && maxPrice <= rangeInput[1].max) {
+      if (e.target.className === "input-min") {
+        rangeInput[0].value = minPrice;
+        range.style.left = (minPrice / rangeInput[0].max) * 100 + "%";
+      } else {
+        rangeInput[1].value = maxPrice;
+        range.style.right = 100 - (maxPrice / rangeInput[1].max) * 100 + "%";
+      }
+    }
+  });
+});
+
+rangeInput.forEach((input) => {
+  input.addEventListener("input", (e) => {
+    let minVal = parseInt(rangeInput[0].value),
+      maxVal = parseInt(rangeInput[1].value);
+
+    if (maxVal - minVal < priceGap) {
+      if (e.target.className === "range-min") {
+        rangeInput[0].value = maxVal - priceGap;
+      } else {
+        rangeInput[1].value = minVal + priceGap;
+      }
+    } else {
+      priceInput[0].value = minVal;
+      priceInput[1].value = maxVal;
+      range.style.left = (minVal / rangeInput[0].max) * 100 + "%";
+      range.style.right = 100 - (maxVal / rangeInput[1].max) * 100 + "%";
+    }
+  });
 });

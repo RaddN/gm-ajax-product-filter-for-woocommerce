@@ -2,8 +2,8 @@
 if (!defined('ABSPATH')) {
     exit;
 }
-function wcapf_settings_init() {
-    $options = get_option('wcapf_options') ?: [
+function dapfforwc_settings_init() {
+    $dapfforwc_options = get_option('dapfforwc_options') ?: [
         'show_categories' => 0,
         'show_attributes' => 1,
         'show_tags' => 0,
@@ -21,109 +21,109 @@ function wcapf_settings_init() {
         'use_filters_word_in_permalinks' => 0,
         'filters_word_in_permalinks' => 'filters',
     ];
-    update_option('wcapf_options', $options);
+    update_option('dapfforwc_options', $dapfforwc_options);
 
-    register_setting('wcapf_options_group', 'wcapf_options');
+    register_setting('dapfforwc_options_group', 'dapfforwc_options', 'dapfforwc_options_sanitize');
     
-    add_settings_section('wcapf_section', __('Filter Settings', 'gm-ajax-product-filter-for-woocommerce'), null, 'wcapf-admin');
+    add_settings_section('dapfforwc_section', __('Filter Settings', 'dynamic-ajax-product-filters-for-woocommerce'), null, 'dapfforwc-admin');
 
     $fields = [
-        'show_categories' => __('Show Categories', 'gm-ajax-product-filter-for-woocommerce'),
-        'show_attributes' => __('Show Attributes', 'gm-ajax-product-filter-for-woocommerce'),
-        'show_tags' => __('Show Tags', 'gm-ajax-product-filter-for-woocommerce'),
-        'show_price_range' => __('Show Price Range', 'gm-ajax-product-filter-for-woocommerce'),
-        'show_rating' => __('Show Rating', 'gm-ajax-product-filter-for-woocommerce'),
-        'use_url_filter' => __('Use URL-Based Filter', 'gm-ajax-product-filter-for-woocommerce'),
-        'use_filters_word_in_permalinks' => __('use filters word in permalinks', 'gm-ajax-product-filter-for-woocommerce'),
-        'update_filter_options' => __('Update filter options', 'gm-ajax-product-filter-for-woocommerce'),
-        'show_loader' => __('Show Loader', 'gm-ajax-product-filter-for-woocommerce'),
-        'use_custom_template' => __('Use Custom Product Template', 'gm-ajax-product-filter-for-woocommerce'),
+        'show_categories' => __('Show Categories', 'dynamic-ajax-product-filters-for-woocommerce'),
+        'show_attributes' => __('Show Attributes', 'dynamic-ajax-product-filters-for-woocommerce'),
+        'show_tags' => __('Show Tags', 'dynamic-ajax-product-filters-for-woocommerce'),
+        'show_price_range' => __('Show Price Range', 'dynamic-ajax-product-filters-for-woocommerce'),
+        'show_rating' => __('Show Rating', 'dynamic-ajax-product-filters-for-woocommerce'),
+        'use_url_filter' => __('Use URL-Based Filter', 'dynamic-ajax-product-filters-for-woocommerce'),
+        'use_filters_word_in_permalinks' => __('use filters word in permalinks', 'dynamic-ajax-product-filters-for-woocommerce'),
+        'update_filter_options' => __('Update filter options', 'dynamic-ajax-product-filters-for-woocommerce'),
+        'show_loader' => __('Show Loader', 'dynamic-ajax-product-filters-for-woocommerce'),
+        'use_custom_template' => __('Use Custom Product Template', 'dynamic-ajax-product-filters-for-woocommerce'),
     ];
 
     foreach ($fields as $key => $label) {
-        add_settings_field($key, $label, "wcapf_{$key}_render", 'wcapf-admin', 'wcapf_section');
+        add_settings_field($key, $label, "dapfforwc_{$key}_render", 'dapfforwc-admin', 'dapfforwc_section');
     }
     
     // Pages List Field
         // Add Page Management Section
-        add_settings_section('wcapf_page_section_before', null, function() {
-            global $options;
+        add_settings_section('dapfforwc_page_section_before', null, function() {
+            global $dapfforwc_options;
             echo '<div class="page_manage">';
-        }, 'wcapf-admin');
-        add_settings_section('wcapf_page_section', __('Pages Manage', 'gm-ajax-product-filter-for-woocommerce'), function() {
-            echo '<p>' . esc_html__('Add the pages below where you have added the shortcode.', 'gm-ajax-product-filter-for-woocommerce') . '</p>';
-        }, 'wcapf-admin');
-        add_settings_field("pages_filter_auto", 'Auto Detect Pages & Default Filters', "wcapf_pages_filter_auto_render", 'wcapf-admin', 'wcapf_page_section');
-    add_settings_field('pages', __('Pages List', 'gm-ajax-product-filter-for-woocommerce'), 'wcapf_pages_render', 'wcapf-admin', 'wcapf_page_section');
-    add_settings_section('wcapf_page_section_after', null, function() {
+        }, 'dapfforwc-admin');
+        add_settings_section('dapfforwc_page_section', __('Pages Manage', 'dynamic-ajax-product-filters-for-woocommerce'), function() {
+            echo '<p>' . esc_html__('Add the pages below where you have added the shortcode.', 'dynamic-ajax-product-filters-for-woocommerce') . '</p>';
+        }, 'dapfforwc-admin');
+        add_settings_field("pages_filter_auto", 'Auto Detect Pages & Default Filters', "dapfforwc_pages_filter_auto_render", 'dapfforwc-admin', 'dapfforwc_page_section');
+    add_settings_field('pages', __('Pages List', 'dynamic-ajax-product-filters-for-woocommerce'), 'dapfforwc_pages_render', 'dapfforwc-admin', 'dapfforwc_page_section');
+    add_settings_section('dapfforwc_page_section_after', null, function() {
         echo '</div>';
-    }, 'wcapf-admin');
+    }, 'dapfforwc-admin');
     
     // Default Filter List Field
-    add_settings_field('default_filters', __('Default Filter List', 'gm-ajax-product-filter-for-woocommerce'), 'wcapf_default_filters_render', 'wcapf-admin', 'wcapf_page_section');
+    add_settings_field('default_filters', __('Default Filter List', 'dynamic-ajax-product-filters-for-woocommerce'), 'dapfforwc_default_filters_render', 'dapfforwc-admin', 'dapfforwc_page_section');
 
     // custom code template
-    add_settings_field('custom_template_code', __('product custom template code', 'gm-ajax-product-filter-for-woocommerce'), 'wcapf_custom_template_code_render', 'wcapf-admin', 'wcapf_section');
+    add_settings_field('custom_template_code', __('product custom template code', 'dynamic-ajax-product-filters-for-woocommerce'), 'dapfforwc_custom_template_code_render', 'dapfforwc-admin', 'dapfforwc_section');
 
 
 
     // form style register
-    register_setting('wcapf_style_options_group', 'wcapf_style_options');
+    register_setting('dapfforwc_style_options_group', 'dapfforwc_style_options', 'dapfforwc_options_sanitize');
 
         // Add Form Style section
     add_settings_section(
-        'wcapf_style_section',
-        __('Form Style Options', 'gm-ajax-product-filter-for-woocommerce'),
+        'dapfforwc_style_section',
+        __('Form Style Options', 'dynamic-ajax-product-filters-for-woocommerce'),
         function () {
-            echo '<p>' . esc_html__('Select the filter box style for each attribute below. Additional options will appear based on your selection.', 'gm-ajax-product-filter-for-woocommerce') . '</p>';
+            echo '<p>' . esc_html__('Select the filter box style for each attribute below. Additional options will appear based on your selection.', 'dynamic-ajax-product-filters-for-woocommerce') . '</p>';
         },
-        'wcapf-style'
+        'dapfforwc-style'
     );
 
 //   advance settings register
-$Advance_options = get_option('wcapf_advance_options') ?: [
+$Advance_options = get_option('dapfforwc_advance_options') ?: [
     'product_selector' => '.products',
     'pagination_selector' => '.woocommerce-pagination ul.page-numbers',
     'product_shortcode' => 'products',
     'use_anchor' => 0,
 ];
-    update_option('wcapf_advance_options', $Advance_options);
-    register_setting('wcapf_advance_settings', 'wcapf_advance_options');
+    update_option('dapfforwc_advance_options', $Advance_options);
+    register_setting('dapfforwc_advance_settings', 'dapfforwc_advance_options', 'dapfforwc_options_sanitize');
     // Add the "Advance Settings" section
     add_settings_section(
-        'wcapf_advance_settings_section',
-        __('Advance Settings', 'gm-ajax-product-filter-for-woocommerce'),
+        'dapfforwc_advance_settings_section',
+        __('Advance Settings', 'dynamic-ajax-product-filters-for-woocommerce'),
         null,
-        'wcapf-advance-settings'
+        'dapfforwc-advance-settings'
     );
 
     // Add the "Product Selector" field
     add_settings_field(
         'product_selector',
-        __('Product Selector', 'gm-ajax-product-filter-for-woocommerce'),
-        'wcapf_product_selector_callback',
-        'wcapf-advance-settings',
-        'wcapf_advance_settings_section'
+        __('Product Selector', 'dynamic-ajax-product-filters-for-woocommerce'),
+        'dapfforwc_product_selector_callback',
+        'dapfforwc-advance-settings',
+        'dapfforwc_advance_settings_section'
     );
     // Add the "Pagination Selector" field
     add_settings_field(
         'pagination_selector',
-        __('Pagination Selector', 'gm-ajax-product-filter-for-woocommerce'),
-        'wcapf_pagination_selector_callback',
-        'wcapf-advance-settings',
-        'wcapf_advance_settings_section'
+        __('Pagination Selector', 'dynamic-ajax-product-filters-for-woocommerce'),
+        'dapfforwc_pagination_selector_callback',
+        'dapfforwc-advance-settings',
+        'dapfforwc_advance_settings_section'
     );
     // Add the "Product shotcode Selector" field
     add_settings_field(
         'product_shortcode',
-        __('Product Shortcode Selector', 'gm-ajax-product-filter-for-woocommerce'),
-        'wcapf_product_shortcode_callback',
-        'wcapf-advance-settings',
-        'wcapf_advance_settings_section'
+        __('Product Shortcode Selector', 'dynamic-ajax-product-filters-for-woocommerce'),
+        'dapfforwc_product_shortcode_callback',
+        'dapfforwc-advance-settings',
+        'dapfforwc_advance_settings_section'
     );
 
-    add_settings_field('use_anchor', __('Make filter link indexable for best SEO', 'gm-ajax-product-filter-for-woocommerce'), "wcapf_use_anchor_render", 'wcapf-advance-settings', 'wcapf_advance_settings_section');
+    add_settings_field('use_anchor', __('Make filter link indexable for best SEO', 'dynamic-ajax-product-filters-for-woocommerce'), "dapfforwc_use_anchor_render", 'dapfforwc-advance-settings', 'dapfforwc_advance_settings_section');
 }
-add_action('admin_init', 'wcapf_settings_init');
+add_action('admin_init', 'dapfforwc_settings_init');
 
 

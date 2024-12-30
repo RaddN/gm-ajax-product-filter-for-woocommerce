@@ -4,8 +4,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-function update_product_counts() {
-    $product_counts = array();
+function dapfforwc_update_product_counts() {
+    $dapfforwc_product_counts = array();
 
     // Get product categories and their counts
     $categories = get_terms(array(
@@ -15,7 +15,7 @@ function update_product_counts() {
 
     if (!is_wp_error($categories)) {
         foreach ($categories as $category) {
-            $product_counts['categories'][$category->slug] = $category->count;
+            $dapfforwc_product_counts['categories'][$category->slug] = $category->count;
         }
     }
 
@@ -27,7 +27,7 @@ function update_product_counts() {
 
     if (!is_wp_error($tags)) {
         foreach ($tags as $tag) {
-            $product_counts['tags'][$tag->slug] = $tag->count;
+            $dapfforwc_product_counts['tags'][$tag->slug] = $tag->count;
         }
     }
 
@@ -45,19 +45,19 @@ function update_product_counts() {
 
             if (!is_wp_error($terms)) {
                 foreach ($terms as $term) {
-                    $product_counts['attributes'][$taxonomy][$term->slug] = $term->count;
+                    $dapfforwc_product_counts['attributes'][$taxonomy][$term->slug] = $term->count;
                 }
             }
         }
     }
 
     // Save product counts in the option
-    update_option('wcapf_product_count', $product_counts);
+    update_option('dapfforwc_product_count', $dapfforwc_product_counts);
 }
 
 // Hook to update product counts whenever products are updated
-add_action('save_post_product', 'update_product_counts');
-add_action('edited_product_cat', 'update_product_counts');
-add_action('edited_product_tag', 'update_product_counts');
-add_action('edited_term', 'update_product_counts');
-add_action('init', 'update_product_counts');
+add_action('save_post_product', 'dapfforwc_update_product_counts');
+add_action('edited_product_cat', 'dapfforwc_update_product_counts');
+add_action('edited_product_tag', 'dapfforwc_update_product_counts');
+add_action('edited_term', 'dapfforwc_update_product_counts');
+add_action('init', 'dapfforwc_update_product_counts');

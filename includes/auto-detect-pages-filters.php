@@ -4,8 +4,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 // Automatic add & remove pages slug list based on shortcode used
-function find_wcapf_shortcode_pages() {
-    $shortcode = 'wcapf_product_filter';
+function dapfforwc_find_filter_shortcode_pages() {
+    $shortcode = 'plugincy_filters';
 
     // Use WP_Query instead of direct SQL
     $query = new WP_Query([
@@ -19,36 +19,36 @@ function find_wcapf_shortcode_pages() {
     return $query->posts;
 }
 
-function update_wcapf_options_with_page_slugs() {
+function dapfforwc_update_filter_options_with_page_slugs() {
     // Fetch pages containing the shortcode
-    $pages_with_wcapf_shortcode = find_wcapf_shortcode_pages();
+    $dapfforwc_pages_with_shortcode = dapfforwc_find_filter_shortcode_pages();
     
     // Get the current options
-    $options = get_option('wcapf_options');
-    $options['pages'] = [];
+    $dapfforwc_options = get_option('dapfforwc_options');
+    $dapfforwc_options['pages'] = [];
 
     // Extract slugs from the pages with the shortcode
-    $slugs = array_map(function($page) {
-        // Use the get_full_slug function to get the complete slug
-        return get_full_slug($page->ID);
-    }, $pages_with_wcapf_shortcode);
+    $dapfforwc_slugs = array_map(function($page) {
+        // Use the dapfforwc_get_full_slug function to get the complete slug
+        return dapfforwc_get_full_slug($page->ID);
+    }, $dapfforwc_pages_with_shortcode);
 
     // Ensure unique values and update the pages array
-    $options['pages'] = array_unique(array_merge($options['pages'], $slugs));
+    $dapfforwc_options['pages'] = array_unique(array_merge($dapfforwc_options['pages'], $dapfforwc_slugs));
 
     // Update the options in the database
-    update_option('wcapf_options', $options);
+    update_option('dapfforwc_options', $dapfforwc_options);
 }
 
 // Hook the function to an action, for example, when the admin initializes
-add_action('admin_init', 'update_wcapf_options_with_page_slugs');
+add_action('admin_init', 'dapfforwc_update_filter_options_with_page_slugs');
 
 
 
 
 
 // Step 1: Find pages containing a specific shortcode
-function find_shortcode_pages($shortcode) {
+function dapfforwc_find_shortcode_pages($shortcode) {
     $query = new WP_Query([
         'post_type'      => 'page',
         'post_status'    => 'publish',
@@ -60,7 +60,7 @@ function find_shortcode_pages($shortcode) {
 }
 
 // Step 2: Parse shortcode attributes
-function get_shortcode_attributes_from_page($content, $shortcode) {
+function dapfforwc_get_shortcode_attributes_from_page($content, $shortcode) {
     // Use regex to match the shortcode and capture its attributes
     preg_match_all('/\[' . preg_quote($shortcode, '/') . '([^]]*)\]/', $content, $matches);
 
@@ -75,8 +75,8 @@ function get_shortcode_attributes_from_page($content, $shortcode) {
 }
 
 // Step 3: Update options with slug and shortcode attributes
-function get_full_slug($post_id) {
-    $slug_parts = [];
+function dapfforwc_get_full_slug($post_id) {
+    $dapfforwc_slug_parts = [];
     $current_post_id = $post_id;
 
     while ($current_post_id) {
@@ -87,7 +87,7 @@ function get_full_slug($post_id) {
         }
         
         // Prepend the current slug
-        array_unshift($slug_parts, $current_post->post_name);
+        array_unshift($dapfforwc_slug_parts, $current_post->post_name);
         
         // Get the parent post ID
         $current_post_id = wp_get_post_parent_id($current_post_id);
@@ -95,24 +95,24 @@ function get_full_slug($post_id) {
         
     }
 
-    return implode('/', $slug_parts); // Combine slugs with '/'
+    return implode('/', $dapfforwc_slug_parts); // Combine slugs with '/'
 }
 
-function update_wcapf_options_with_filters() {
-    global $advance_settings;
-    $shortcode = $advance_settings["product_shortcode"] ?? 'products'; // Shortcode to search for
-    $pages_with_shortcode = find_shortcode_pages($shortcode);
+function dapfforwc_update_options_with_filters() {
+    global $dapfforwc_advance_settings;
+    $shortcode = $dapfforwc_advance_settings["product_shortcode"] ?? 'products'; // Shortcode to search for
+    $pages_with_shortcode = dapfforwc_find_shortcode_pages($shortcode);
 
     // Get the current options
-    $options = get_option('wcapf_options');
-    $options['default_filters'] = []; // Initialize if not set
-    $options['product_show_settings'] = [];
+    $dapfforwc_options = get_option('dapfforwc_options');
+    $dapfforwc_options['default_filters'] = []; // Initialize if not set
+    $dapfforwc_options['product_show_settings'] = [];
 
     foreach ($pages_with_shortcode as $page) {
-        $attributes_list = get_shortcode_attributes_from_page($page->post_content, $shortcode);
+        $attributes_list = dapfforwc_get_shortcode_attributes_from_page($page->post_content, $shortcode);
 
         // Get the full slug using the new function
-        $full_slug = get_full_slug($page->ID);
+        $full_slug = dapfforwc_get_full_slug($page->ID);
 
         foreach ($attributes_list as $attributes) {
             // Ensure that the 'category', 'attribute', and 'terms' keys exist
@@ -122,10 +122,10 @@ function update_wcapf_options_with_filters() {
             $filters = !empty($arrayCata) ? $arrayCata : (!empty($tagValue) ? $tagValue : $termsValue);
 
             // Use the combined full slug as the key in default_filters
-            $options['default_filters'][$full_slug] = $filters;
+            $dapfforwc_options['default_filters'][$full_slug] = $filters;
 
             // Set display settings
-            $options['product_show_settings'][$full_slug] = [
+            $dapfforwc_options['product_show_settings'][$full_slug] = [
                 'per_page'        => $attributes['limit'] ?? $attributes['per_page'] ?? '',
                 'orderby'         => $attributes['orderby'] ?? '',
                 'order'           => $attributes['order'] ?? '',
@@ -135,8 +135,8 @@ function update_wcapf_options_with_filters() {
     }
 
     // Save the updated options
-    update_option('wcapf_options', $options);
+    update_option('dapfforwc_options', $dapfforwc_options);
 }
 
 // Step 4: Hook to an appropriate action (e.g., admin_init or save_post)
-add_action('admin_init', 'update_wcapf_options_with_filters');
+add_action('admin_init', 'dapfforwc_update_options_with_filters');

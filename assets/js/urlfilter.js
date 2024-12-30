@@ -1,10 +1,7 @@
 jQuery(document).ready(function($) {
     let advancesettings;
-    if (typeof wcapf_data !== 'undefined' && wcapf_data.advance_settings) {
-        advancesettings = wcapf_data.advance_settings;
-    }
-    if (typeof wcapf_data !== 'undefined' && wcapf_data.product_count) {
-        product_count = wcapf_data.product_count;
+    if (typeof dapfforwc_data !== 'undefined' && dapfforwc_data.dapfforwc_advance_settings) {
+        advancesettings = dapfforwc_data.dapfforwc_advance_settings;
     }
     var rfilterbuttonsId = $('.rfilterbuttons').attr('id');
     var path = window.location.pathname;
@@ -39,7 +36,7 @@ jQuery(document).ready(function($) {
     let pagination_selector = advancesettings ? advancesettings["pagination_selector"] ?? 'ul.page-numbers' : 'ul.page-numbers';
    
     function fetchFilteredProducts(page = 1) {
-        $.post(wcapf_ajax.ajax_url, gatherFormData() + `&paged=${page}&action=wcapf_filter_products`, function(response) {
+        $.post(dapfforwc_ajax.ajax_url, gatherFormData() + `&paged=${page}&action=dapfforwc_filter_products`, function(response) {
             $('#roverlay').hide();
             $('#loader').hide();
             if (response.success) {
@@ -193,12 +190,12 @@ jQuery(document).ready(function($) {
 
         // Create the filters query string from the Set
         let filtersQueryString = Array.from(selectedFilters); // Convert Set back to array
-        if (typeof wcapf_data !== 'undefined' && wcapf_data.options) {
-            const options = wcapf_data.options;
-            if (options.default_filters) {
+        if (typeof dapfforwc_data !== 'undefined' && dapfforwc_data.dapfforwc_options) {
+            const dapfforwc_options = dapfforwc_data.dapfforwc_options;
+            if (dapfforwc_options.default_filters) {
                 var path = window.location.pathname;
                 var currentPage = path.replace(/^\/|\/$/g, '');
-                var defaultFilters = options.default_filters[currentPage];
+                var defaultFilters = dapfforwc_options.default_filters[currentPage];
                 // Remove values from filtersArray that are present in defaultFilters
                 filtersQueryString = filtersQueryString.filter(function (value) {
                     return !defaultFilters.includes(value);
@@ -247,5 +244,60 @@ jQuery(document).ready(function($) {
 });
 
 
+// cateogry hide & show manage for herichical
+
+jQuery(document).ready(function($) {
+    $('.show-sub-cata').on('click', function(event) {
+        event.preventDefault();
+        const $childCategories = $(this).closest('a').next('.child-categories');
+        $childCategories.slideToggle(() => {
+            $(this).text($childCategories.is(':visible') ? '-' : '+');
+        });
+    });
+});
 
 
+
+//  for price range
+
+const rangeInput = document.querySelectorAll(".range-input input"),
+  priceInput = document.querySelectorAll(".price-input input"),
+  range = document.querySelector(".slider .progress");
+let priceGap = 1000;
+
+priceInput.forEach((input) => {
+  input.addEventListener("input", (e) => {
+    let minPrice = parseInt(priceInput[0].value),
+      maxPrice = parseInt(priceInput[1].value);
+
+    if (maxPrice - minPrice >= priceGap && maxPrice <= rangeInput[1].max) {
+      if (e.target.className === "input-min") {
+        rangeInput[0].value = minPrice;
+        range.style.left = (minPrice / rangeInput[0].max) * 100 + "%";
+      } else {
+        rangeInput[1].value = maxPrice;
+        range.style.right = 100 - (maxPrice / rangeInput[1].max) * 100 + "%";
+      }
+    }
+  });
+});
+
+rangeInput.forEach((input) => {
+  input.addEventListener("input", (e) => {
+    let minVal = parseInt(rangeInput[0].value),
+      maxVal = parseInt(rangeInput[1].value);
+
+    if (maxVal - minVal < priceGap) {
+      if (e.target.className === "range-min") {
+        rangeInput[0].value = maxVal - priceGap;
+      } else {
+        rangeInput[1].value = minVal + priceGap;
+      }
+    } else {
+      priceInput[0].value = minVal;
+      priceInput[1].value = maxVal;
+      range.style.left = (minVal / rangeInput[0].max) * 100 + "%";
+      range.style.right = 100 - (maxVal / rangeInput[1].max) * 100 + "%";
+    }
+  });
+});

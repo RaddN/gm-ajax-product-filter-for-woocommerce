@@ -103,7 +103,7 @@ div#roverlay {
 }
 /* responsive filter */
 @media (max-width: 781px) {
-    form#conference-by-month {
+    .rfilterbuttons {
         display: none;
     }
     #product-filter .filter-group div .title{cursor:pointer !important;}
@@ -115,17 +115,28 @@ div#roverlay {
         width: 60px;
         height: 45px;
         position: absolute;
+        left: 0px;
+    }
+    form#product-filter {
+        display: flex ;
+        flex-direction: row !important;
+        overflow: scroll;
+        gap: 10px;
+        height: 66px;
+        margin-left: 64px;
     }
 .filter-group.attributes {
-    display: flex !important
-;
+    display: flex !important;
     flex-direction: row !important;
-    overflow: scroll;
-    margin-left: 66px;
     gap: 10px;
 }
-.filter-group.attributes>div {
-    min-width: 100px;
+.filter-group.attributes .title, .filter-group.category .title, .filter-group.tags .title, .filter-group.price-range .title, div#rating .title{font-size: 16px !important;}
+.child-categories {
+    display: block !important;
+}
+.filter-group.attributes>div, div#rating,div#price-range,div#category {
+    min-width: max-content;
+    height: min-content;
 }
     #product-filter .items {
         position: absolute;
