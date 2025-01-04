@@ -14,15 +14,24 @@ class dapfforwc_Filter_Functions {
         }
             // Determine the current page number
     $paged = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
+    $orderbyFormUser = isset($_POST['orderby']) ? $_POST['orderby'] : "";
     $currentpage_slug = isset($_POST['current-page']) ? sanitize_text_field(wp_unslash($_POST['current-page'])) : "";
         $args = array(
             'post_type' => 'product',
             'posts_per_page' => isset($dapfforwc_options["product_show_settings"][$currentpage_slug]["per_page"]) ? 
             intval($dapfforwc_options["product_show_settings"][$currentpage_slug]["per_page"]) : 12,
             'post_status' => 'publish',
-            'orderby' => $dapfforwc_options["product_show_settings"][$currentpage_slug]["orderby"] ?? 'date',
+            'orderby' => $orderbyFormUser ? $orderbyFormUser : $dapfforwc_options["product_show_settings"][$currentpage_slug]["orderby"] ?? 'date',
             'order' => isset($dapfforwc_options["product_show_settings"][$currentpage_slug]["order"])?strtoupper($dapfforwc_options["product_show_settings"][$currentpage_slug]["order"]) : 'ASC',
             'paged' => $paged,
+            'tax_query' => array(
+                'relation' => 'AND'
+            )
+        );
+        $args_options = array(
+            'post_type' => 'product',
+            'posts_per_page' => -1,
+            'post_status' => 'publish',
             'tax_query' => array(
                 'relation' => 'AND'
             )
@@ -31,12 +40,26 @@ class dapfforwc_Filter_Functions {
 
         $args = $this->apply_filters_to_args($args,$second_operator);
 
+        $args_options = $this->apply_filters_to_args($args_options ,$second_operator);
 
+        $filter_options = new WP_Query($args_options);
+        $count_total_showing_product = $filter_options->post_count;
         $query = new WP_Query($args);
 
+        $updated_filters = dapfforwc_get_updated_filters($filter_options);
+        include(plugin_dir_path(__FILE__) . 'widget_design_template.php');
+        $default_filter = [];
+
+        // Check if 'selectedvalues' is set and not empty
+        if (!empty($_POST['selectedvalues'])) {
+            // Convert the string to an array
+            $default_filter = array_map('sanitize_text_field', explode(',', wp_unslash($_POST['selectedvalues'])));
+        }
+        
+        $filterform = dapfforwc_filter_form($updated_filters,$default_filter,"","","",$min_price=floatval($_POST['min_price'])??0,$max_price=floatval($_POST['max_price']) ?? 10000);
         // Capture the product listing
         ob_start();
-
+        
         if ($query->have_posts()) {
             while ($query->have_posts()) : $query->the_post();
             $this->display_product($query->post);
@@ -44,7 +67,13 @@ class dapfforwc_Filter_Functions {
          // Add pagination links
         $this->pagination($query,$paged);
         } else {
-            echo '<p>No products found</p>';
+            echo '<div style="display: flex ; flex-direction: column; align-items: center; gap: 10px;">
+            <p style="margin-top: 20px; font-size: 24px; color: #212121;">No products found</p>
+            <p>We\'re sorry. We cannot find any matches for your search term.</p>
+            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="100" height="100" viewBox="0 0 50 50">
+            <path d="M 21 3 C 11.621094 3 4 10.621094 4 20 C 4 29.378906 11.621094 37 21 37 C 24.710938 37 28.140625 35.804688 30.9375 33.78125 L 44.09375 46.90625 L 46.90625 44.09375 L 33.90625 31.0625 C 36.460938 28.085938 38 24.222656 38 20 C 38 10.621094 30.378906 3 21 3 Z M 21 5 C 29.296875 5 36 11.703125 36 20 C 36 28.296875 29.296875 35 21 35 C 12.703125 35 6 28.296875 6 20 C 6 11.703125 12.703125 5 21 5 Z"></path>
+            </svg>
+            </div>';
         }
 
         $product_html = ob_get_clean();
@@ -52,7 +81,9 @@ class dapfforwc_Filter_Functions {
         // Send both the filtered products and updated filters back to the AJAX request
         wp_send_json_success(array(
             'products' => $product_html,
-            'pagination' => $this->pagination($query,$paged)
+            'total_product_fetch' => $count_total_showing_product,
+            'pagination' => $this->pagination($query,$paged),
+            'filter_options' => $filterform
         ));
 
         wp_die();

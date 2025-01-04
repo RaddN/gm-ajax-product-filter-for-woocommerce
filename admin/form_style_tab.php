@@ -61,7 +61,11 @@ if (!defined('ABSPATH')) {
                                 <span class="active" style="display:none;"><i class="fa fa-check"></i></span>
                                 <input type="radio" name="dapfforwc_style_options[<?php echo esc_attr($dapfforwc_attribute_name); ?>][type]" value="<?php echo esc_html($key); ?>" <?php checked($dapfforwc_selected_style, $key); ?> data-type="<?php echo esc_html($key); ?>">
                                 <img src="<?php echo esc_url(plugins_url('../assets/images/' . $key . '.png', __FILE__)); ?>" alt="<?php echo esc_attr($key); ?>">
-                                <div class="title"><?php echo esc_html($key); ?></div>
+                                <!-- <div class="title"> -->
+                                    <?php 
+                                    // echo esc_html($key); 
+                                    ?>
+                                    <!-- </div> -->
                             </label>
                         <?php endforeach; ?>
                     </div>
@@ -76,7 +80,11 @@ if (!defined('ABSPATH')) {
                                     <span class="active" style="display:none;"><i class="fa fa-check"></i></span>
                                     <input type="radio" class="optionselect" name="dapfforwc_style_options[<?php echo esc_attr($dapfforwc_attribute_name); ?>][sub_option]" value="<?php echo esc_attr($key); ?>" <?php checked($dapfforwc_sub_option, $key); ?>>
                                     <img src="<?php echo esc_url(plugins_url('../assets/images/' . $key . '.png', __FILE__)); ?>" alt="<?php echo esc_attr($label); ?>">
-                                    <div class="title"><?php echo esc_html($label); ?></div>
+                                    <!-- <div class="title"> -->
+                                        <?php 
+                                        // echo esc_html($label); 
+                                        ?>
+                                    <!-- </div> -->
                                 </label>
                             <?php endforeach; ?>
                         </div>
@@ -102,8 +110,8 @@ if (!defined('ABSPATH')) {
     <h4><?php esc_html_e('Advanced Options for Terms', 'dynamic-ajax-product-filters-for-woocommerce'); ?></h4>
     <?php if (!empty($dapfforwc_terms)) : ?>
         
-        <!-- Color Options -->
-        <div class="color" style="display: <?php echo $dapfforwc_selected_style === 'color' ? 'block' : 'none'; ?>;">
+       <!-- Color Options -->
+       <div class="color" style="display: <?php echo $dapfforwc_selected_style === 'color' ? 'block' : 'none'; ?>;">
             <h5><?php esc_html_e('Set Colors for Terms', 'dynamic-ajax-product-filters-for-woocommerce'); ?></h5>
             <?php foreach ($dapfforwc_terms as $term) :
                 $dapfforwc_color_value = $dapfforwc_form_styles[$dapfforwc_attribute_name]['colors'][$term->slug] ?? dapfforwc_color_name_to_hex(esc_attr($term->slug)) ; // Fetch stored color or default

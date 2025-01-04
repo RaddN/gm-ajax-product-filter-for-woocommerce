@@ -6,7 +6,24 @@ jQuery(document).ready(function($) {
     // Initialize filters
     var rfilterbuttonsId = $('.rfilterbuttons').attr('id');
     var path = window.location.pathname;
+    var orderby;
+    // Initialize filters and handle changes
     $('#product-filter, .rfilterbuttons').on('change', handleFilterChange);
+    $('.woocommerce-ordering select').on('change', function(event) {
+        // Prevent the default form submission and page reload
+        event.preventDefault();
+
+        // Get the selected value
+        orderby = $(this).val();
+        fetchFilteredProducts();
+
+    });
+     // Prevent form submission on pressing Enter
+     $('.woocommerce-ordering').on('submit', function(event) {
+        event.preventDefault();
+    });
+    
+    
     fetchFilteredProducts();
     var rfilterindex = 0;
     // Handle filter changes and AJAX loading
@@ -26,11 +43,12 @@ jQuery(document).ready(function($) {
     let pagination_selector = advancesettings ? advancesettings["pagination_selector"] ?? 'ul.page-numbers' : 'ul.page-numbers';
    
     function fetchFilteredProducts(page = 1) {
-        $.post(dapfforwc_ajax.ajax_url, gatherFormData() + `&paged=${page}&action=dapfforwc_filter_products`, function(response) {
+        $.post(dapfforwc_ajax.ajax_url, gatherFormData() + `&orderby=${orderby}&paged=${page}&action=dapfforwc_filter_products`, function(response) {
             $('#roverlay').hide();
             $('#loader').hide();
             if (response.success) {
                 $(product_selector).html(response.data.products);
+                $('.woocommerce-result-count').text(`${response.data.total_product_fetch} results found`);
                 $(pagination_selector).html(response.data.pagination);
                 syncCheckboxSelections();
             } else {
@@ -127,7 +145,12 @@ jQuery(document).ready(function($) {
             $(this).toggleClass('checked', checkbox.is(':checked'));
         });
     }
-
+        // reset button
+        $(document).on('click', '#reset-rating', function(event) {
+            event.preventDefault();
+            $('input[name="rating[]"]').prop('checked', false);
+            fetchFilteredProducts();
+        });
     function attachMainFilterChangeEvents() {
         $('#' + rfilterbuttonsId + ' input').on('change', function() {
             const relatedCheckbox = $(`.rfilterbuttons ul li input[value="${$(this).val()}"]`);

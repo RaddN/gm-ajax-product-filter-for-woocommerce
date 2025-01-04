@@ -220,7 +220,7 @@ function dapfforwc_admin_scripts() {
                     <span class="active" style="display:none;"><i class="fa fa-check"></i></span>
                     <input type="radio" class="optionselect" name="dapfforwc_style_options[${attributeName}][sub_option]" value="${key}">
                     <img src="/wp-content/plugins/dynamic-ajax-product-filters-for-woocommerce/assets/images/${key}.png" alt="${currentOptions[key]}">
-                    <div class="title">${currentOptions[key]}</div>
+                   
                 `;
                 fragment.appendChild(label);
             }

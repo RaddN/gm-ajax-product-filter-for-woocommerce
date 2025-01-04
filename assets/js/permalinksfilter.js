@@ -2,6 +2,7 @@ jQuery(document).ready(function($) {
     let advancesettings;
     let dapfforwc_options ;
     let front_page_slug;
+    let selectedValesbyuser = store_selected_values();
     if (typeof dapfforwc_data !== 'undefined' && dapfforwc_data.front_page_slug) {
         front_page_slug = dapfforwc_data.front_page_slug;
     }
@@ -12,9 +13,29 @@ jQuery(document).ready(function($) {
         advancesettings = dapfforwc_data.dapfforwc_advance_settings;
     }
     var rfilterbuttonsId = $('.rfilterbuttons').attr('id');
+    var orderby;
+
+      
+
     // Initialize filters and handle changes
+    
     $('#product-filter, .rfilterbuttons').on('change', handleFilterChange);
-    // fetchFilteredProducts();
+    $('.woocommerce-ordering select').on('change', function(event) {
+        // Prevent the default form submission and page reload
+        event.preventDefault();
+
+        // Get the selected value
+        orderby = $(this).val();
+        fetchFilteredProducts();
+
+    });
+
+    // Prevent form submission on pressing Enter
+    $('.woocommerce-ordering').on('submit', function(event) {
+        event.preventDefault();
+    });
+  
+
     var rfiltercurrentUrl = window.location.href;
     var path = window.location.pathname;
     rfiltercurrentUrl = rfiltercurrentUrl.split('?')[0];
@@ -24,7 +45,6 @@ jQuery(document).ready(function($) {
     if (typeof dapfforwc_data !== 'undefined' && dapfforwc_data.slug) {
         
         const slugArray = dapfforwc_data.slug.split('/').filter(value => value !== '');
-        console.log(slugArray);
         if (slugArray.length > 0) {
             const filtersString = slugArray.join(',');
             applyFiltersFromUrl(filtersString);
@@ -32,7 +52,6 @@ jQuery(document).ready(function($) {
         } 
     }else if(gmfilter){
         const slugtoArray = gmfilter.split('/').filter(value => value !== '');
-        console.log(slugtoArray);
         if (slugtoArray.length > 0) {
             const filtersString = slugtoArray.join(',');
             applyFiltersFromUrl(filtersString);
@@ -42,12 +61,39 @@ jQuery(document).ready(function($) {
     else if (anyFilterSelected()) {
         fetchFilteredProducts();
     }
+    
     function handleFilterChange(e) {
         e.preventDefault();
+        if (!anyFilterSelected()) return location.reload();
+        
+        selectedValesbyuser = store_selected_values();
         updateUrlFilters(); // Update URL based on selected filters
         $('#roverlay').show();
         $('#loader').show();
         fetchFilteredProducts();
+    }
+    function store_selected_values(){
+        let selectedValues = [];
+        // Get selected rating
+        $('input[name="rating[]"]:checked').each(function() {
+            selectedValues.push($(this).val());
+        });
+
+        // Get selected categories
+        $('input[name="category[]"]:checked').each(function() {
+            selectedValues.push($(this).val());
+        });
+
+        // Get selected attributes
+        $('input[name^="attribute"]:checked').each(function() {
+            selectedValues.push($(this).val());
+        });
+
+        // Get selected tags
+        $('input[name="tag[]"]:checked').each(function() {
+            selectedValues.push($(this).val());
+        });
+        return selectedValues;
     }
 
     function anyFilterSelected() {
@@ -57,15 +103,21 @@ jQuery(document).ready(function($) {
     let product_selector = advancesettings ? advancesettings["product_selector"] ?? 'ul.products':'ul.products';
     let pagination_selector = advancesettings ? advancesettings["pagination_selector"] ?? 'ul.page-numbers' : 'ul.page-numbers';
     function fetchFilteredProducts(page = 1) {
-        $.post(dapfforwc_ajax.ajax_url, gatherFormData() +  `&paged=${page}&action=dapfforwc_filter_products`, function(response) {
+        $.post(dapfforwc_ajax.ajax_url, gatherFormData() +  `&selectedvalues=${selectedValesbyuser}&orderby=${orderby}&paged=${page}&action=dapfforwc_filter_products`, function(response) {
             $('#roverlay').hide();
             $('#loader').hide();
             if (response.success) {
                 $(product_selector).html(response.data.products);
+                $('.woocommerce-result-count').text(`${response.data.total_product_fetch} results found`);
+                if(dapfforwc_options["update_filter_options"]==="on"){
+                $('#product-filter div').remove();
+                $("form#product-filter").append(response.data.filter_options);
+                }
                 $(pagination_selector).html(response.data.pagination);
                 syncCheckboxSelections();
             } else {
                 console.error('Error:', response.message);
+                
             }
         }).fail(handleAjaxError);
     }
@@ -82,11 +134,44 @@ jQuery(document).ready(function($) {
     
     // Call this function after updating the product listings
     attachPaginationEvents();
+    function changePseudoElementContent(beforeContent, afterContent) {
+        // Create a new style element
+        var style = $('<style></style>');
+        style.text(`
+            .progress-percentage:before { 
+                content: "${beforeContent}"; 
+            }
+            .progress-percentage:after { 
+                content: "${afterContent}"; 
+            }
+        `);
+        
+        // Append the style to the head
+        $('head').append(style);
+    }
     function gatherFormData() {
         const currentPageSlug = path === "/" ? path : path.replace(/^\/|\/$/g, '');
         const formData = $('#product-filter').serialize();
-        const minPrice = $('#min-price').val();
-        const maxPrice = $('#max-price').val();
+        
+        // price range
+        const rangeInput = document.querySelectorAll(".range-input input"),
+        priceInput = document.querySelectorAll(".price-input input"),
+        range = document.querySelector(".slider .progress");
+        let minPrice = parseInt(rangeInput[0].value),
+        maxPrice = parseInt(rangeInput[1].value);
+        changePseudoElementContent(`$${minPrice}`, `$${maxPrice}`);
+        rangeInput.forEach((input) => {
+        input.addEventListener("input", (e) => {
+          let minPrice = parseInt(rangeInput[0].value);
+            maxPrice = parseInt(rangeInput[1].value);
+            changePseudoElementContent(`$${minPrice}`, `$${maxPrice}`);
+            priceInput[0].value = minminPriceVal;
+            priceInput[1].value = maxPrice;
+            range.style.left = (minPrice / rangeInput[0].max) * 100 + "%";
+            range.style.right = 100 - (maxPrice / rangeInput[1].max) * 100 + "%";
+        });
+      });
+    //   price range ends
         // Append price filters if values exist
         let priceParams = '';
         if (minPrice) priceParams += `&min_price=${encodeURIComponent(minPrice)}`;
@@ -166,22 +251,28 @@ jQuery(document).ready(function($) {
             return; // Early return if the string is empty
         }
     
-        const filterValues = filtersString.split(',');
-    
+        const filterValues = filtersString.split(',').map(value => value.trim()); // Trim whitespace
         filterValues.forEach(value => {
-                // Check the input checkbox
-                if ($(`input[value="${value}"]`).length) {
-                    $(`input[value="${value}"]`).attr('checked', true);
-                } else if ($(`select option[value="${value}"]`).length) {
-                    // If no input found, check dropdown option
-                    $(`select option[value="${value}"]`).prop('selected', true);
-                } else {
-                    console.log(`Filter "${value}" not found in inputs or dropdown.`);
-                }
+            // Check the input checkbox
+            if ($(`input[value="${value}"]`).length) {
+                $(`input[value="${value}"]`).attr('checked', true);
+            } else if ($(`select option[value="${value}"]`).length) {
+                // If no input found, check dropdown option
+                $(`select option[value="${value}"]`).prop('selected', true);
+            } else {
+                console.log(`Filter "${value}" not found in inputs or dropdown.`);
+            }
         });
     
         fetchFilteredProducts(); // Fetch products after applying filters
     }
+    // reset button
+    $(document).on('click', '#reset-rating', function(event) {
+        event.preventDefault();
+        $('input[name="rating[]"]').prop('checked', false);
+        fetchFilteredProducts();
+        updateUrlFilters();
+    });
     function updateUrlFilters() {
         const selectedFilters = new Set();
         $('#product-filter input:checked').each(function() {
@@ -199,7 +290,6 @@ jQuery(document).ready(function($) {
             const dapfforwc_options = dapfforwc_data.dapfforwc_options;
             if (dapfforwc_options.default_filters) {
                 var currentPage = path==="/"? front_page_slug : path.replace(/^\/|\/$/g, '');
-                console.log(currentPage);
                 var defaultFilters = dapfforwc_options.default_filters[currentPage];
                 // Remove values from filtersArray that are present in defaultFilters
                 filtersArray = filtersArray.filter(function (value) {
@@ -259,50 +349,4 @@ jQuery(document).ready(function($) {
             $(this).text($childCategories.is(':visible') ? '-' : '+');
         });
     });
-});
-
-
-
-//  for price range
-
-const rangeInput = document.querySelectorAll(".range-input input"),
-  priceInput = document.querySelectorAll(".price-input input"),
-  range = document.querySelector(".slider .progress");
-let priceGap = 1000;
-
-priceInput.forEach((input) => {
-  input.addEventListener("input", (e) => {
-    let minPrice = parseInt(priceInput[0].value),
-      maxPrice = parseInt(priceInput[1].value);
-
-    if (maxPrice - minPrice >= priceGap && maxPrice <= rangeInput[1].max) {
-      if (e.target.className === "input-min") {
-        rangeInput[0].value = minPrice;
-        range.style.left = (minPrice / rangeInput[0].max) * 100 + "%";
-      } else {
-        rangeInput[1].value = maxPrice;
-        range.style.right = 100 - (maxPrice / rangeInput[1].max) * 100 + "%";
-      }
-    }
-  });
-});
-
-rangeInput.forEach((input) => {
-  input.addEventListener("input", (e) => {
-    let minVal = parseInt(rangeInput[0].value),
-      maxVal = parseInt(rangeInput[1].value);
-
-    if (maxVal - minVal < priceGap) {
-      if (e.target.className === "range-min") {
-        rangeInput[0].value = maxVal - priceGap;
-      } else {
-        rangeInput[1].value = minVal + priceGap;
-      }
-    } else {
-      priceInput[0].value = minVal;
-      priceInput[1].value = maxVal;
-      range.style.left = (minVal / rangeInput[0].max) * 100 + "%";
-      range.style.right = 100 - (maxVal / rangeInput[1].max) * 100 + "%";
-    }
-  });
 });

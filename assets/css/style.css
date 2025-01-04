@@ -367,6 +367,29 @@ input#searchFilter {
     -moz-appearance: none;
     box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
   }
+
+  .progress-percentage:before {
+    content: "$57";
+    background: red;
+    color: #fff;
+    width: max-content;
+    border-radius: 50px;
+    padding: 4px 20px;
+    position: absolute;
+    top: -50px;
+    left: -10px;
+}
+.progress-percentage:after {
+    content: "$57";
+    background: red;
+    color: #fff;
+    width: max-content;
+    border-radius: 50px;
+    padding: 4px 20px;
+    position: absolute;
+    right: 0;
+    top: -50px;
+}
 /* Dynamic Rating */
  .dynamic-rating {
     border: none;
