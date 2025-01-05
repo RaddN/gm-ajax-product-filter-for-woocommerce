@@ -92,6 +92,7 @@ $Advance_options = get_option('dapfforwc_advance_options') ?: [
     'pagination_selector' => '.woocommerce-pagination ul.page-numbers',
     'product_shortcode' => 'products',
     'use_anchor' => 0,
+    'remove_outofStock' => 0,
 ];
     update_option('dapfforwc_advance_options', $Advance_options);
     register_setting('dapfforwc_advance_settings', 'dapfforwc_advance_options', 'dapfforwc_options_sanitize');
@@ -129,6 +130,8 @@ $Advance_options = get_option('dapfforwc_advance_options') ?: [
     );
 
     add_settings_field('use_anchor', __('Make filter link indexable for best SEO', 'dynamic-ajax-product-filters-for-woocommerce'), "dapfforwc_use_anchor_render", 'dapfforwc-advance-settings', 'dapfforwc_advance_settings_section');
+    add_settings_field('remove_outofStock', __('Remove out of stock product', 'dynamic-ajax-product-filters-for-woocommerce'), "dapfforwc_remove_outofStock_render", 'dapfforwc-advance-settings', 'dapfforwc_advance_settings_section');
+
 }
 add_action('admin_init', 'dapfforwc_settings_init');
 

@@ -5,8 +5,9 @@ if (!defined('ABSPATH')) {
 class dapfforwc_Filter_Functions {
 
     public function process_filter() {
-        global $dapfforwc_options,$dapfforwc_styleoptions;
+        global $dapfforwc_options,$dapfforwc_styleoptions,$dapfforwc_advance_settings;
         $update_filter_options = $dapfforwc_options["update_filter_options"]??"";
+        $remove_outofStock_product = $dapfforwc_advance_settings["remove_outofStock"] ?? ""; 
 
         if (!isset($_POST['gm-product-filter-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['gm-product-filter-nonce'])), 'gm-product-filter-action')) {
             wp_send_json_error(array('message' => 'Security check failed'), 403);
@@ -36,6 +37,18 @@ class dapfforwc_Filter_Functions {
                 'relation' => 'AND'
             )
         );
+        if ($remove_outofStock_product==="on") {
+            $args['meta_query'][] =
+                array(
+                    'key' => '_stock_status',
+                    'value' => 'instock',
+                );
+            $args_options['meta_query'][] =
+            array(
+                'key' => '_stock_status',
+                'value' => 'instock',
+            );
+        }
         $second_operator = isset($dapfforwc_options["product_show_settings"]["upcoming-conferences"]["operator_second"])?strtoupper($dapfforwc_options["product_show_settings"]["upcoming-conferences"]["operator_second"]) : "IN";
 
         $args = $this->apply_filters_to_args($args,$second_operator);

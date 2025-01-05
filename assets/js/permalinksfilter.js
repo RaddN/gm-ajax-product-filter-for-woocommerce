@@ -14,7 +14,7 @@ jQuery(document).ready(function($) {
     }
     var rfilterbuttonsId = $('.rfilterbuttons').attr('id');
     var orderby;
-
+    syncCheckboxSelections();
       
 
     // Initialize filters and handle changes

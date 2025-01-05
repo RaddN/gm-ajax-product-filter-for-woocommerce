@@ -130,16 +130,32 @@ jQuery(document).ready(function($) {
         maxPrice = parseInt(rangeInput[1].value);
         changePseudoElementContent(`$${minPrice}`, `$${maxPrice}`);
         rangeInput.forEach((input) => {
-        input.addEventListener("input", (e) => {
-          let minPrice = parseInt(rangeInput[0].value);
-            maxPrice = parseInt(rangeInput[1].value);
-            changePseudoElementContent(`$${minPrice}`, `$${maxPrice}`);
-            priceInput[0].value = minminPriceVal;
-            priceInput[1].value = maxPrice;
-            range.style.left = (minPrice / rangeInput[0].max) * 100 + "%";
-            range.style.right = 100 - (maxPrice / rangeInput[1].max) * 100 + "%";
-        });
-      });
+            input.addEventListener("input", (e) => {
+              let minPrice = parseInt(rangeInput[0].value);
+                maxPrice = parseInt(rangeInput[1].value);
+                changePseudoElementContent(`$${minPrice}`, `$${maxPrice}`);
+                priceInput[0].value = minPrice;
+                priceInput[1].value = maxPrice;
+                range.style.left = (minPrice / rangeInput[0].max) * 100 + "%";
+                range.style.right = 100 - (maxPrice / rangeInput[1].max) * 100 + "%";
+            });
+          });
+          priceInput.forEach((input) => {
+            input.addEventListener("input", (e) => {
+                console.log("hello");
+              let minPrice = parseInt(priceInput[0].value),
+                maxPrice = parseInt(priceInput[1].value);
+                console.log(minPrice);
+                if (e.target.className === "input-min") {
+                  rangeInput[0].value = minPrice;
+                  range.style.left = (minPrice / rangeInput[0].max) * 100 + "%";
+                } else {
+                  rangeInput[1].value = maxPrice;
+                  range.style.right = 100 - (maxPrice / rangeInput[1].max) * 100 + "%";
+                }
+              
+            });
+          });
     //   price range ends
         
         // Append price filters if values exist
@@ -222,6 +238,24 @@ jQuery(document).ready(function($) {
             relatedCheckbox.prop('checked', $(this).is(':checked')).closest('li').toggleClass('checked', $(this).is(':checked'));
         });
     }
+    // create list of current selected filter
+    function selectedFilterShowProductTop(){
+        // Clear existing content
+    $('.rfilterselected > ul').empty();
+    for (let value of selectedValesbyuser) {
+        $('.rfilterselected > ul').append(`
+            <li class="checked">
+                <input id="selected_${value}" type="checkbox" value="${value}" checked>
+                <label for="selected_${value}">${value.replace(/-/g, ' ')}</label>
+                <label style="font-size:12px;margin-left:5px;">x</label>
+            </li>`);
+    }}
+    selectedFilterShowProductTop();
+    $('.rfilterselected').on('change', 'li', function(e) {
+        const value = $(this).find('input[type="checkbox"]').val(); 
+        $(`#product-filter input[value="${value}"]`).prop('checked', false);
+        handleFilterChange(e);
+    });
 });
 
 

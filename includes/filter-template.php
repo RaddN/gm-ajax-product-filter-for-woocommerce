@@ -8,6 +8,7 @@ function dapfforwc_product_filter_shortcode($atts) {
     global $dapfforwc_styleoptions,$post,$dapfforwc_options, $dapfforwc_advance_settings;
     $use_anchor = $dapfforwc_advance_settings["use_anchor"] ?? "";
     $use_filters_word = $dapfforwc_options["use_filters_word_in_permalinks"] ?? "";
+    $remove_outofStock_product = $dapfforwc_advance_settings["remove_outofStock"] ?? ""; 
     $dapfforwc_slug = "";
     // Check if the post object is available
     if (isset($post)) {
@@ -145,6 +146,13 @@ function dapfforwc_product_filter_shortcode($atts) {
                 'operator' => $second_operator,
             );
         }
+    }
+    if ($remove_outofStock_product==="on") {
+        $args['meta_query'][] =
+            array(
+                'key' => '_stock_status',
+                'value' => 'instock',
+            );
     }
     
     // Query the products based on the filters
