@@ -47,7 +47,6 @@ class dapfforwc_Filter_Functions {
         $query = new WP_Query($args);
 
         $updated_filters = dapfforwc_get_updated_filters($filter_options);
-        include(plugin_dir_path(__FILE__) . 'widget_design_template.php');
         $default_filter = [];
 
         // Check if 'selectedvalues' is set and not empty
@@ -166,7 +165,7 @@ class dapfforwc_Filter_Functions {
     private function display_product($post) {
         global $dapfforwc_options;
         $product = wc_get_product($post->ID);
-        if(isset($dapfforwc_options['use_custom_template'])){
+        if(isset($dapfforwc_options['use_custom_template']) && $dapfforwc_options['use_custom_template']==="on"){
         // Get product details
         $product_link = get_permalink();
         $product_title = get_the_title(); 

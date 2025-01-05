@@ -1,7 +1,35 @@
 
 <?php 
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 function dapfforwc_filter_form($updated_filters,$default_filter,$use_anchor,$use_filters_word,$atts,$min_price,$max_price){
-    global $dapfforwc_styleoptions,$dapfforwc_product_count,$post,$dapfforwc_options, $dapfforwc_advance_settings;
+    global $dapfforwc_styleoptions,$post,$dapfforwc_options, $dapfforwc_advance_settings;
+    $dapfforwc_product_count = [];
+
+// Extract category counts
+$dapfforwc_product_count['categories'] = [];
+foreach ($updated_filters['categories'] as $category) {
+    $dapfforwc_product_count['categories'][$category->slug] = $category->count;
+}
+
+// Extract tag counts
+$dapfforwc_product_count['tags'] = [];
+foreach ($updated_filters['tags'] as $tag) {
+    $dapfforwc_product_count['tags'][$tag->slug] = $tag->count;
+}
+
+// Extract attribute counts
+$dapfforwc_product_count['attributes'] = [];
+foreach ($updated_filters['attributes'] as $key => $terms) {
+    $dapfforwc_product_count['attributes'][$key] = [];
+    foreach ($terms as $term) {
+        $dapfforwc_product_count['attributes'][$key][$term->slug] = $term->count;
+    }
+}
+
     $formOutPut = ""
     
     ?>

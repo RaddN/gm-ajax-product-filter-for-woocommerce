@@ -13,6 +13,8 @@ function dapfforwc_render_checkbox($key) {
     <?php
     if($key ==="use_filters_word_in_permalinks") {
         echo "<p>if you want to use permalinks filter in your front page turn it on.</p>";
+    } elseif($key ==="show_loader") {
+        echo "<p><a href='#' id='customize_loader'>customize</a> loading effect</p>";
     }
 }
 

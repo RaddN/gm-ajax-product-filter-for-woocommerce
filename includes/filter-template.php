@@ -5,7 +5,7 @@ if (!defined('ABSPATH')) {
 }
 
 function dapfforwc_product_filter_shortcode($atts) {
-    global $dapfforwc_styleoptions,$dapfforwc_product_count,$post,$dapfforwc_options, $dapfforwc_advance_settings;
+    global $dapfforwc_styleoptions,$post,$dapfforwc_options, $dapfforwc_advance_settings;
     $use_anchor = $dapfforwc_advance_settings["use_anchor"] ?? "";
     $use_filters_word = $dapfforwc_options["use_filters_word_in_permalinks"] ?? "";
     $dapfforwc_slug = "";
@@ -15,7 +15,7 @@ function dapfforwc_product_filter_shortcode($atts) {
         $dapfforwc_slug = dapfforwc_get_full_slug($post->ID);
     }
 
-    $second_operator = $dapfforwc_options["product_show_settings"][$dapfforwc_slug ]? strtoupper($dapfforwc_options["product_show_settings"][$dapfforwc_slug ]["operator_second"]) ?? "IN":"IN";
+    $second_operator = strpos($dapfforwc_slug, 'autosave') === false ? $dapfforwc_options["product_show_settings"][$dapfforwc_slug ]? strtoupper($dapfforwc_options["product_show_settings"][$dapfforwc_slug ]["operator_second"]) ?? "IN":"IN":"IN";
     $default_filter =$dapfforwc_options["default_filters"][$dapfforwc_slug ] ?? [] ;
     $dapfforwc_slug = get_transient('dapfforwc_slug');
     $filters_array = explode('/', str_replace('filters/', '', $dapfforwc_slug));
@@ -149,22 +149,23 @@ function dapfforwc_product_filter_shortcode($atts) {
     
     // Query the products based on the filters
     $products = new WP_Query($args);
-
+    
     $updated_filters = dapfforwc_get_updated_filters($products);
+    // echo "<pre>"; print_r($dapfforwc_styleoptions ); echo "</pre>";
     
     ob_start(); // Start output buffering
     ?>
     <form id="product-filter" method="POST">
     <?php
     wp_nonce_field('gm-product-filter-action', 'gm-product-filter-nonce'); 
-    include(plugin_dir_path(__FILE__) . 'widget_design_template.php');
     echo dapfforwc_filter_form($updated_filters,$default_filter,$use_anchor,$use_filters_word,$atts,$min_price=0,$max_price=10000);
 
     echo '</form>';
     ?>
     
 <!-- Loader HTML -->
-<div id="loader" style="display:none;"></div>
+<?php echo $dapfforwc_options["loader_html"] ?>
+<style><?php echo $dapfforwc_options["loader_css"] ?></style>
 <div id="roverlay" style="display: none;"></div>
 
 <div id="filtered-products">
@@ -226,10 +227,13 @@ function dapfforwc_render_filter_option($sub_option, $title, $value, $checked, $
 
         case 'color':
         case 'color_no_border':
+        case 'color_circle':
+        case 'color_value':
             $color = $dapfforwc_styleoptions[$attribute]['colors'][$value] ?? '#000'; // Default color
             $border = ($sub_option === 'color_no_border') ? 'none' : '1px solid #000';
+            $value_show = ($sub_option === 'color_value') ? 'block' : 'none';
             $output .= '<label style="position: relative;"><input type="'.($singlevalueSelect==="yes"?'radio':'checkbox').'" class="filter-color" name="' . $name . '[]" value="' . $value . '"' . $checked . '>
-                <span class="color-box" style="background-color: ' . $color . '; border: ' . $border . '; width: 30px; height: 30px;"></span></label>';
+                <span class="color-box" style="background-color: ' . $color . '; border: ' . $border . '; width: 30px; height: 30px;"></span><span style="display:'.$value_show.';">'.$value.'<span></label>';
             break;
 
         case 'image':
@@ -302,7 +306,7 @@ function dapfforwc_render_filter_option($sub_option, $title, $value, $checked, $
         case 'rating':
             for ( $i = 5; $i >= 1; $i-- ) {
                 $output .= '<label>';
-                $output .= '<input type="checkbox" name="rating[]" value="' . esc_attr( $i ) . '"' . $checked . '>';
+                $output .= '<input type="checkbox" name="rating[]" value="' . esc_attr( $i ) . '" '.(in_array($i, $checked) ? ' checked' : '').'>';
                 $output .= '<span class="stars">';
                 for ( $j = 1; $j <= $i; $j++ ) {
                     $output .= '<i class="fa fa-star" aria-hidden="true"></i>';
@@ -409,6 +413,18 @@ function dapfforwc_product_filter_shortcode_single($atts) {
 
 }
 add_shortcode('plugincy_filters_single', 'dapfforwc_product_filter_shortcode_single');
+
+function dapfforwc_product_filter_shortcode_selected() {
+
+    // Generate the output
+    $output = '<form class="rfilterselected"><ul>';
+    $output .= '</ul></form>';
+
+    return $output;
+
+
+}
+add_shortcode('plugincy_filters_selected', 'dapfforwc_product_filter_shortcode_selected');
 
 
 function dapfforwc_get_updated_filters($query) {

@@ -1,12 +1,16 @@
 jQuery(document).ready(function($) {
-    let advancesettings;
+    let advancesettings,dapfforwc_options;
     if (typeof dapfforwc_data !== 'undefined' && dapfforwc_data.dapfforwc_advance_settings) {
         advancesettings = dapfforwc_data.dapfforwc_advance_settings;
+    }
+    if (typeof dapfforwc_data !== 'undefined' && dapfforwc_data.dapfforwc_options) {
+        dapfforwc_options = dapfforwc_data.dapfforwc_options;
     }
     // Initialize filters
     var rfilterbuttonsId = $('.rfilterbuttons').attr('id');
     var path = window.location.pathname;
     var orderby;
+    let selectedValesbyuser = store_selected_values();
     // Initialize filters and handle changes
     $('#product-filter, .rfilterbuttons').on('change', handleFilterChange);
     $('.woocommerce-ordering select').on('change', function(event) {
@@ -30,9 +34,33 @@ jQuery(document).ready(function($) {
     function handleFilterChange(e) {
         e.preventDefault();
         if (!anyFilterSelected()) return location.reload();
+        selectedValesbyuser = store_selected_values();
         $('#roverlay').show();
         $('#loader').show();
         fetchFilteredProducts();
+    }
+    function store_selected_values(){
+        let selectedValues = [];
+        // Get selected rating
+        $('input[name="rating[]"]:checked').each(function() {
+            selectedValues.push($(this).val());
+        });
+
+        // Get selected categories
+        $('input[name="category[]"]:checked').each(function() {
+            selectedValues.push($(this).val());
+        });
+
+        // Get selected attributes
+        $('input[name^="attribute"]:checked').each(function() {
+            selectedValues.push($(this).val());
+        });
+
+        // Get selected tags
+        $('input[name="tag[]"]:checked').each(function() {
+            selectedValues.push($(this).val());
+        });
+        return selectedValues;
     }
 
     function anyFilterSelected() {
@@ -43,12 +71,16 @@ jQuery(document).ready(function($) {
     let pagination_selector = advancesettings ? advancesettings["pagination_selector"] ?? 'ul.page-numbers' : 'ul.page-numbers';
    
     function fetchFilteredProducts(page = 1) {
-        $.post(dapfforwc_ajax.ajax_url, gatherFormData() + `&orderby=${orderby}&paged=${page}&action=dapfforwc_filter_products`, function(response) {
+        $.post(dapfforwc_ajax.ajax_url, gatherFormData() + `&selectedvalues=${selectedValesbyuser}&orderby=${orderby}&paged=${page}&action=dapfforwc_filter_products`, function(response) {
             $('#roverlay').hide();
             $('#loader').hide();
             if (response.success) {
                 $(product_selector).html(response.data.products);
                 $('.woocommerce-result-count').text(`${response.data.total_product_fetch} results found`);
+                if(dapfforwc_options["update_filter_options"]==="on"){
+                    $('#product-filter div').remove();
+                    $("form#product-filter").append(response.data.filter_options);
+                    }
                 $(pagination_selector).html(response.data.pagination);
                 syncCheckboxSelections();
             } else {
@@ -69,13 +101,46 @@ jQuery(document).ready(function($) {
     
     // Call this function after updating the product listings
     attachPaginationEvents();
+    function changePseudoElementContent(beforeContent, afterContent) {
+        // Create a new style element
+        var style = $('<style></style>');
+        style.text(`
+            .progress-percentage:before { 
+                content: "${beforeContent}"; 
+            }
+            .progress-percentage:after { 
+                content: "${afterContent}"; 
+            }
+        `);
+        
+        // Append the style to the head
+        $('head').append(style);
+    }
 
     function gatherFormData() {
         const currentPageSlug = path === "/" ? path : path.replace(/^\/|\/$/g, '');
         
         const formData = $('#product-filter').serialize();
-        const minPrice = $('#min-price').val();
-        const maxPrice = $('#max-price').val();
+        
+        // price range
+        const rangeInput = document.querySelectorAll(".range-input input"),
+        priceInput = document.querySelectorAll(".price-input input"),
+        range = document.querySelector(".slider .progress");
+        let minPrice = parseInt(rangeInput[0].value),
+        maxPrice = parseInt(rangeInput[1].value);
+        changePseudoElementContent(`$${minPrice}`, `$${maxPrice}`);
+        rangeInput.forEach((input) => {
+        input.addEventListener("input", (e) => {
+          let minPrice = parseInt(rangeInput[0].value);
+            maxPrice = parseInt(rangeInput[1].value);
+            changePseudoElementContent(`$${minPrice}`, `$${maxPrice}`);
+            priceInput[0].value = minminPriceVal;
+            priceInput[1].value = maxPrice;
+            range.style.left = (minPrice / rangeInput[0].max) * 100 + "%";
+            range.style.right = 100 - (maxPrice / rangeInput[1].max) * 100 + "%";
+        });
+      });
+    //   price range ends
         
         // Append price filters if values exist
         let priceParams = '';
@@ -206,51 +271,3 @@ jQuery(document).ready(function($) {
     });
 });
 
-
-
-
-
-
-//  for price range
-
-const rangeInput = document.querySelectorAll(".range-input input"),
-  priceInput = document.querySelectorAll(".price-input input"),
-  range = document.querySelector(".slider .progress");
-let priceGap = 1000;
-
-priceInput.forEach((input) => {
-  input.addEventListener("input", (e) => {
-    let minPrice = parseInt(priceInput[0].value),
-      maxPrice = parseInt(priceInput[1].value);
-
-    if (maxPrice - minPrice >= priceGap && maxPrice <= rangeInput[1].max) {
-      if (e.target.className === "input-min") {
-        rangeInput[0].value = minPrice;
-        range.style.left = (minPrice / rangeInput[0].max) * 100 + "%";
-      } else {
-        rangeInput[1].value = maxPrice;
-        range.style.right = 100 - (maxPrice / rangeInput[1].max) * 100 + "%";
-      }
-    }
-  });
-});
-
-rangeInput.forEach((input) => {
-  input.addEventListener("input", (e) => {
-    let minVal = parseInt(rangeInput[0].value),
-      maxVal = parseInt(rangeInput[1].value);
-
-    if (maxVal - minVal < priceGap) {
-      if (e.target.className === "range-min") {
-        rangeInput[0].value = maxVal - priceGap;
-      } else {
-        rangeInput[1].value = minVal + priceGap;
-      }
-    } else {
-      priceInput[0].value = minVal;
-      priceInput[1].value = maxVal;
-      range.style.left = (minVal / rangeInput[0].max) * 100 + "%";
-      range.style.right = 100 - (maxVal / rangeInput[1].max) * 100 + "%";
-    }
-  });
-});

@@ -35,38 +35,29 @@ div#roverlay {
     top: -64px;
     left: 0;
 }
-#loader {
-   width: 56px;
-   height: 56px;
-   border-radius: 50%;
-   background: conic-gradient(#0000 10%,#474bff);
-   -webkit-mask: radial-gradient(farthest-side,#0000 calc(100% - 9px),#000 0);
-   animation: spinner-zp9dbg 1s infinite linear;
-}
-@keyframes spinner-zp9dbg {
-   to {
-      transform: rotate(1turn);
-   }
-}
-.rfilterbuttons li {
+.rfilterbuttons li,.rfilterselected li {
     padding: 10px 20px;
     border: 1px solid;
     border-radius: 30px;
+    min-width: max-content;
 }
-.rfilterbuttons ul {
+.rfilterbuttons ul,.rfilterselected ul {
     display: flex;
     list-style: none;
     padding: 0 !important;
     gap: 14px;
 }
-.rfilterbuttons input {
+.rfilterselected ul {
+    flex-wrap: wrap;
+}
+.rfilterbuttons input,.rfilterselected input {
     display: none;
 }
-.rfilterbuttons ul li.checked {
+.rfilterbuttons ul li.checked,.rfilterselected ul li.checked  {
     background: red;
     color: #fff !important;
 }
-.rfilterbuttons ul li.checked label{
+.rfilterbuttons ul li.checked label,.rfilterselected ul li.checked label{
     color: #fff !important;
 }
 .filter-group.attributes .title, .filter-group.category .title,.filter-group.tags .title,.filter-group.price-range .title,div#rating .title {
@@ -94,7 +85,7 @@ div#roverlay {
 .filter-group.attributes  .items ,.filter-group.category .items, .filter-group.tags .items,.filter-group.price-range .items, div#rating .items{
     padding: 20px 10px;
 }
-.filter-group.attributes .items>label,.filter-group.category .items>label,.filter-group.tags .items>label,.rfilterbuttons label {
+.filter-group.attributes .items>label,.filter-group.category .items>label,.filter-group.tags .items>label,.rfilterbuttons label,.rfilterselected label {
     text-transform: capitalize;
     cursor: pointer ;
 }
@@ -152,18 +143,41 @@ form.rfilterbuttons li {
 }
 
 /* color style */
-.items.color label,.items.color_no_border label,.items.image label,.items.image_no_border label{
+.items.color label,.items.color_no_border label,.items.image label,.items.image_no_border label,.items.color_circle label,.items.button_check label{
     position: relative;
     margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.items.button_check label {
+    border: 1px solid red;
+    border-radius: 8px;
 }
 
-.items.color input,.items.color_no_border input,.items.image input,.items.image_no_border input{
+.items.color input,.items.color_no_border input,.items.image input,.items.image_no_border input,.items.color_circle input,.items.button_check input{
     position: absolute;
     top: 0;
     right: 0;
     display: none;
 }
-.items.color,.items.color_no_border,.items.image,.items.image_no_border {
+.items.color_circle input {
+    position: absolute;
+    top: unset;
+    right: unset;
+}
+.items.color_value input {
+    position: absolute;
+    display: none;
+}
+.items.color_circle .color-box,.items.color_value .color-box{
+    border-radius: 100%;
+}
+.items.color_value .color-box{
+    width: 20px !important;
+    height: 20px !important;
+}
+.items.color,.items.color_no_border,.items.image,.items.image_no_border,.items.color_circle,.items.button_check {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: 6px;
@@ -174,7 +188,10 @@ form.rfilterbuttons li {
 .items.image,.items.image_no_border {
     grid-template-columns: repeat(3, 1fr);
 }
-.items.color input:checked,.items.color_no_border input:checked, .items.image input:checked,.items.image_no_border input:checked{
+.items.button_check{
+    grid-template-columns: repeat(4, 1fr);
+}
+.items.color input:checked,.items.color_no_border input:checked, .items.image input:checked,.items.image_no_border input:checked,.items.color_circle input:checked,.items.button_check input:checked,.items.color_value input:checked{
     display: block;
 }
 .items.image img,.items.image_no_border img{

@@ -64,10 +64,12 @@ jQuery(document).ready(function($) {
     
     function handleFilterChange(e) {
         e.preventDefault();
-        if (!anyFilterSelected()) return location.reload();
+        
         
         selectedValesbyuser = store_selected_values();
         updateUrlFilters(); // Update URL based on selected filters
+        if (!anyFilterSelected()) return location.reload();
+        selectedFilterShowProductTop();
         $('#roverlay').show();
         $('#loader').show();
         fetchFilteredProducts();
@@ -75,34 +77,35 @@ jQuery(document).ready(function($) {
     function store_selected_values(){
         let selectedValues = [];
         // Get selected rating
-        $('input[name="rating[]"]:checked').each(function() {
+        $('#product-filter input[name="rating[]"]:checked').each(function() {
             selectedValues.push($(this).val());
         });
 
         // Get selected categories
-        $('input[name="category[]"]:checked').each(function() {
+        $('#product-filter input[name="category[]"]:checked').each(function() {
             selectedValues.push($(this).val());
         });
 
         // Get selected attributes
-        $('input[name^="attribute"]:checked').each(function() {
+        $('#product-filter input[name^="attribute"]:checked').each(function() {
             selectedValues.push($(this).val());
         });
 
         // Get selected tags
-        $('input[name="tag[]"]:checked').each(function() {
+        $('#product-filter input[name="tag[]"]:checked').each(function() {
             selectedValues.push($(this).val());
         });
         return selectedValues;
     }
 
     function anyFilterSelected() {
-        return $('#product-filter input:checked').length > 0 ||
-               $('.rfilterbuttons input:checked').length > 0;
+        return $('#product-filter input:checked').length > 0;
     }
     let product_selector = advancesettings ? advancesettings["product_selector"] ?? 'ul.products':'ul.products';
     let pagination_selector = advancesettings ? advancesettings["pagination_selector"] ?? 'ul.page-numbers' : 'ul.page-numbers';
     function fetchFilteredProducts(page = 1) {
+        selectedValesbyuser = store_selected_values();
+        console.log(selectedValesbyuser);
         $.post(dapfforwc_ajax.ajax_url, gatherFormData() +  `&selectedvalues=${selectedValesbyuser}&orderby=${orderby}&paged=${page}&action=dapfforwc_filter_products`, function(response) {
             $('#roverlay').hide();
             $('#loader').hide();
@@ -305,6 +308,24 @@ jQuery(document).ready(function($) {
         : `${filtersArray.join('/')}`;
         history.replaceState(null, '', newUrl);
     }
+    // create list of current selected filter
+    function selectedFilterShowProductTop(){
+        // Clear existing content
+    $('.rfilterselected > ul').empty();
+    for (let value of selectedValesbyuser) {
+        $('.rfilterselected > ul').append(`
+            <li class="checked">
+                <input id="selected_${value}" type="checkbox" value="${value}" checked>
+                <label for="selected_${value}">${value.replace(/-/g, ' ')}</label>
+                <label style="font-size:12px;margin-left:5px;">x</label>
+            </li>`);
+    }}
+    selectedFilterShowProductTop();
+    $('.rfilterselected').on('change', 'li', function(e) {
+        const value = $(this).find('input[type="checkbox"]').val(); 
+        $(`#product-filter input[value="${value}"]`).prop('checked', false);
+        handleFilterChange(e);
+    });
     // for responsive
     function isMobile() {
         return $(window).width() <= 768;

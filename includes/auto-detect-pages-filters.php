@@ -74,29 +74,6 @@ function dapfforwc_get_shortcode_attributes_from_page($content, $shortcode) {
     return $attributes_list;
 }
 
-// Step 3: Update options with slug and shortcode attributes
-function dapfforwc_get_full_slug($post_id) {
-    $dapfforwc_slug_parts = [];
-    $current_post_id = $post_id;
-
-    while ($current_post_id) {
-        $current_post = get_post($current_post_id);
-        
-        if (!$current_post) {
-            break; // Exit if no post is found
-        }
-        
-        // Prepend the current slug
-        array_unshift($dapfforwc_slug_parts, $current_post->post_name);
-        
-        // Get the parent post ID
-        $current_post_id = wp_get_post_parent_id($current_post_id);
-
-        
-    }
-
-    return implode('/', $dapfforwc_slug_parts); // Combine slugs with '/'
-}
 
 function dapfforwc_update_options_with_filters() {
     global $dapfforwc_advance_settings;

@@ -81,3 +81,36 @@ const editor = CodeMirror(document.getElementById("code-editor"), {
     toggleRows();
 });
     
+
+// loading effect popup
+document.addEventListener('DOMContentLoaded', function() {
+    const customizeLoaderLink = document.getElementById('customize_loader');
+    const popup = document.getElementById('custom-loading-popup');
+    const closePopup = document.querySelector('.close-popup');
+    const saveEffectButton = document.getElementById('save-effect');
+    let selectedEffect = null;
+
+    customizeLoaderLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        popup.style.display = 'flex';
+    });
+
+    closePopup.addEventListener('click', function() {
+        popup.style.display = 'none';
+    });
+
+    document.querySelectorAll('.loading-option').forEach(option => {
+        option.addEventListener('click', function() {
+            const html = this.getAttribute('data-html');
+            const css = this.getAttribute('data-css');
+            document.getElementById('loader_html').value = html;
+            document.getElementById('loader_css').value = css;
+            // Remove selected class from all options
+            document.querySelectorAll('.loading-option').forEach(opt => opt.classList.remove('selected'));
+            // Add selected class to the clicked option
+            this.classList.add('selected');
+            // Store the selected effect value
+            selectedEffect = this.getAttribute('data-value');
+        });
+    });
+});

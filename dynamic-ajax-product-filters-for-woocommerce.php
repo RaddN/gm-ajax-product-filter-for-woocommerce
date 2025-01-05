@@ -16,12 +16,11 @@ if (!defined('ABSPATH')) {
 }
 
 // Global Variables
-global $dapfforwc_options, $dapfforwc_advance_settings, $dapfforwc_styleoptions, $dapfforwc_product_count, $dapfforwc_use_url_filter, $dapfforwc_auto_detect_pages_filters, $dapfforwc_slug, $dapfforwc_sub_options ;
+global $dapfforwc_options, $dapfforwc_advance_settings, $dapfforwc_styleoptions, $dapfforwc_use_url_filter, $dapfforwc_auto_detect_pages_filters, $dapfforwc_slug, $dapfforwc_sub_options ;
 
 $dapfforwc_options = get_option('dapfforwc_options');
 $dapfforwc_advance_settings = get_option('dapfforwc_advance_options');
 $dapfforwc_styleoptions = get_option('dapfforwc_style_options');
-$dapfforwc_product_count = get_option('dapfforwc_product_count');
 $dapfforwc_use_url_filter = isset($dapfforwc_options['use_url_filter']) ? $dapfforwc_options['use_url_filter'] : false;
 $dapfforwc_auto_detect_pages_filters = $dapfforwc_options['pages_filter_auto'] ?? '';
 $dapfforwc_slug = "";
@@ -37,6 +36,7 @@ $dapfforwc_front_page_slug = $dapfforwc_front_page->post_name;
 $dapfforwc_sub_options = [
     'checkbox' => [
         'checkbox' => __('Checkbox', 'dynamic-ajax-product-filters-for-woocommerce'),
+        'button_check' => __('Button Checkbox', 'dynamic-ajax-product-filters-for-woocommerce'),
         'radio_check' => __('Radio Check', 'dynamic-ajax-product-filters-for-woocommerce'),
         'radio' => __('Radio', 'dynamic-ajax-product-filters-for-woocommerce'),
         'square_check' => __('Square Check', 'dynamic-ajax-product-filters-for-woocommerce'),
@@ -46,6 +46,8 @@ $dapfforwc_sub_options = [
     'color' => [
         'color' => __('Color', 'dynamic-ajax-product-filters-for-woocommerce'),
         'color_no_border' => __('Color Without Border', 'dynamic-ajax-product-filters-for-woocommerce'),
+        'color_circle' => __('Color Circle', 'dynamic-ajax-product-filters-for-woocommerce'),
+        'color_value' => __('Color With Value', 'dynamic-ajax-product-filters-for-woocommerce'),
     ],
     'image' => [
         'image' => __('Image', 'dynamic-ajax-product-filters-for-woocommerce'),
@@ -101,7 +103,7 @@ function dapfforwc_missing_woocommerce_notice() {
 
 // Enqueue scripts and styles
 function dapfforwc_enqueue_scripts() {
-    global $dapfforwc_use_url_filter, $dapfforwc_options, $dapfforwc_slug , $dapfforwc_styleoptions, $dapfforwc_product_count, $dapfforwc_advance_settings,$dapfforwc_front_page_slug;
+    global $dapfforwc_use_url_filter, $dapfforwc_options, $dapfforwc_slug , $dapfforwc_styleoptions, $dapfforwc_advance_settings,$dapfforwc_front_page_slug;
 
     $script_handle = 'filter-ajax';
     $script_path = 'assets/js/filter.js';
@@ -116,7 +118,7 @@ function dapfforwc_enqueue_scripts() {
     }
 
     wp_enqueue_script($script_handle, plugin_dir_url(__FILE__) . $script_path, ['jquery'], '1.0.6', true);
-    wp_localize_script($script_handle, 'dapfforwc_data', compact('dapfforwc_options', 'dapfforwc_slug', 'dapfforwc_styleoptions', 'dapfforwc_product_count', 'dapfforwc_advance_settings','dapfforwc_front_page_slug'));
+    wp_localize_script($script_handle, 'dapfforwc_data', compact('dapfforwc_options', 'dapfforwc_slug', 'dapfforwc_styleoptions', 'dapfforwc_advance_settings','dapfforwc_front_page_slug'));
     wp_localize_script($script_handle, 'dapfforwc_ajax', ['ajax_url' => admin_url('admin-ajax.php')]);
 
     wp_enqueue_style('filter-style', plugin_dir_url(__FILE__) . 'assets/css/style.css', [], '1.0.6');
@@ -300,3 +302,30 @@ if ($dapfforwc_use_url_filter !== '' && !empty($dapfforwc_options['pages'])) {
 if ($dapfforwc_auto_detect_pages_filters === "on") {
     include(plugin_dir_path(__FILE__) . 'includes/auto-detect-pages-filters.php');
 }
+
+function dapfforwc_get_full_slug($post_id) {
+    $dapfforwc_slug_parts = [];
+    $current_post_id = $post_id;
+
+    while ($current_post_id) {
+        $current_post = get_post($current_post_id);
+        
+        if (!$current_post) {
+            break; // Exit if no post is found
+        }
+        
+        // Prepend the current slug
+        array_unshift($dapfforwc_slug_parts, $current_post->post_name);
+        
+        // Get the parent post ID
+        $current_post_id = wp_get_post_parent_id($current_post_id);
+
+        
+    }
+
+    return implode('/', $dapfforwc_slug_parts); // Combine slugs with '/'
+}
+
+
+include(plugin_dir_path(__FILE__) . 'includes/widget_design_template.php');
+include(plugin_dir_path(__FILE__) . 'includes/get_review.php');

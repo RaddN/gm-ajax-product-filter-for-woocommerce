@@ -4,15 +4,18 @@ if (!defined('ABSPATH')) {
 }
 function dapfforwc_settings_init() {
     $dapfforwc_options = get_option('dapfforwc_options') ?: [
-        'show_categories' => 0,
-        'show_attributes' => 1,
-        'show_tags' => 0,
-        'show_price_range' => 0,
-        'use_url_filter' => '',
+        'show_categories' =>"on",
+        'show_attributes' => "on",
+        'show_tags' => "on",
+        'show_price_range' => "",
+        'show_rating' => "",
+        'use_url_filter' => 'query_string',
         'update_filter_options' => 0,
-        'show_loader' => 1,
-        'pages_filter_auto' => 1,
-        'pages' => [], 
+        'show_loader' => "on",
+        'pages_filter_auto' => "on",
+        'pages' => [],
+        'loader_html'=>'<div id="loader" style="display:none;"></div>',
+        'loader_css'=>'#loader { width: 56px; height: 56px; border-radius: 50%; background: conic-gradient(#0000 10%,#474bff); -webkit-mask: radial-gradient(farthest-side,#0000 calc(100% - 9px),#000 0); animation: spinner-zp9dbg 1s infinite linear; } @keyframes spinner-zp9dbg { to { transform: rotate(1turn); } }',
         'default_filters' => [],
         'use_custom_template' => 0,
         'custom_template_code' => '',
@@ -65,8 +68,11 @@ function dapfforwc_settings_init() {
     // custom code template
     add_settings_field('custom_template_code', __('product custom template code', 'dynamic-ajax-product-filters-for-woocommerce'), 'dapfforwc_custom_template_code_render', 'dapfforwc-admin', 'dapfforwc_section');
 
-
-
+    $default_style = get_option('dapfforwc_style_options') ?: [
+        'price' => ['type'=>'price', 'sub_option'=>'price'],
+        'rating' => ['type'=>'rating', 'sub_option'=>'rating'],
+    ];
+    update_option('dapfforwc_style_options', $default_style);
     // form style register
     register_setting('dapfforwc_style_options_group', 'dapfforwc_style_options', 'dapfforwc_options_sanitize');
 
