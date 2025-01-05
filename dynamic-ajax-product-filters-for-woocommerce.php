@@ -80,7 +80,6 @@ function dapfforwc_check_woocommerce() {
         add_action('admin_notices', 'dapfforwc_missing_woocommerce_notice');
     } else {
         include_once plugin_dir_path(__FILE__) . 'admin/admin-notice.php';
-        include_once plugin_dir_path(__FILE__) . 'includes/count_product.php';
         include_once plugin_dir_path(__FILE__) . 'includes/filter-template.php';
 
         add_action('wp_enqueue_scripts', 'dapfforwc_enqueue_scripts');
@@ -179,6 +178,7 @@ function dapfforwc_admin_scripts() {
     if (selectedAttribute === "price") {
         toggleDisplay(".primary_options label", "none");
         toggleDisplay(".primary_options label.price", "block");
+        toggleDisplay(".min-max-price-set", "block");
     }
     else if (selectedAttribute === "rating") {
         toggleDisplay(".primary_options label", "none");
@@ -187,6 +187,7 @@ function dapfforwc_admin_scripts() {
         toggleDisplay(".hierarchical", "block");
     }
     else {
+        toggleDisplay(".min-max-price-set", "none");
         toggleDisplay(".hierarchical", "none");
         toggleDisplay(".primary_options label", "block");
         toggleDisplay(".primary_options label.price", "none");

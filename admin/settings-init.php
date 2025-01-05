@@ -69,7 +69,7 @@ function dapfforwc_settings_init() {
     add_settings_field('custom_template_code', __('product custom template code', 'dynamic-ajax-product-filters-for-woocommerce'), 'dapfforwc_custom_template_code_render', 'dapfforwc-admin', 'dapfforwc_section');
 
     $default_style = get_option('dapfforwc_style_options') ?: [
-        'price' => ['type'=>'price', 'sub_option'=>'price'],
+        'price' => ['type'=>'price', 'sub_option'=>'price', 'min_price' => 0, 'max_price'=> 10000],
         'rating' => ['type'=>'rating', 'sub_option'=>'rating'],
     ];
     update_option('dapfforwc_style_options', $default_style);

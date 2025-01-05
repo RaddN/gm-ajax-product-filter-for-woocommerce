@@ -5,7 +5,7 @@ if (!defined('ABSPATH')) {
 class dapfforwc_Filter_Functions {
 
     public function process_filter() {
-        global $dapfforwc_options;
+        global $dapfforwc_options,$dapfforwc_styleoptions;
         $update_filter_options = $dapfforwc_options["update_filter_options"]??"";
 
         if (!isset($_POST['gm-product-filter-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['gm-product-filter-nonce'])), 'gm-product-filter-action')) {
@@ -55,7 +55,7 @@ class dapfforwc_Filter_Functions {
             $default_filter = array_map('sanitize_text_field', explode(',', wp_unslash($_POST['selectedvalues'])));
         }
         
-        $filterform = dapfforwc_filter_form($updated_filters,$default_filter,"","","",$min_price=floatval($_POST['min_price'])??0,$max_price=floatval($_POST['max_price']) ?? 10000);
+        $filterform = dapfforwc_filter_form($updated_filters,$default_filter,"","","",$min_price=floatval($_POST['min_price']) ?? $dapfforwc_styleoptions["price"]["min_price"] ?? 0,$max_price=floatval($_POST['max_price']) ?? $dapfforwc_styleoptions["price"]["max_price"] ?? 10000);
         // Capture the product listing
         ob_start();
         

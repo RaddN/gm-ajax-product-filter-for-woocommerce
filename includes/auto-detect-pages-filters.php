@@ -93,7 +93,7 @@ function dapfforwc_update_options_with_filters() {
 
         foreach ($attributes_list as $attributes) {
             // Ensure that the 'category', 'attribute', and 'terms' keys exist
-            $arrayCata = isset($attributes['category']) ? explode(", ", $attributes['category']) : [];
+            $arrayCata = isset($attributes['category']) ? explode(",", $attributes['category']) : [];
             $tagValue = isset($attributes['tags']) ? $attributes['tags'] : [];
             $termsValue = isset($attributes['terms']) ? $attributes['terms'] : [];
             $filters = !empty($arrayCata) ? $arrayCata : (!empty($tagValue) ? $tagValue : $termsValue);

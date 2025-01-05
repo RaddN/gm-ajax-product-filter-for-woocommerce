@@ -16,9 +16,9 @@ function dapfforwc_product_filter_shortcode($atts) {
     }
 
     $second_operator = strpos($dapfforwc_slug, 'autosave') === false ? $dapfforwc_options["product_show_settings"][$dapfforwc_slug ]? strtoupper($dapfforwc_options["product_show_settings"][$dapfforwc_slug ]["operator_second"]) ?? "IN":"IN":"IN";
-    $default_filter =$dapfforwc_options["default_filters"][$dapfforwc_slug ] ?? [] ;
-    $dapfforwc_slug = get_transient('dapfforwc_slug');
-    $filters_array = explode('/', str_replace('filters/', '', $dapfforwc_slug));
+    $default_filter =$dapfforwc_options["default_filters"][$dapfforwc_slug] ?? [] ;
+    $dapfforwc_store_slug = get_transient('dapfforwc_slug');
+    $filters_array = explode('/', str_replace('filters/', '', $dapfforwc_store_slug));
     $default_filter = array_merge($default_filter , $filters_array);
     // Define default attributes and merge with user-defined attributes
     $atts = shortcode_atts(array(
@@ -151,14 +151,14 @@ function dapfforwc_product_filter_shortcode($atts) {
     $products = new WP_Query($args);
     
     $updated_filters = dapfforwc_get_updated_filters($products);
-    // echo "<pre>"; print_r($dapfforwc_styleoptions ); echo "</pre>";
+    // echo "<pre>"; print_r($default_filter); echo "</pre>";
     
     ob_start(); // Start output buffering
     ?>
     <form id="product-filter" method="POST">
     <?php
     wp_nonce_field('gm-product-filter-action', 'gm-product-filter-nonce'); 
-    echo dapfforwc_filter_form($updated_filters,$default_filter,$use_anchor,$use_filters_word,$atts,$min_price=0,$max_price=10000);
+    echo dapfforwc_filter_form($updated_filters,$default_filter,$use_anchor,$use_filters_word,$atts,$min_price=$dapfforwc_styleoptions["price"]["min_price"],$max_price=$dapfforwc_styleoptions["price"]["max_price"]);
 
     echo '</form>';
     ?>
@@ -251,48 +251,54 @@ function dapfforwc_render_filter_option($sub_option, $title, $value, $checked, $
             $output .= '<option class="filter-option" value="' . $value . '"' . $checked . '> ' . $title . ($count!=0?' ('.$count.')':''). '</option>';
             break;
         case 'input-price-range':
+                $default_min_price= $dapfforwc_styleoptions["price"]["min_price"] ?? "0";
+                $default_max_price=$dapfforwc_styleoptions["price"]["max_price"] ?? "10000";
                 $output .= '<div class="range-input"><label for="min-price">Min Price:</label>
-        <input type="number" id="min-price" name="min_price" min="0" step="1" placeholder="Min" value="'.$min_price.'" style="position: relative; height: max-content; top: unset; pointer-events: all;">
+        <input type="number" id="min-price" name="min_price" min="'.$default_min_price.'" step="1" placeholder="Min" value="'.$min_price.'" style="position: relative; height: max-content; top: unset; pointer-events: all;">
         
         <label for="max-price">Max Price:</label>
-        <input type="number" id="max-price" name="max_price" min="0" step="1" placeholder="Max" value="'.$max_price.'" style="position: relative; height: max-content; top: unset; pointer-events: all;"></div>';
+        <input type="number" id="max-price" name="max_price" min="'.$default_min_price.'" step="1" placeholder="Max" value="'.$max_price.'" style="position: relative; height: max-content; top: unset; pointer-events: all;"></div>';
                 break;
         case 'slider':
+            $default_min_price= $dapfforwc_styleoptions["price"]["min_price"] ?? "0";
+            $default_max_price=$dapfforwc_styleoptions["price"]["max_price"] ?? "10000";
             $output .= '<div class="price-input">
         <div class="field">
           <span>Min</span>
-          <input type="number" id="min-price" name="min_price" class="input-min" min="0" value="'.$min_price.'">
+          <input type="number" id="min-price" name="min_price" class="input-min" min="'.$default_min_price.'" value="'.$min_price.'">
         </div>
         <div class="separator">-</div>
         <div class="field">
           <span>Max</span>
-          <input type="number" id="max-price" name="max_price" min="0" class="input-max" value="'.$max_price.'">
+          <input type="number" id="max-price" name="max_price" min="'.$default_min_price.'" class="input-max" value="'.$max_price.'">
         </div>
       </div>
       <div class="slider">
         <div class="progress"></div>
       </div>
       <div class="range-input">
-        <input type="range" id="price-range-min" class="range-min" min="0" max="10000" value="'.$min_price.'" >
-        <input type="range" id="price-range-max" class="range-max" min="0" max="10000" value="'.$max_price.'">
+        <input type="range" id="price-range-min" class="range-min" min="'.$default_min_price.'" max="'.$default_max_price.'" value="'.$min_price.'" >
+        <input type="range" id="price-range-max" class="range-max" min="'.$default_min_price.'" max="'.$default_max_price.'" value="'.$max_price.'">
       </div>';
             break;
         case 'price':
+            $default_min_price= $dapfforwc_styleoptions["price"]["min_price"] ?? "0";
+            $default_max_price=$dapfforwc_styleoptions["price"]["max_price"] ?? "10000";
             $output .= '<div class="price-input" style="visibility: hidden; margin: 0;">
         <div class="field">
-            <input type="number" id="min-price" name="min_price" class="input-min" min="0" value="'.$min_price.'">
+            <input type="number" id="min-price" name="min_price" class="input-min" min="'.$default_min_price.'" value="'.$min_price.'">
         </div>
         <div class="separator">-</div>
         <div class="field">
-            <input type="number" id="max-price" name="max_price" min="0" class="input-max" value="'.$max_price.'">
+            <input type="number" id="max-price" name="max_price" min="'.$default_min_price.'" class="input-max" value="'.$max_price.'">
         </div>
         </div>
         <div class="slider">
         <div class="progress progress-percentage"></div>
         </div>
         <div class="range-input">
-        <input type="range" id="price-range-min" class="range-min" min="0" max="10000" value="'.$min_price.'">
-        <input type="range" id="price-range-max" class="range-max" min="0" max="10000" value="'.$max_price.'">
+        <input type="range" id="price-range-min" class="range-min" min="'.$default_min_price.'" max="'.$default_max_price.'" value="'.$min_price.'">
+        <input type="range" id="price-range-max" class="range-max" min="'.$default_min_price.'" max="'.$default_max_price.'" value="'.$max_price.'">
         </div>';
             break;
         case 'rating-text':

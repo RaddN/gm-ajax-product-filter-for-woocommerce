@@ -105,7 +105,6 @@ jQuery(document).ready(function($) {
     let pagination_selector = advancesettings ? advancesettings["pagination_selector"] ?? 'ul.page-numbers' : 'ul.page-numbers';
     function fetchFilteredProducts(page = 1) {
         selectedValesbyuser = store_selected_values();
-        console.log(selectedValesbyuser);
         $.post(dapfforwc_ajax.ajax_url, gatherFormData() +  `&selectedvalues=${selectedValesbyuser}&orderby=${orderby}&paged=${page}&action=dapfforwc_filter_products`, function(response) {
             $('#roverlay').hide();
             $('#loader').hide();
@@ -168,10 +167,26 @@ jQuery(document).ready(function($) {
           let minPrice = parseInt(rangeInput[0].value);
             maxPrice = parseInt(rangeInput[1].value);
             changePseudoElementContent(`$${minPrice}`, `$${maxPrice}`);
-            priceInput[0].value = minminPriceVal;
+            priceInput[0].value = minPrice;
             priceInput[1].value = maxPrice;
             range.style.left = (minPrice / rangeInput[0].max) * 100 + "%";
             range.style.right = 100 - (maxPrice / rangeInput[1].max) * 100 + "%";
+        });
+      });
+      priceInput.forEach((input) => {
+        input.addEventListener("input", (e) => {
+            console.log("hello");
+          let minPrice = parseInt(priceInput[0].value),
+            maxPrice = parseInt(priceInput[1].value);
+            console.log(minPrice);
+            if (e.target.className === "input-min") {
+              rangeInput[0].value = minPrice;
+              range.style.left = (minPrice / rangeInput[0].max) * 100 + "%";
+            } else {
+              rangeInput[1].value = maxPrice;
+              range.style.right = 100 - (maxPrice / rangeInput[1].max) * 100 + "%";
+            }
+          
         });
       });
     //   price range ends

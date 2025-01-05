@@ -176,6 +176,18 @@ if (!defined('ABSPATH')) {
             <?php esc_html_e('Enabled & hide child', 'dynamic-ajax-product-filters-for-woocommerce'); ?>
         </label>
     </div>
+    <div class="setting-item min-max-price-set" style="display:none;">
+        <?php 
+        $product_min = isset($dapfforwc_form_styles[$dapfforwc_attribute_name]["min_price"]) ? esc_attr($dapfforwc_form_styles[$dapfforwc_attribute_name]["min_price"]) : '0';
+        $product_max = isset($dapfforwc_form_styles[$dapfforwc_attribute_name]["max_price"]) ? esc_attr($dapfforwc_form_styles[$dapfforwc_attribute_name]["max_price"]) : '10000';
+        ?>
+        <p><strong><?php esc_html_e('Set Min & Max Price:', 'dynamic-ajax-product-filters-for-woocommerce'); ?></strong></p>
+        <label for="min_price"> Min Price </label>
+        <input type="number" name="dapfforwc_style_options[<?php echo esc_attr($dapfforwc_attribute_name); ?>][min_price]" value="<?php echo esc_attr($product_min); ?>">
+        <label for="max_price"> Max Price </label>
+        <input type="number" name="dapfforwc_style_options[<?php echo esc_attr($dapfforwc_attribute_name); ?>][max_price]" value="<?php echo esc_attr($product_max); ?>">
+        
+    </div>
 
     <!-- Enable Minimization Option -->
     <div class="setting-item">

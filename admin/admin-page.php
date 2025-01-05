@@ -347,12 +347,16 @@ function handle_reset_settings() {
 
 function reset_settings_notice() {
     dapfforwc_settings_init();
+    include(plugin_dir_path(__FILE__) . 'includes/auto-detect-pages-filters.php');
+    dapfforwc_update_filter_options_with_page_slugs();
     ?>
     <div class="notice notice-success is-dismissible">
         <p><?php _e('Settings have been reset successfully.', 'dynamic-ajax-product-filters-for-woocommerce'); ?></p>
     </div>
     <?php
 }
+
+
 
 
 
