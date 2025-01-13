@@ -15,14 +15,14 @@ class dapfforwc_Filter_Functions {
         }
             // Determine the current page number
     $paged = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
-    $orderbyFormUser = isset($_POST['orderby']) ? $_POST['orderby'] : "";
+    $orderbyFormUser = isset($_POST['orderby']) && $_POST['orderby']!== "undefined" ? $_POST['orderby'] : "";
     $currentpage_slug = isset($_POST['current-page']) ? sanitize_text_field(wp_unslash($_POST['current-page'])) : "";
         $args = array(
             'post_type' => 'product',
             'posts_per_page' => isset($dapfforwc_options["product_show_settings"][$currentpage_slug]["per_page"]) ? 
             intval($dapfforwc_options["product_show_settings"][$currentpage_slug]["per_page"]) : 12,
             'post_status' => 'publish',
-            'orderby' => $orderbyFormUser ? $orderbyFormUser : $dapfforwc_options["product_show_settings"][$currentpage_slug]["orderby"] ?? 'date',
+            'orderby' => $orderbyFormUser!=="" ? $orderbyFormUser : $dapfforwc_options["product_show_settings"][$currentpage_slug]["orderby"] ?? 'date',
             'order' => isset($dapfforwc_options["product_show_settings"][$currentpage_slug]["order"])?strtoupper($dapfforwc_options["product_show_settings"][$currentpage_slug]["order"]) : 'ASC',
             'paged' => $paged,
             'tax_query' => array(
@@ -59,8 +59,11 @@ class dapfforwc_Filter_Functions {
         $count_total_showing_product = $filter_options->post_count;
         $query = new WP_Query($args);
 
+        
+
         $updated_filters = dapfforwc_get_updated_filters($filter_options);
         $default_filter = [];
+        $min_max_prices = dapfforwc_get_min_max_price();
 
         // Check if 'selectedvalues' is set and not empty
         if (!empty($_POST['selectedvalues'])) {
@@ -68,7 +71,7 @@ class dapfforwc_Filter_Functions {
             $default_filter = array_map('sanitize_text_field', explode(',', wp_unslash($_POST['selectedvalues'])));
         }
         
-        $filterform = dapfforwc_filter_form($updated_filters,$default_filter,"","","",$min_price=floatval($_POST['min_price']) ?? $dapfforwc_styleoptions["price"]["min_price"] ?? 0,$max_price=floatval($_POST['max_price']) ?? $dapfforwc_styleoptions["price"]["max_price"] ?? 10000);
+        $filterform = dapfforwc_filter_form($updated_filters,$default_filter,"","","",$min_price=floatval($_POST['min_price']) ?? $dapfforwc_styleoptions["price"]["min_price"] ?? $min_max_prices['min'],$max_price=floatval($_POST['max_price']) ?? $dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max']);
         // Capture the product listing
         ob_start();
         
@@ -164,13 +167,17 @@ class dapfforwc_Filter_Functions {
         }
     
         // Tag Filter
-        if (!empty($_POST['tags'])) {
+        if (!empty($_POST['tag'])) {
             $args['tax_query'][] = array(
                 'taxonomy' => 'product_tag',
                 'field' => 'slug',
-                'terms' => array_map('sanitize_text_field', wp_unslash($_POST['tags'])),
+                'terms' => array_map('sanitize_text_field', wp_unslash($_POST['tag'])),
                 'operator' => $second_operator,
             );
+        }
+        if (!empty($_POST['s'])) {
+            $search_term = sanitize_text_field(wp_unslash($_POST['s']));
+            $args['s'] = $search_term; // Add the search term to the main query args
         }
     
         return $args;

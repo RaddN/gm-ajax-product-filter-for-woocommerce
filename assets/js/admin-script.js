@@ -24,7 +24,9 @@ const editor = CodeMirror(document.getElementById("code-editor"), {
         
         // Function to show or hide the closest <tr> with the .custom_template_code class
         function toggleTemplateRow() {
-          const closestTr = document.querySelector(".custom_template_code").closest('tr');
+          let closestTr = document.querySelector(".custom_template_code");
+          
+         if(closestTr){closestTr = closestTr.closest('tr');}
           
           // Check if the next sibling has the class 'custom_template_code'
           if (closestTr) {
@@ -36,7 +38,8 @@ const editor = CodeMirror(document.getElementById("code-editor"), {
           }
         }
         // Event listener for checkbox change
-        checkbox.addEventListener('change', toggleTemplateRow);
+        if(checkbox){
+        checkbox.addEventListener('change', toggleTemplateRow);}
     
         // Initialize the state on page load
         toggleTemplateRow();
@@ -44,18 +47,23 @@ const editor = CodeMirror(document.getElementById("code-editor"), {
 
     
  //   page manage
-     document.querySelector('.page-inputs .add-page').addEventListener('click', function() {
+    const addpagebtn =  document.querySelector('.page-inputs .add-page');
+    if(addpagebtn){
+    addpagebtn.addEventListener('click', function() {
             var newPage = document.createElement('div');
             newPage.classList.add('page-item');
             newPage.innerHTML = '<input type="text" name="dapfforwc_options[pages][]" value="" placeholder="Add new page" /> <button type="button" class="remove-page">Remove</button>';
             document.querySelector('.page-list').appendChild(newPage);
         });
+    }
 
-        document.querySelector('.page-list').addEventListener('click', function(e) {
+       const pagelist = document.querySelector('.page-list');
+       if(pagelist){
+       pagelist.addEventListener('click', function(e) {
             if (e.target.classList.contains('remove-page')) {
                 e.target.closest('.page-item').remove();
             }
-        });
+        });}
 
         document.addEventListener("DOMContentLoaded", function () {
     // Get the checkbox element
@@ -75,7 +83,8 @@ const editor = CodeMirror(document.getElementById("code-editor"), {
     }
 
     // Attach change event to the checkbox
-    pagesFilterAutoCheckbox.addEventListener("change", toggleRows);
+
+    if(pagesFilterAutoCheckbox){pagesFilterAutoCheckbox.addEventListener("change", toggleRows);}
 
     // Initial toggle based on the checkbox state
     toggleRows();
@@ -90,14 +99,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const saveEffectButton = document.getElementById('save-effect');
     let selectedEffect = null;
 
-    customizeLoaderLink.addEventListener('click', function(e) {
+    if(customizeLoaderLink){customizeLoaderLink.addEventListener('click', function(e) {
         e.preventDefault();
         popup.style.display = 'flex';
-    });
+    });}
 
-    closePopup.addEventListener('click', function() {
+    if(closePopup){closePopup.addEventListener('click', function() {
         popup.style.display = 'none';
-    });
+    });}
 
     document.querySelectorAll('.loading-option').forEach(option => {
         option.addEventListener('click', function() {
@@ -114,3 +123,4 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+

@@ -5,7 +5,7 @@ if (!defined('ABSPATH')) {
 }
 
 function dapfforwc_product_filter_shortcode($atts) {
-    global $dapfforwc_styleoptions,$post,$dapfforwc_options, $dapfforwc_advance_settings;
+    global $dapfforwc_styleoptions,$post,$dapfforwc_options, $dapfforwc_advance_settings, $dapfforwc_min_max_price;
     $use_anchor = $dapfforwc_advance_settings["use_anchor"] ?? "";
     $use_filters_word = $dapfforwc_options["use_filters_word_in_permalinks"] ?? "";
     $remove_outofStock_product = $dapfforwc_advance_settings["remove_outofStock"] ?? ""; 
@@ -16,7 +16,7 @@ function dapfforwc_product_filter_shortcode($atts) {
         $dapfforwc_slug = dapfforwc_get_full_slug($post->ID);
     }
 
-    $second_operator = strpos($dapfforwc_slug, 'autosave') === false ? $dapfforwc_options["product_show_settings"][$dapfforwc_slug ]? strtoupper($dapfforwc_options["product_show_settings"][$dapfforwc_slug ]["operator_second"]) ?? "IN":"IN":"IN";
+    $second_operator = isset($dapfforwc_options["product_show_settings"][$dapfforwc_slug ]) ? strtoupper($dapfforwc_options["product_show_settings"][$dapfforwc_slug ]["operator_second"]) ?? "IN":"IN";
     $default_filter =$dapfforwc_options["default_filters"][$dapfforwc_slug] ?? [] ;
     $dapfforwc_store_slug = get_transient('dapfforwc_slug');
     $filters_array = explode('/', str_replace('filters/', '', $dapfforwc_store_slug));
@@ -27,6 +27,8 @@ function dapfforwc_product_filter_shortcode($atts) {
         'terms' => '',
         'category' => '',
         'tag' => '',
+        'product_selector' => '',
+        'pagination_selector' => ''
     ), $atts);
 
     // Prepare the query arguments based on the provided attributes
@@ -159,14 +161,24 @@ function dapfforwc_product_filter_shortcode($atts) {
     $products = new WP_Query($args);
     
     $updated_filters = dapfforwc_get_updated_filters($products);
-    // echo "<pre>"; print_r($default_filter); echo "</pre>";
+    // echo "<pre>"; print_r($dapfforwc_styleoptions["max_height"]); echo "</pre>";
+    $min_max_prices = dapfforwc_get_min_max_price();
+// echo "Minimum Price: " . wc_price($prices['min']);
+// echo "Maximum Price: " . wc_price($prices['max']);
     
     ob_start(); // Start output buffering
     ?>
-    <form id="product-filter" method="POST">
+    <style>
+    .progress-percentage:after{
+        content: "$<?php echo $min_max_prices['max'] ?>";
+    }
+    </style>
+    <form id="product-filter" method="POST" 
+    <?php if (!empty($atts['product_selector'])) { echo 'data-product_selector="' . htmlspecialchars($atts["product_selector"]) . '"'; } ?> 
+    <?php if (!empty($atts['pagination_selector'])) { echo 'data-pagination_selector="' . htmlspecialchars($atts["pagination_selector"]) . '"'; } ?>>
     <?php
     wp_nonce_field('gm-product-filter-action', 'gm-product-filter-nonce'); 
-    echo dapfforwc_filter_form($updated_filters,$default_filter,$use_anchor,$use_filters_word,$atts,$min_price=$dapfforwc_styleoptions["price"]["min_price"],$max_price=$dapfforwc_styleoptions["price"]["max_price"]);
+    echo dapfforwc_filter_form($updated_filters,$default_filter,$use_anchor,$use_filters_word,$atts,$min_price=$dapfforwc_styleoptions["price"]["min_price"]??$min_max_prices['min'],$max_price=$dapfforwc_styleoptions["price"]["max_price"]??$min_max_prices['max']);
 
     echo '</form>';
     ?>
@@ -208,6 +220,7 @@ function dapfforwc_customSort($a, $b) {
 }
 function dapfforwc_render_filter_option($sub_option, $title, $value, $checked, $dapfforwc_styleoptions , $name, $attribute,$singlevalueSelect, $count,$min_price=0,$max_price=10000) {
     $output = '';
+    $min_max_prices = dapfforwc_get_min_max_price();
     switch ($sub_option) {
         case 'checkbox':
             $output .= '<label><input type="'.($singlevalueSelect==="yes"?'radio':'checkbox').'" class="filter-checkbox" name="' . $name . '[]" value="' . $value . '"' . $checked . '> ' . $title . ($count!=0?' ('.$count.')':''). '</label>';
@@ -230,7 +243,7 @@ function dapfforwc_render_filter_option($sub_option, $title, $value, $checked, $
             break;
 
         case 'checkbox_hide':
-            $output .= '<label><input type="'.($singlevalueSelect==="yes"?'radio':'checkbox').'" class="filter-checkbox" name="' . $name . '[]" value="' . $value . '"' . $checked . ' style="display:none;"> ' . $title . ($count!=0?' ('.$count.')':''). '</label>';
+            $output .= '<label><input type="'.($singlevalueSelect==="yes"?'radio':'checkbox').'" class="filter-checkbox" name="' . $name . '[]" value="' . $value . '"' . $checked . ' style="display:none;"> <span>' . $title . ($count!=0?' ('.$count.')':''). '</span></label>';
             break;
 
         case 'color':
@@ -259,8 +272,8 @@ function dapfforwc_render_filter_option($sub_option, $title, $value, $checked, $
             $output .= '<option class="filter-option" value="' . $value . '"' . $checked . '> ' . $title . ($count!=0?' ('.$count.')':''). '</option>';
             break;
         case 'input-price-range':
-                $default_min_price= $dapfforwc_styleoptions["price"]["min_price"] ?? "0";
-                $default_max_price=$dapfforwc_styleoptions["price"]["max_price"] ?? "10000";
+                $default_min_price= $dapfforwc_styleoptions["price"]["min_price"] ?? $min_max_prices['min'];
+                $default_max_price=$dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max'];
                 $output .= '<div class="range-input"><label for="min-price">Min Price:</label>
         <input type="number" id="min-price" name="min_price" min="'.$default_min_price.'" step="1" placeholder="Min" value="'.$min_price.'" style="position: relative; height: max-content; top: unset; pointer-events: all;">
         
@@ -268,8 +281,8 @@ function dapfforwc_render_filter_option($sub_option, $title, $value, $checked, $
         <input type="number" id="max-price" name="max_price" min="'.$default_min_price.'" step="1" placeholder="Max" value="'.$max_price.'" style="position: relative; height: max-content; top: unset; pointer-events: all;"></div>';
                 break;
         case 'slider':
-            $default_min_price= $dapfforwc_styleoptions["price"]["min_price"] ?? "0";
-            $default_max_price=$dapfforwc_styleoptions["price"]["max_price"] ?? "10000";
+            $default_min_price= $dapfforwc_styleoptions["price"]["min_price"] ?? $min_max_prices['min'];
+            $default_max_price=$dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max'];
             $output .= '<div class="price-input">
         <div class="field">
           <span>Min</span>
@@ -290,8 +303,8 @@ function dapfforwc_render_filter_option($sub_option, $title, $value, $checked, $
       </div>';
             break;
         case 'price':
-            $default_min_price= $dapfforwc_styleoptions["price"]["min_price"] ?? "0";
-            $default_max_price=$dapfforwc_styleoptions["price"]["max_price"] ?? "10000";
+            $default_min_price= $dapfforwc_styleoptions["price"]["min_price"] ?? $min_max_prices['min'];
+            $default_max_price=$dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max'];
             $output .= '<div class="price-input" style="visibility: hidden; margin: 0;">
         <div class="field">
             <input type="number" id="min-price" name="min_price" class="input-min" min="'.$default_min_price.'" value="'.$min_price.'">
@@ -420,6 +433,18 @@ function dapfforwc_product_filter_shortcode_single($atts) {
 
     // Generate the output
     $output = '<form class="rfilterbuttons" id="'.$atts['name'].'"><ul>';
+    $output .= '<li>
+                <input id="selected_category_1" type="checkbox" value="category_1" checked="">
+                <label for="selected_category_1">Category 1</label>
+            </li>
+           <li>
+                <input id="selected_category_2" type="checkbox" value="category_2" checked="">
+                <label for="selected_category_2">Category 2</label>
+            </li>
+            <li class="checked">
+                <input id="selected_category_3" type="checkbox" value="category_3" checked="">
+                <label for="selected_category_3">Category 3</label>
+            </li>';
     $output .= '</ul></form>';
 
     return $output;
@@ -431,8 +456,23 @@ add_shortcode('plugincy_filters_single', 'dapfforwc_product_filter_shortcode_sin
 function dapfforwc_product_filter_shortcode_selected() {
 
     // Generate the output
-    $output = '<form class="rfilterselected"><ul>';
-    $output .= '</ul></form>';
+    $output = '<form class="rfilterselected"><div><ul>';
+    $output .= '<li class="checked">
+                <input id="selected_category_1" type="checkbox" value="category_1" checked="">
+                <label for="selected_category_1">Category 1</label>
+                <label style="font-size:12px;margin-left:5px;">x</label>
+            </li>
+           <li class="checked">
+                <input id="selected_category_2" type="checkbox" value="category_2" checked="">
+                <label for="selected_category_2">Category 2</label>
+                <label style="font-size:12px;margin-left:5px;">x</label>
+            </li>
+            <li class="checked">
+                <input id="selected_category_3" type="checkbox" value="category_3" checked="">
+                <label for="selected_category_3">Category 3</label>
+                <label style="font-size:12px;margin-left:5px;">x</label>
+            </li>';
+    $output .= '</ul></div></form>';
 
     return $output;
 

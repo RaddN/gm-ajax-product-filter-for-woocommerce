@@ -23,6 +23,7 @@ function dapfforwc_show_attributes_render() { dapfforwc_render_checkbox('show_at
 function dapfforwc_show_tags_render() { dapfforwc_render_checkbox('show_tags'); }
 function dapfforwc_show_price_range_render() { dapfforwc_render_checkbox('show_price_range'); }
 function dapfforwc_show_rating_render() { dapfforwc_render_checkbox('show_rating'); }
+function dapfforwc_show_search_render() { dapfforwc_render_checkbox('show_search'); }
 function dapfforwc_use_filters_word_in_permalinks_render() { dapfforwc_render_checkbox('use_filters_word_in_permalinks'); }
 function dapfforwc_update_filter_options_render() {dapfforwc_render_checkbox('update_filter_options');}
 function dapfforwc_show_loader_render() { dapfforwc_render_checkbox('show_loader'); }
@@ -33,7 +34,7 @@ function dapfforwc_pages_filter_auto_render() { dapfforwc_render_checkbox('pages
 function dapfforwc_custom_template_code_render() {
     global $dapfforwc_options;
     echo '    
-    <div class="custom_template_code" style="' . (isset($dapfforwc_options['use_custom_template']) ? 'display:block;' : 'display:none;') . '">';
+    <div class="custom_template_code" >';
     ?>
         <!-- Placeholder List -->
         <div id="placeholder-list" style="margin-bottom: 10px;">
@@ -72,7 +73,7 @@ function dapfforwc_use_url_filter_render() {
         <?php
         $types = [
             'query_string' => __('With Query String (e.g., ?filters)', 'dynamic-ajax-product-filters-for-woocommerce'),
-            'permalinks' => __('With Permalinks (e.g., canada/toronto/feb-2024)', 'dynamic-ajax-product-filters-for-woocommerce'),
+            'permalinks' => __('With Permalinks (e.g., brand/size/color)', 'dynamic-ajax-product-filters-for-woocommerce'),
             'ajax' => __('With Ajax', 'dynamic-ajax-product-filters-for-woocommerce'),
         ];
         foreach ($types as $value => $label) {

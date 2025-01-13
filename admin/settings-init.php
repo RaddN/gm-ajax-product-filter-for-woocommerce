@@ -9,6 +9,7 @@ function dapfforwc_settings_init() {
         'show_tags' => "on",
         'show_price_range' => "",
         'show_rating' => "",
+        'show_search' => "",
         'use_url_filter' => 'query_string',
         'update_filter_options' => 0,
         'show_loader' => "on",
@@ -36,6 +37,7 @@ function dapfforwc_settings_init() {
         'show_tags' => __('Show Tags', 'dynamic-ajax-product-filters-for-woocommerce'),
         'show_price_range' => __('Show Price Range', 'dynamic-ajax-product-filters-for-woocommerce'),
         'show_rating' => __('Show Rating', 'dynamic-ajax-product-filters-for-woocommerce'),
+        'show_search' => __('Show Search', 'dynamic-ajax-product-filters-for-woocommerce'),
         'use_url_filter' => __('Use URL-Based Filter', 'dynamic-ajax-product-filters-for-woocommerce'),
         'use_filters_word_in_permalinks' => __('use filters word in permalinks', 'dynamic-ajax-product-filters-for-woocommerce'),
         'update_filter_options' => __('Update filter options', 'dynamic-ajax-product-filters-for-woocommerce'),
@@ -69,7 +71,7 @@ function dapfforwc_settings_init() {
     add_settings_field('custom_template_code', __('product custom template code', 'dynamic-ajax-product-filters-for-woocommerce'), 'dapfforwc_custom_template_code_render', 'dapfforwc-admin', 'dapfforwc_section');
 
     $default_style = get_option('dapfforwc_style_options') ?: [
-        'price' => ['type'=>'price', 'sub_option'=>'price', 'min_price' => 0, 'max_price'=> 10000],
+        'price' => ['type'=>'price', 'sub_option'=>'price'],
         'rating' => ['type'=>'rating', 'sub_option'=>'rating'],
     ];
     update_option('dapfforwc_style_options', $default_style);

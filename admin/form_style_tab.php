@@ -151,8 +151,10 @@ if (!defined('ABSPATH')) {
             <!-- Optional Settings -->
 <div class="optional_settings">
     <h4><?php esc_html_e('Optional Settings:', 'dynamic-ajax-product-filters-for-woocommerce'); ?></h4>
-    <!-- Hierarchical -->
 
+    <div class="row">
+        <div class="col-6">
+    <!-- Hierarchical -->
     <div class="setting-item hierarchical" style="display:none;">
         <p><strong><?php esc_html_e('Enable Hierarchical:', 'dynamic-ajax-product-filters-for-woocommerce'); ?></strong></p>
         <label>
@@ -178,8 +180,9 @@ if (!defined('ABSPATH')) {
     </div>
     <div class="setting-item min-max-price-set" style="display:none;">
         <?php 
-        $product_min = isset($dapfforwc_form_styles[$dapfforwc_attribute_name]["min_price"]) ? esc_attr($dapfforwc_form_styles[$dapfforwc_attribute_name]["min_price"]) : '0';
-        $product_max = isset($dapfforwc_form_styles[$dapfforwc_attribute_name]["max_price"]) ? esc_attr($dapfforwc_form_styles[$dapfforwc_attribute_name]["max_price"]) : '10000';
+        $min_max_prices = dapfforwc_get_min_max_price();
+        $product_min = isset($dapfforwc_form_styles[$dapfforwc_attribute_name]["min_price"]) ? esc_attr($dapfforwc_form_styles[$dapfforwc_attribute_name]["min_price"]) : $min_max_prices['min'];
+        $product_max = isset($dapfforwc_form_styles[$dapfforwc_attribute_name]["max_price"]) ? esc_attr($dapfforwc_form_styles[$dapfforwc_attribute_name]["max_price"]) : $min_max_prices['max'];
         ?>
         <p><strong><?php esc_html_e('Set Min & Max Price:', 'dynamic-ajax-product-filters-for-woocommerce'); ?></strong></p>
         <label for="min_price"> Min Price </label>
@@ -207,6 +210,11 @@ if (!defined('ABSPATH')) {
                 <?php checked($dapfforwc_form_styles[esc_attr($dapfforwc_attribute_name)]['minimize']['type'] ?? '', 'no_arrow'); ?>>
             <?php esc_html_e('Enabled without Arrow', 'dynamic-ajax-product-filters-for-woocommerce'); ?>
         </label>
+        <label>
+            <input type="radio" name="dapfforwc_style_options[<?php echo esc_attr($dapfforwc_attribute_name); ?>][minimize][type]" value="minimize_initial" 
+                <?php checked($dapfforwc_form_styles[esc_attr($dapfforwc_attribute_name)]['minimize']['type'] ?? '', 'minimize_initial'); ?>>
+            <?php esc_html_e('Initially Minimized', 'dynamic-ajax-product-filters-for-woocommerce'); ?>
+        </label>
     </div>
 
     <!-- Single Selection Option -->
@@ -227,6 +235,17 @@ if (!defined('ABSPATH')) {
                 <?php checked($dapfforwc_form_styles[esc_attr($dapfforwc_attribute_name)]['show_product_count'] ?? '', 'yes'); ?>>
             <?php esc_html_e('Show number of products', 'dynamic-ajax-product-filters-for-woocommerce'); ?>
         </label>
+    </div>
+    </div>
+    <div>
+        <div class="setting-item">
+            <p><strong><?php esc_html_e('Max Height:', 'dynamic-ajax-product-filters-for-woocommerce'); ?></strong></p>
+            <label>
+           <?php $max_height = isset($dapfforwc_form_styles["max_height"][$dapfforwc_attribute_name]) ? esc_attr($dapfforwc_form_styles["max_height"][$dapfforwc_attribute_name]) : 0; ?>
+               <input type="number" name="dapfforwc_style_options[max_height][<?php echo esc_attr($dapfforwc_attribute_name); ?>]" value="<?php echo esc_attr($max_height); ?>">
+            </label>
+        </div>
+    </div>
     </div>
 </div>
 <!-- optional ends -->

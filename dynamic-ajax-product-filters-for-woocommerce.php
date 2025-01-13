@@ -30,7 +30,7 @@ $dapfforwc_front_page_id = get_option('page_on_front');
 // Get the front page object
 $dapfforwc_front_page = get_post($dapfforwc_front_page_id);
 // Get the slug of the front page
-$dapfforwc_front_page_slug = $dapfforwc_front_page->post_name;
+$dapfforwc_front_page_slug = $dapfforwc_front_page? $dapfforwc_front_page->post_name : "";
 
 // Define sub-options
 $dapfforwc_sub_options = [
@@ -93,6 +93,7 @@ function dapfforwc_check_woocommerce() {
 
         add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'dapfforwc_add_settings_link');
         include(plugin_dir_path(__FILE__) . 'admin/admin-page.php');
+        include(plugin_dir_path(__FILE__) . 'includes/common-functions.php');
     }
 }
 
@@ -123,20 +124,70 @@ function dapfforwc_enqueue_scripts() {
     wp_enqueue_style('filter-style', plugin_dir_url(__FILE__) . 'assets/css/style.css', [], '1.0.6');
     wp_enqueue_style('select2-css', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css', [], '1.0.6');
     wp_enqueue_script('select2-js', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js', ['jquery'], '1.0.6', true);
+    // max hegith css generate
+    global $dapfforwc_styleoptions;
 
+    $css = '';
+    $max_height = $dapfforwc_styleoptions["max_height"] ?? [];
+    foreach ( $max_height as $key => $value) {
+        // Sanitize the key to create a valid CSS class name
+        if($value>0){
+        $cssClass = strtolower($key); // Replace dashes with underscores
+        $css .= "#{$cssClass} .items{\n";
+        $css .= "    max-height: {$value}px;\n"; // Set max-height based on value
+        $css .= "    overflow-y: scroll;\n";
+        $css .= "    transition: max-height 0.3s ease;\n";
+        $css .= "}\n";
+        }
+    }
+    // Add the generated CSS as inline style
+    wp_add_inline_style('filter-style', $css);
     wp_add_inline_script('select2-js', '
         jQuery(document).ready(function($) {
-            $(".select2").select2({ placeholder: "Select Options" });
-            $("select.select2_classic").select2({ placeholder: "Select Options", allowClear: true });
-
-            $(".title.collapsable_arrow").on("click", function() {
-                $(this).find("svg").toggleClass("rotated");
-                $(this).siblings(".items").slideToggle(300);
+            
+            $(".select2").select2({
+                placeholder: "Select Options",
+                allowClear: true
             });
 
-            $(".title.collapsable_no_arrow").on("click", function() {
-                $(this).siblings(".items").slideToggle(300);
+           
+            $("select.select2_classic").select2({
+                placeholder: "Select Options",
+                allowClear: true
             });
+            if ($(window).width() > 768) {
+    function initializeCollapsible() {
+        $(".title").each(function () {
+            const $this = $(this);
+            const $items = $this.next(".items");
+
+            // Hide items initially if the title has a specific class
+            if ($this.hasClass("collapsable_minimize_initial")) {
+                $items.hide();
+            }
+
+            // Clear any existing event handlers before adding new ones
+            $this.off("click").on("click", function () {
+                // Handle `.collapsable_arrow` class for rotating the SVG icon
+                if ($this.hasClass("collapsable_arrow")) {
+                    $this.find("svg").toggleClass("rotated");
+                }
+                // Toggle the visibility of the sibling `.items`
+                $items.slideToggle(300);
+            });
+        });
+    }
+
+    // Initialize collapsible elements
+    initializeCollapsible();
+
+    // Reinitialize collapsibles after AJAX content is loaded
+    $(document).ajaxComplete(function () {
+        initializeCollapsible();
+    });
+}
+
+
         });
     ');
 }
@@ -153,9 +204,10 @@ function dapfforwc_admin_scripts() {
 
     $inline_script = 'document.addEventListener("DOMContentLoaded", function () {
     const dropdown = document.getElementById("attribute-dropdown");
-    const firstAttribute = dropdown.value;
 
-    document.querySelector(`#options-${firstAttribute}`).style.display = "block";
+    if(dropdown){const firstAttribute = dropdown.value;
+
+    document.querySelector(`#options-${firstAttribute}`).style.display = "block";}
 
     function toggleDisplay(selector, display) {
         document.querySelectorAll(selector).forEach(el => {
@@ -163,7 +215,7 @@ function dapfforwc_admin_scripts() {
         });
     }
 
-    dropdown.addEventListener("change", function () {
+    if(dropdown)dropdown.addEventListener("change", function () {
     const selectedAttribute = this.value;
 
     toggleDisplay(".style-options", "none");
@@ -181,10 +233,15 @@ function dapfforwc_admin_scripts() {
         toggleDisplay(".min-max-price-set", "block");
     }
     else if (selectedAttribute === "rating") {
+        toggleDisplay(".min-max-price-set", "none");
         toggleDisplay(".primary_options label", "none");
         toggleDisplay(".primary_options label.rating", "block");
     } else if(selectedAttribute === "category"){
         toggleDisplay(".hierarchical", "block");
+        toggleDisplay(".min-max-price-set", "none");
+        toggleDisplay(".primary_options label", "block");
+        toggleDisplay(".primary_options label.price", "none");
+        toggleDisplay(".primary_options label.rating", "none");
     }
     else {
         toggleDisplay(".min-max-price-set", "none");
@@ -297,9 +354,9 @@ function dapfforwc_add_settings_link($links) {
     return $links;
 }
 
-if ($dapfforwc_use_url_filter !== '' && !empty($dapfforwc_options['pages'])) {
-    include(plugin_dir_path(__FILE__) . 'includes/permalinks-setup.php');
-}
+
+include(plugin_dir_path(__FILE__) . 'includes/permalinks-setup.php');
+
 if ($dapfforwc_auto_detect_pages_filters === "on") {
     include(plugin_dir_path(__FILE__) . 'includes/auto-detect-pages-filters.php');
 }
@@ -330,3 +387,18 @@ function dapfforwc_get_full_slug($post_id) {
 
 include(plugin_dir_path(__FILE__) . 'includes/widget_design_template.php');
 include(plugin_dir_path(__FILE__) . 'includes/get_review.php');
+include(plugin_dir_path(__FILE__) . 'includes/blocks_widget_create.php');
+
+// add alert for admin in 404 page
+
+function add_admin_message_before_footer() {
+    if (is_404() && current_user_can('administrator')) {
+        ?>
+        <div class="admin-message" style="background-color: #f9f9f9; padding: 20px; border: 1px solid #ccc; margin-top: 20px;">
+            <h2>Admin Notice</h2>
+            <p>This page was not found. If you think it's an error goto <b> product filters > Form Manage <b> & turn on <b><a href="/wp-admin/admin.php?page=dapfforwc-admin#:~:text=use%20filters%20word%20in%20permalinks">use filters word in permalinks</a></b>. (only admin can see this.)</p>
+        </div>
+        <?php
+    }
+}
+add_action('wp_head', 'add_admin_message_before_footer');

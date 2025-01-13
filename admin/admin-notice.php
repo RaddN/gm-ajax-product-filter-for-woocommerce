@@ -4,22 +4,6 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Hook to admin_notices action
-add_action('admin_notices', 'dapfforwc_custom_admin_notice');
-
-function dapfforwc_custom_admin_notice() {
-    global $dapfforwc_options;
-
-    // Check the conditions
-    if (isset($dapfforwc_options['use_url_filter']) && $dapfforwc_options['use_url_filter'] === 'permalinks' && count($dapfforwc_options['pages'])<2) {
-        ?>
-        <div class="notice notice-warning is-dismissible">
-            <p><?php  esc_html_e('Please note: You have enabled permalinks filtering please add the pages slug where you have used filter.', 'dynamic-ajax-product-filters-for-woocommerce'); ?></p>
-        </div>
-        <?php
-    }
-}
-
 // check duplicate slugs
 
 function dapfforwc_check_woocommerce_duplicate_slugs() {

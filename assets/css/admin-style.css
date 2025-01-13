@@ -491,3 +491,7 @@
  .dot_ring,.half_ring,.chase {
     margin-bottom: 39px;
 }
+.row {
+    display: flex;
+}
+

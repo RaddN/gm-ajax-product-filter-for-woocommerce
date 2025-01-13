@@ -8,11 +8,13 @@ jQuery(document).ready(function($) {
     }
     var rfilterbuttonsId = $('.rfilterbuttons').attr('id');
     var path = window.location.pathname;
+    var currentPage = path.replace(/^\/|\/$/g, '');
     // Initialize filters
     var orderby;
     let selectedValesbyuser = store_selected_values();
     // Initialize filters and handle changes
     $('#product-filter, .rfilterbuttons').on('change', handleFilterChange);
+    $('#product-filter, .rfilterbuttons').on('submit', handleFilterChange);
     $('.woocommerce-ordering select').on('change', function(event) {
         // Prevent the default form submission and page reload
         event.preventDefault();
@@ -41,57 +43,78 @@ jQuery(document).ready(function($) {
 
     function handleFilterChange(e) {
         e.preventDefault();
-        if (!anyFilterSelected()) return location.reload();
+        
+        
         selectedValesbyuser = store_selected_values();
+        updateUrlFilters();
+        if (!anyFilterSelected()) return location.reload();
+        selectedFilterShowProductTop();
+        syncCheckboxSelections();
         $('#roverlay').show();
         $('#loader').show();
-        updateUrlFilters(); // Update the URL based on current filters
         fetchFilteredProducts();
     }
-    function store_selected_values(){
+    function store_selected_values() {
         let selectedValues = [];
-        // Get selected rating
-        $('input[name="rating[]"]:checked').each(function() {
-            selectedValues.push($(this).val());
+    
+        // Get selected values from checkboxes and radio buttons
+        selectedValues = selectedValues.concat(
+            $('#product-filter input:checked').map(function() {
+                return $(this).val();
+            }).get()
+        );
+    
+        // Get selected values from select elements
+        $('#product-filter select').each(function() {
+            const values = $(this).val();
+            if (values) { // Check if a value is selected
+                selectedValues = selectedValues.concat(values);
+            }
         });
-
-        // Get selected categories
-        $('input[name="category[]"]:checked').each(function() {
-            selectedValues.push($(this).val());
-        });
-
-        // Get selected attributes
-        $('input[name^="attribute"]:checked').each(function() {
-            selectedValues.push($(this).val());
-        });
-
-        // Get selected tags
-        $('input[name="tag[]"]:checked').each(function() {
-            selectedValues.push($(this).val());
-        });
+    
         return selectedValues;
     }
-
+    function selectfromurl(){
+        let urlvalues = currentPage.split('/');
+    urlvalues.forEach(value => {
+        // Check the input checkbox
+        if ($(`input[value="${value}"]`).length) {
+            $(`input[value="${value}"]`).attr('checked', true);
+        } else if ($(`select option[value="${value}"]`).length) {
+            // If no input found, check dropdown option
+            $(`select option[value="${value}"]`).prop('selected', true);
+        }
+    });
+    }
+    selectfromurl();
     function anyFilterSelected() {
-        return $('#product-filter input[type="checkbox"]:checked').length > 0 ||
-               $('.rfilterbuttons input[type="checkbox"]:checked').length > 0;
+        const inputchecked = $('#product-filter input:checked').length > 0;
+        const selectSelected = $('#product-filter select').filter(function() { return this.value; }).length > 0;
+        const textInputSelected = $('#product-filter input[type="text"]').filter(function() { return this.value.trim() !== ""; }).length > 0;
+        const numberInputSelected = $('#product-filter input[type="number"]').filter(function() { return this.value.trim() !== ""; }).length > 0;
+        const range = $('#product-filter input[type="range"]').filter(function() { return this.value.trim() !== ""; }).length > 0;
+    
+        return inputchecked || selectSelected || textInputSelected || numberInputSelected || range;
     }
     let product_selector = advancesettings ? advancesettings["product_selector"] ?? 'ul.products':'ul.products';
     let pagination_selector = advancesettings ? advancesettings["pagination_selector"] ?? 'ul.page-numbers' : 'ul.page-numbers';
+    let productSelector_shortcode = $('#product-filter').data('product_selector');
+    let paginationSelector_shortcode = $('#product-filter').data('pagination_selector');
    
     function fetchFilteredProducts(page = 1) {
+        selectfromurl();
         selectedValesbyuser = store_selected_values();
         $.post(dapfforwc_ajax.ajax_url, gatherFormData() + `&selectedvalues=${selectedValesbyuser}&orderby=${orderby}&paged=${page}&action=dapfforwc_filter_products`, function(response) {
             $('#roverlay').hide();
             $('#loader').hide();
             if (response.success) {
-                $(product_selector).html(response.data.products);
+                $(productSelector_shortcode ?? product_selector).html(response.data.products);
                 $('.woocommerce-result-count').text(`${response.data.total_product_fetch} results found`);
                 if(dapfforwc_options["update_filter_options"]==="on"){
                     $('#product-filter div').remove();
                     $("form#product-filter").append(response.data.filter_options);
                     }
-                $(pagination_selector).html(response.data.pagination);
+                $(paginationSelector_shortcode ?? pagination_selector).html(response.data.pagination);
                 syncCheckboxSelections();
             } else {
                 console.error('Error:', response.message);
@@ -99,7 +122,7 @@ jQuery(document).ready(function($) {
         }).fail(handleAjaxError);
     }
     function attachPaginationEvents() {
-        $(document).on('click', `${pagination_selector} a.page-numbers`, function(e) {
+        $(document).on('click', `${paginationSelector_shortcode ?? pagination_selector} a.page-numbers`, function(e) {
             e.preventDefault(); // Prevent the default anchor click behavior
             const url = $(this).attr('href'); // Get the URL from the link
             const page = new URL(url).searchParams.get('paged'); // Extract the page number
@@ -116,10 +139,10 @@ jQuery(document).ready(function($) {
         var style = $('<style></style>');
         style.text(`
             .progress-percentage:before { 
-                content: "${beforeContent}"; 
+                content: "${beforeContent}" !important; 
             }
             .progress-percentage:after { 
-                content: "${afterContent}"; 
+                content: "${afterContent}" !important; 
             }
         `);
         
@@ -244,8 +267,6 @@ jQuery(document).ready(function($) {
         });
     }
     function applyFiltersFromUrl(filtersString) {
-        var path = window.location.pathname;
-        var currentPage = path.replace(/^\/|\/$/g, '');
         if (!filtersString) {
             const newUrl = `/${currentPage}/`;
             history.replaceState(null, '', newUrl);
@@ -300,15 +321,16 @@ jQuery(document).ready(function($) {
 
         // Create the filters query string from the Set
         let filtersQueryString = Array.from(selectedFilters); // Convert Set back to array
-        var path = window.location.pathname;
-        var currentPage = path.replace(/^\/|\/$/g, '');
             if (dapfforwc_options.default_filters) {
                 
-                var defaultFilters = dapfforwc_options.default_filters[currentPage];
+                var defaultFilters = dapfforwc_options.default_filters[currentPage]??[];
+                let urlvalues = currentPage.split('/');
+                defaultFilters = defaultFilters.concat(urlvalues);
                 // Remove values from filtersArray that are present in defaultFilters
+                if(defaultFilters){
                 filtersQueryString = filtersQueryString.filter(function (value) {
                     return !defaultFilters.includes(value);
-                });
+                });}
             }
         const filterString = filtersQueryString.length !== 0 ? filtersQueryString.join(',') : '';
         const newUrl = filterString.length !== 0 ? `?filters=${filterString}` : `/${currentPage}/`;
@@ -319,9 +341,9 @@ jQuery(document).ready(function($) {
     // create list of current selected filter
     function selectedFilterShowProductTop(){
         // Clear existing content
-    $('.rfilterselected > ul').empty();
+    $('.rfilterselected ul').empty();
     for (let value of selectedValesbyuser) {
-        $('.rfilterselected > ul').append(`
+        $('.rfilterselected ul').append(`
             <li class="checked">
                 <input id="selected_${value}" type="checkbox" value="${value}" checked>
                 <label for="selected_${value}">${value.replace(/-/g, ' ')}</label>
@@ -329,6 +351,7 @@ jQuery(document).ready(function($) {
             </li>`);
     }}
     selectedFilterShowProductTop();
+    syncCheckboxSelections();
     $('.rfilterselected').on('change', 'li', function(e) {
         const value = $(this).find('input[type="checkbox"]').val(); 
         $(`#product-filter input[value="${value}"]`).prop('checked', false);

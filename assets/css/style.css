@@ -60,12 +60,12 @@ div#roverlay {
 .rfilterbuttons ul li.checked label,.rfilterselected ul li.checked label{
     color: #fff !important;
 }
-.filter-group.attributes .title, .filter-group.category .title,.filter-group.tags .title,.filter-group.price-range .title,div#rating .title {
+.filter-group.attributes .title, .filter-group.category .title,.filter-group.tag .title,.filter-group.price-range .title,div#rating .title {
     background: linear-gradient(90deg, #501A73 9%, #432FB8 37%);
     color: white !important;
     text-align: center;
     padding: 10px 0;
-    font-size: 20px !important;
+    font-size: 20px;
     display: flex;
     justify-content: space-between;
     padding-left: 14px ;
@@ -76,16 +76,20 @@ div#roverlay {
     height: 16px;
     fill: #fff;
 }
-.filter-group.attributes>div,.filter-group.category,.filter-group.tags,.filter-group.price-range, div#rating {
+.filter-group.attributes>div,.filter-group.category,.filter-group.tag,.filter-group.price-range, div#rating {
     background: rgba(255, 255, 255, 0.7);
     padding-bottom: 1px;
     box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
     overflow: hidden;
 }
-.filter-group.attributes  .items ,.filter-group.category .items, .filter-group.tags .items,.filter-group.price-range .items, div#rating .items{
+.filter-group.attributes  .items ,.filter-group.category .items, .filter-group.tag .items,.filter-group.price-range .items, div#rating .items{
     padding: 20px 10px;
+    width: 100%;
 }
-.filter-group.attributes .items>label,.filter-group.category .items>label,.filter-group.tags .items>label,.rfilterbuttons label,.rfilterselected label {
+div#rating .items{
+    align-items: baseline;
+}
+.filter-group.attributes .items>label,.filter-group.category .items>label,.filter-group.tag .items>label,.rfilterbuttons label,.rfilterselected label {
     text-transform: capitalize;
     cursor: pointer ;
 }
@@ -121,7 +125,7 @@ div#roverlay {
     flex-direction: row !important;
     gap: 10px;
 }
-.filter-group.attributes .title, .filter-group.category .title, .filter-group.tags .title, .filter-group.price-range .title, div#rating .title{font-size: 16px !important;}
+.filter-group.attributes .title, .filter-group.category .title, .filter-group.tag .title, .filter-group.price-range .title, div#rating .title{font-size: 16px !important;}
 .child-categories {
     display: block !important;
 }
@@ -363,6 +367,7 @@ input#searchFilter {
     pointer-events: none;
     -webkit-appearance: none;
     -moz-appearance: none;
+    margin:0;
   }
   input[type="range"]::-webkit-slider-thumb {
     height: 17px;
@@ -372,7 +377,7 @@ input#searchFilter {
     pointer-events: auto;
     -webkit-appearance: none;
     box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
-    margin-left:-5px;
+    margin-left:-2px;
   }
   input[type="range"]::-moz-range-thumb {
     height: 17px;
@@ -386,7 +391,7 @@ input#searchFilter {
   }
 
   .progress-percentage:before {
-    content: "$57";
+    content: "$0";
     background: red;
     color: #fff;
     width: max-content;
@@ -413,12 +418,12 @@ input#searchFilter {
     float: left;
   }
   
-  .dynamic-rating > label {
+  .dynamic-rating label {
     color: #90A0A3;
     float: right;
   }
   
-  .dynamic-rating > label:before {
+  .dynamic-rating  label:before {
     margin: 5px;
     font-size: 2em;
     font-family: FontAwesome;
@@ -426,22 +431,63 @@ input#searchFilter {
     display: inline-block;
   }
   
-  .dynamic-rating > input {
+  .dynamic-rating  input {
     display: none;
   }
   
-  .dynamic-rating > input:checked ~ label,
-  .dynamic-rating:not(:checked) > label:hover,
-  .dynamic-rating:not(:checked) > label:hover ~ label {
+  .dynamic-rating  input:checked ~ label,
+  .dynamic-rating:not(:checked)  label:hover,
+  .dynamic-rating:not(:checked)  label:hover ~ label {
     color: #F79426;
   }
   
-  .dynamic-rating > input:checked + label:hover,
-  .dynamic-rating > input:checked ~ label:hover,
-  .dynamic-rating > label:hover ~ input:checked ~ label,
-  .dynamic-rating > input:checked ~ label:hover ~ label {
+  .dynamic-rating  input:checked + label:hover,
+  .dynamic-rating  input:checked ~ label:hover,
+  .dynamic-rating  label:hover ~ input:checked ~ label,
+  .dynamic-rating  input:checked ~ label:hover ~ label {
     color: #FECE31;
   }
   .child-categories {
     margin-left: 25px;
+}
+
+.checkbox_hide .filter-checkbox:checked + span {
+    color: red; /* Change to your desired color */
+}
+
+.collapsable_minimize_initial svg {
+    transform: rotate(-90deg);
+}
+
+.collapsable_minimize_initial .rotatable.rotated {
+    transform: rotate(0);
+}
+
+/* search text box */
+
+.search-container {
+    display: flex;
+    align-items: center;
+}
+.search-field {
+    padding: 9px;
+    border: 1px solid #ccc;
+    border-radius: 4px 0 0 4px;
+    width: 65%;
+}
+.search-submit {
+    padding: 10px 15px;
+    border: none;
+    background-color: #0073aa;
+    color: white;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+}
+span#reset-rating{
+    font-size: 14px;
+    color: red;
+    cursor: pointer;
+}
+input#search-field {
+    width: 63%;
 }
