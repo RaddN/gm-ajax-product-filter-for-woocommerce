@@ -1,0 +1,74 @@
+.custom-box-control {
+    margin: 1rem 0;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #f9f9f9;
+}
+
+.custom-box-control-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 5px;
+}
+.custom-box-control label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 10px;
+    text-align: center;
+}
+
+.control-top, .control-right, .control-bottom, .control-left {
+    display: flex;
+    flex-direction: column;
+}
+
+/* responsive icon design */
+.device-selector {
+    display: inline-block;
+    margin-left: 10px;
+}
+span.dashicons.selected {
+    background: green;
+    color: #fff;
+    border-radius: 50%;
+}
+
+/* tab style here */
+.my-tab-panel {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+}
+
+.my-tab-panel .components-tab-panel__tabs {
+    display: flex;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #ddd;
+}
+
+.my-tab-panel .components-tab-panel__tabs button {
+    flex: 1;
+    padding: 10px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    outline: none;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-size: 14px;
+    color: #333;
+}
+
+.my-tab-panel .components-tab-panel__tabs button:hover {
+    background-color: #e0e0e0;
+}
+
+.my-tab-panel .components-tab-panel__tabs .active-tab {
+    background-color: #fff;
+    border-bottom: 2px solid #007cba;
+    color: #007cba;
+}

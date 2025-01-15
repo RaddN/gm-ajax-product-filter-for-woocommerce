@@ -199,9 +199,9 @@ function dapfforwc_admin_page_content() { global $dapfforwc_options;
                         <h2>Customize Loading Effect</h2>
                         <label for="loader_html">HTML</label>
                         <p style="text-align:left;"><b>Note:</b> style="display:none;" id="loader" is required </p>
-                        <textarea id="loader_html" placeholder="html values will be here" name="dapfforwc_options[loader_html]"><?php echo $dapfforwc_options["loader_html"] ?></textarea>
+                        <textarea id="loader_html" placeholder="html values will be here" name="dapfforwc_options[loader_html]"><?php echo esc_html($dapfforwc_options["loader_html"]); ?></textarea>
                         <label for="loader_css">CSS</label>
-                        <textarea id="loader_css" placeholder="CSS values will be here" name="dapfforwc_options[loader_css]"><?php echo $dapfforwc_options["loader_css"] ?></textarea>
+                        <textarea id="loader_css" placeholder="CSS values will be here" name="dapfforwc_options[loader_css]"><?php echo esc_html($dapfforwc_options["loader_css"]); ?></textarea>
                         <p>Select a loading effect (or get html & css code from anywhere paste & save): </p>
                         <div class="loading-options">
                             <?php
@@ -211,8 +211,8 @@ function dapfforwc_admin_page_content() { global $dapfforwc_options;
                             foreach ($loading_effects as $effect) {
                                 ?>
                                 <div class="loading-option" data-value="<?php echo esc_attr($effect['value']); ?>" 
-                     data-html="<?php echo htmlspecialchars($effect['html']); ?>" 
-                     data-css="<?php echo htmlspecialchars($effect['css']); ?>">
+                     data-html="<?php echo esc_html($effect['html']); ?>" 
+                     data-css="<?php echo esc_html($effect['css']); ?>">
                                     <style><?php echo esc_attr($effect['css']); ?></style>
                                     <div class="<?php echo esc_attr($effect['value']); ?>"></div>
                                     <span class="effect-name"><?php echo esc_html($effect['name']); ?></span>
@@ -351,7 +351,7 @@ function reset_settings_notice() {
     dapfforwc_update_filter_options_with_page_slugs();
     ?>
     <div class="notice notice-success is-dismissible">
-        <p><?php _e('Settings have been reset successfully.', 'dynamic-ajax-product-filters-for-woocommerce'); ?></p>
+        <p><?php esc_html_e('Settings have been reset successfully.', 'dynamic-ajax-product-filters-for-woocommerce'); ?></p>
     </div>
     <?php
 }

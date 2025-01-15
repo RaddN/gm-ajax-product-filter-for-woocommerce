@@ -1,4 +1,8 @@
 <?php
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 function dapfforwc_get_min_max_price() {
     $args = array(
         'post_type' => 'product',

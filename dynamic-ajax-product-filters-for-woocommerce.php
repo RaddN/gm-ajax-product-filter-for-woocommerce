@@ -402,3 +402,17 @@ function add_admin_message_before_footer() {
     }
 }
 add_action('wp_head', 'add_admin_message_before_footer');
+
+
+// block editor script
+function enqueue_dynamic_ajax_filter_block_assets() {
+    wp_enqueue_script(
+        'dynamic-ajax-filter-block',
+        plugins_url( 'includes/block.js', __FILE__ ),
+        array( 'wp-blocks', 'wp-element', 'wp-editor' ),
+        filemtime( plugin_dir_path( __FILE__ ) . 'includes/block.js' )
+    );
+
+    wp_enqueue_style('custom-box-control-styles', plugin_dir_url(__FILE__) . 'assets/css/block-editor.css', [], '1.0.6');
+}
+add_action( 'enqueue_block_editor_assets', 'enqueue_dynamic_ajax_filter_block_assets' );
