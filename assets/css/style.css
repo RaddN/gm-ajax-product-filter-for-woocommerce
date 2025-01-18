@@ -88,6 +88,7 @@ div#roverlay {
 }
 div#rating .items{
     align-items: baseline;
+    display: flex;
 }
 .filter-group.attributes .items>label,.filter-group.category .items>label,.filter-group.tag .items>label,.rfilterbuttons label,.rfilterselected label {
     text-transform: capitalize;

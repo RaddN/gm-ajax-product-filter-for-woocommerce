@@ -68,7 +68,16 @@ const DeviceSelector = ({ onChange }) => {
         else {
             dispatch('core/edit-post').__experimentalSetPreviewDeviceType(device);
         }
+        document.querySelectorAll('.dashicons').forEach((element) => {
+            element.classList.remove('selected');
+        });
+
+        document.querySelectorAll(`.dashicons-${device}`).forEach((element) => {
+            element.classList.add('selected');
+        });
+
     };
+
 
     return wp.element.createElement(
         'div',
@@ -122,13 +131,13 @@ const DeviceSelector = ({ onChange }) => {
                 type: 'string',
                 default: '',
             },
-            color: {
+            customCSS: {
                 type: 'string',
                 default: '',
             },
-            typography: {
-                type: 'object',
-                default: {},
+            className: {
+                type: 'string',
+                default: "",
             },
             formStyle: {
                 type: 'object',
@@ -137,7 +146,15 @@ const DeviceSelector = ({ onChange }) => {
                         desktop: '',
                         tablet: '',
                         mobile: ''
-                    }
+                    },
+                desktop: {},
+                tablet: {},
+                mobile: {},
+                height: {
+                    desktop: { value: 0, unit: 'px' },
+                    tablet: { value: 0, unit: 'px' },
+                    mobile: { value: 0, unit: 'px' },
+                }
                 },
             },
             containerStyle: {
@@ -147,77 +164,107 @@ const DeviceSelector = ({ onChange }) => {
                         desktop: '',
                         tablet: '',
                         mobile: ''
-                    }
+                    },
+                desktop: {},
+                tablet: {},
+                mobile: {},
                 },
             },
             widgetTitleStyle: {
                 type: 'object',
-                default:  {
+                default: {
                     background: {
                         desktop: '',
                         tablet: '',
                         mobile: ''
-                    }
+                    },
+                desktop: {},
+                tablet: {},
+                mobile: {},
                 },
             },
             widgetItemsStyle: {
                 type: 'object',
-                default:  {
+                default: {
                     background: {
                         desktop: '',
                         tablet: '',
                         mobile: ''
-                    }
+                    },
+                desktop: {},
+                tablet: {},
+                mobile: {},
                 },
             },
             buttonStyle: {
                 type: 'object',
-                default:  {
+                default: {
                     background: {
                         desktop: '',
                         tablet: '',
                         mobile: ''
-                    }
+                    },
+                desktop: {},
+                tablet: {},
+                mobile: {},
                 },
             },
             ratingStyle: {
                 type: 'object',
-                default:  {
+                default: {
                     background: {
                         desktop: '',
                         tablet: '',
                         mobile: ''
-                    }
+                    },
+                desktop: {},
+                tablet: {},
+                mobile: {},
                 },
             },
             resetButtonStyle: {
                 type: 'object',
-                default:  {
+                default: {
                     background: {
                         desktop: '',
                         tablet: '',
                         mobile: ''
-                    }
+                    },
+                desktop: {},
+                tablet: {},
+                mobile: {},
                 },
             },
             inputStyle: {
                 type: 'object',
-                default:  {
+                default: {
                     background: {
                         desktop: '',
                         tablet: '',
                         mobile: ''
-                    }
+                    },
+                desktop: {},
+                tablet: {},
+                mobile: {},
                 },
             },
             sliderStyle: {
                 type: 'object',
-                default:  {
+                default: {
                     background: {
                         desktop: '',
                         tablet: '',
                         mobile: ''
-                    }
+                    },
+                desktop: {},
+                tablet: {},
+                mobile: {},
+                },
+            },
+            filterWordMobile: {
+                type: 'object',
+                default:{
+                    display: "block",
                 },
             },
             selectedDevice: {
@@ -232,6 +279,10 @@ const DeviceSelector = ({ onChange }) => {
             const handleBackgroundChange = (value, section) => {
                 const updatedBackground = { ...attributes[section].background, [attributes.selectedDevice]: value };
                 setAttributes({ [section]: { ...attributes[section], background: updatedBackground } });
+            };
+            const handleCustomBoxControl = (value, section, cssproperty) => {
+                const updatedcssproperty = { ...attributes[section][attributes.selectedDevice], [cssproperty]: value };
+                setAttributes({ [section]: { ...attributes[section], [attributes.selectedDevice]: updatedcssproperty } });
             };
 
             return [
@@ -249,6 +300,11 @@ const DeviceSelector = ({ onChange }) => {
                                 name: 'style',
                                 title: 'Style',
                                 className: 'tab-style',
+                            },
+                            {
+                                name: 'advanced',
+                                title: 'Advanced',
+                                className: 'tab-advanced',
                             },
                         ],
                     },
@@ -292,57 +348,125 @@ const DeviceSelector = ({ onChange }) => {
                         } else if ( tab.name === 'style' ) {
                             if(attributes.filterType==='all') {
                             return [
+                                el( PanelBody, { title: 'Filter Word (Mobile)', initialOpen: true },
+                                    el( 'div', { style: { display: 'block' } },
+                                        el( 'p', {}, 'Show Filter Word on Mobile' )
+                                    ),
+                                    el( 'button', {
+                                        type: 'button',
+                                        onClick: function(){
+                                            setAttributes( { filterWordMobile: { ...attributes.filterWordMobile, display: attributes.filterWordMobile.display==="block"?"none":"block" } } );
+                                        },
+                                        style: { marginBottom: '10px' }
+                                    }, attributes.filterWordMobile.display==="block" ? 'showing' : 'hidden' ),
+                                ),                             
                                 el( PanelBody, { title: 'Form Style', initialOpen: false },
                                 el( 'p', {}, 'Background', el(DeviceSelector, {
                                     onChange: function(device) {
                                         setAttributes({ selectedDevice: device });
                                     }
-                                }) ),
+                                }) 
+                            ),
                                 el( ColorPalette, {
-                                    value: attributes.formStyle.background[attributes.selectedDevice],
+                                    value: attributes.formStyle.background?attributes.formStyle.background[attributes.selectedDevice]:"",
                                     onChange: function(value) { handleBackgroundChange(value, 'formStyle') },
                                 } ),
-                                el('p', {}, 'Padding'),
-                                el(CustomBoxControl, {
-                                    values: attributes.formStyle?.padding || { top: 0, right: 0, bottom: 0, left: 0 },
+                                el('p', {}, 'Padding', el(DeviceSelector, {
+                                    onChange: function(device) {
+                                        setAttributes({ selectedDevice: device });
+                                    }
+                                }) ),
+                                el( CustomBoxControl, {
+                                    values: attributes.formStyle[attributes.selectedDevice]?.padding || { top: 0, right: 0, bottom: 0, left: 0 },
                                     unit: 'px',
                                     onChange: function (value) {
+                                        handleCustomBoxControl(value, 'formStyle', 'padding');
+                                    }
+                                }),
+                                el('p', {}, 'Margin', el(DeviceSelector, {
+                                    onChange: function(device) {
+                                        setAttributes({ selectedDevice: device });
+                                    }
+                                }) ),
+                                el( CustomBoxControl, {
+                                    values: attributes.formStyle[attributes.selectedDevice]?.margin || { top: 0, right: 0, bottom: 0, left: 0 },
+                                    unit: 'px',
+                                    onChange: function (value) {
+                                        handleCustomBoxControl(value, 'formStyle', 'margin');
+                                    }
+                                }),
+                                el( 'p', {}, 'Shadow' ),
+                                el( TextControl, {
+                                    value: attributes.formStyle["box-shadow"],
+                                    onChange: function( value ) {
+                                        setAttributes( { formStyle: { ...attributes.formStyle, "box-shadow": value } } );
+                                    }
+                                } ),
+                                el( 'p', {
+                                    style: { marginBottom: '5px', fontSize: '11px', color: '#666' }
+                                }, 'eg. rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' ),
+                                el(
+                                    'p',
+                                    { className: 'components-base-control__label' },
+                                    'Height',
+                                    el(DeviceSelector, {
+                                        onChange: (device) => {
+                                            setAttributes({ selectedDevice: device });
+                                        },
+                                    }),
+                                    el(SelectControl, {
+                                        value: attributes.formStyle?.height?.[attributes.selectedDevice]?.unit || 'px',
+                                        options: [
+                                            { label: 'px', value: 'px' },
+                                            { label: '%', value: '%' },
+                                            { label: 'em', value: 'em' },
+                                        ],
+                                        onChange: (unit) => {
+                                            setAttributes({
+                                                formStyle: {
+                                                    ...attributes.formStyle,
+                                                    height: {
+                                                        ...attributes.formStyle?.height,
+                                                        [attributes.selectedDevice]: {
+                                                            ...attributes.formStyle?.height?.[attributes.selectedDevice],
+                                                            unit,
+                                                        },
+                                                    },
+                                                },
+                                            });
+                                        },
+                                    }),
+                                ), 
+                                el(RangeControl, {
+                                    value: attributes.formStyle?.height?.[attributes.selectedDevice]?.value || 0,
+                                    onChange: (value) => {
                                         setAttributes({
                                             formStyle: {
                                                 ...attributes.formStyle,
-                                                padding: value,
+                                                height: {
+                                                    ...attributes.formStyle?.height,
+                                                    [attributes.selectedDevice]: {
+                                                        ...attributes.formStyle?.height?.[attributes.selectedDevice],
+                                                        value,
+                                                    },
+                                                },
                                             },
                                         });
                                     },
-                                }),
-                                el( 'p', {}, 'Margin' ),
+                                }),                               
+                                el('p', {}, 'Border Radius', el(DeviceSelector, {
+                                    onChange: function(device) {
+                                        setAttributes({ selectedDevice: device });
+                                    }
+                                }) ),
                                 el( CustomBoxControl, {
-                                    values: attributes.formStyle.margin,
-                                    onChange: function( value ) {
-                                        setAttributes( { formStyle: { ...attributes.formStyle, margin: value } } );
+                                    values: attributes.formStyle[attributes.selectedDevice]? attributes.formStyle[attributes.selectedDevice]["border-radius"] : { top: 0, right: 0, bottom: 0, left: 0 },
+                                    unit: 'px',
+                                    onChange: function (value) {
+                                        handleCustomBoxControl(value, 'formStyle', "border-radius");
                                     }
-                                } ),
-                                el( 'p', {}, 'Shadow' ),
-                                el( TextControl, {
-                                    value: attributes.formStyle.shadow,
-                                    onChange: function( value ) {
-                                        setAttributes( { formStyle: { ...attributes.formStyle, shadow: value } } );
-                                    }
-                                } ),
-                                el( 'p', {}, 'Height' ),
-                                el( RangeControl, {
-                                    value: attributes.formStyle.height,
-                                    onChange: function( value ) {
-                                        setAttributes( { formStyle: { ...attributes.formStyle, height: value } } );
-                                    }
-                                } ),
-                                el( 'p', {}, 'Border Radius' ),
-                                el( CustomBoxControl, {
-                                    values: attributes.formStyle["border-radius"],
-                                    onChange: function( value ) {
-                                        setAttributes( { formStyle: { ...attributes.formStyle, "border-radius": value } } );
-                                    }
-                                } )),
+                                })
+                            ),
                                 el( PanelBody, { title: 'Container Style', initialOpen: false },
                                     el( 'p', {}, 'Background', el(DeviceSelector, {
                                         onChange: function(device) {
@@ -354,32 +478,47 @@ const DeviceSelector = ({ onChange }) => {
                                         onChange: function(value) { 
                                             handleBackgroundChange(value, 'containerStyle') },
                                     } ),
-                                    el( 'p', {}, 'Padding' ),
-                                    el( CustomBoxControl, {
-                                        values: attributes.containerStyle.padding,
-                                        onChange: function( value ) {
-                                            setAttributes( { containerStyle: { ...attributes.containerStyle, padding: value } } );
+                                    el('p', {}, 'Padding', el(DeviceSelector, {
+                                        onChange: function(device) {
+                                            setAttributes({ selectedDevice: device });
                                         }
-                                    } ),
-                                    el( 'p', {}, 'Margin' ),
+                                    }) ),
                                     el( CustomBoxControl, {
-                                        values: attributes.containerStyle.margin,
-                                        onChange: function( value ) {
-                                            setAttributes( { containerStyle: { ...attributes.containerStyle, margin: value } } );
+                                        values: attributes.containerStyle[attributes.selectedDevice]?.padding || { top: 0, right: 0, bottom: 0, left: 0 },
+                                        unit: 'px',
+                                        onChange: function (value) {
+                                            handleCustomBoxControl(value, 'containerStyle', 'padding');
                                         }
-                                    } ),
-                                    el( 'p', {}, 'Border Radius' ),
-                                el( CustomBoxControl, {
-                                    values: attributes.containerStyle["border-radius"],
-                                    onChange: function( value ) {
-                                        setAttributes( { containerStyle: { ...attributes.containerStyle, "border-radius": value } } );
-                                    }
-                                } ),
+                                    }),
+                                    el('p', {}, 'Margin', el(DeviceSelector, {
+                                        onChange: function(device) {
+                                            setAttributes({ selectedDevice: device });
+                                        }
+                                    }) ),
+                                    el( CustomBoxControl, {
+                                        values: attributes.containerStyle[attributes.selectedDevice]?.margin || { top: 0, right: 0, bottom: 0, left: 0 },
+                                        unit: 'px',
+                                        onChange: function (value) {
+                                            handleCustomBoxControl(value, 'containerStyle', 'margin');
+                                        }
+                                    }),
+                                    el('p', {}, 'Border Radius', el(DeviceSelector, {
+                                        onChange: function(device) {
+                                            setAttributes({ selectedDevice: device });
+                                        }
+                                    }) ),
+                                    el( CustomBoxControl, {
+                                        values: attributes.containerStyle[attributes.selectedDevice]? attributes.containerStyle[attributes.selectedDevice]["border-radius"]: { top: 0, right: 0, bottom: 0, left: 0 },
+                                        unit: 'px',
+                                        onChange: function (value) {
+                                            handleCustomBoxControl(value, 'containerStyle', "border-radius");
+                                        }
+                                    }),
                                     el( 'p', {}, 'Shadow' ),
                                     el( TextControl, {
-                                        value: attributes.containerStyle.shadow,
+                                        value: attributes.containerStyle["box-shadow"],
                                         onChange: function( value ) {
-                                            setAttributes( { containerStyle: { ...attributes.containerStyle, shadow: value } } );
+                                            setAttributes( { containerStyle: { ...attributes.containerStyle, "box-shadow": value } } );
                                         }
                                     } ),
                                     el( 'p', {}, 'Overflow' ),
@@ -421,13 +560,18 @@ const DeviceSelector = ({ onChange }) => {
                                             setAttributes( { widgetTitleStyle: { ...attributes.widgetTitleStyle, color: value } } );
                                         }
                                     } ),
-                                    el( 'p', {}, 'Border Radius' ),
-                                    el( CustomBoxControl, {
-                                        values: attributes.widgetTitleStyle["border-radius"],
-                                        onChange: function( value ) {
-                                            setAttributes( { widgetTitleStyle: { ...attributes.widgetTitleStyle, "border-radius": value } } );
+                                    el('p', {}, 'Border Radius', el(DeviceSelector, {
+                                        onChange: function(device) {
+                                            setAttributes({ selectedDevice: device });
                                         }
-                                    } ),
+                                    }) ),
+                                    el( CustomBoxControl, {
+                                        values: attributes.widgetTitleStyle[attributes.selectedDevice]? attributes.widgetTitleStyle[attributes.selectedDevice]["border-radius"] : { top: 0, right: 0, bottom: 0, left: 0 },
+                                        unit: 'px',
+                                        onChange: function (value) {
+                                            handleCustomBoxControl(value, 'widgetTitleStyle', "border-radius");
+                                        }
+                                    }),
                                     el( 'p', {}, 'Text Align' ),
                                     el( SelectControl, {
                                         value: attributes.widgetTitleStyle["text-align"],
@@ -440,20 +584,30 @@ const DeviceSelector = ({ onChange }) => {
                                             setAttributes( { widgetTitleStyle: { ...attributes.widgetTitleStyle, "text-align": value } } );
                                         }
                                     } ),
-                                    el( 'p', {}, 'Padding' ),
-                                    el( CustomBoxControl, {
-                                        values: attributes.widgetTitleStyle.padding,
-                                        onChange: function( value ) {
-                                            setAttributes( { widgetTitleStyle: { ...attributes.widgetTitleStyle, padding: value } } );
+                                    el('p', {}, 'Padding', el(DeviceSelector, {
+                                        onChange: function(device) {
+                                            setAttributes({ selectedDevice: device });
                                         }
-                                    } ),
-                                    el( 'p', {}, 'Margin' ),
+                                    }) ),
                                     el( CustomBoxControl, {
-                                        values: attributes.widgetTitleStyle.margin,
-                                        onChange: function( value ) {
-                                            setAttributes( { widgetTitleStyle: { ...attributes.widgetTitleStyle, margin: value } } );
+                                        values: attributes.widgetTitleStyle[attributes.selectedDevice]?.padding || { top: 0, right: 0, bottom: 0, left: 0 },
+                                        unit: 'px',
+                                        onChange: function (value) {
+                                            handleCustomBoxControl(value, 'widgetTitleStyle', 'padding');
                                         }
-                                    } ),
+                                    }),
+                                    el('p', {}, 'Margin', el(DeviceSelector, {
+                                        onChange: function(device) {
+                                            setAttributes({ selectedDevice: device });
+                                        }
+                                    }) ),
+                                    el( CustomBoxControl, {
+                                        values: attributes.widgetTitleStyle[attributes.selectedDevice]?.margin || { top: 0, right: 0, bottom: 0, left: 0 },
+                                        unit: 'px',
+                                        onChange: function (value) {
+                                            handleCustomBoxControl(value, 'widgetTitleStyle', 'margin');
+                                        }
+                                    }),
                                 ),
                                 el( PanelBody, { title: 'Widget Items Style', initialOpen: false },
                                     el( 'p', {}, 'Background', el(DeviceSelector, {
@@ -479,27 +633,42 @@ const DeviceSelector = ({ onChange }) => {
                                             setAttributes( { widgetItemsStyle: { ...attributes.widgetItemsStyle, color: value } } );
                                         }
                                     } ),
-                                    el( 'p', {}, 'Padding' ),
-                                    el( CustomBoxControl, {
-                                        values: attributes.widgetItemsStyle.padding,
-                                        onChange: function( value ) {
-                                            setAttributes( { widgetItemsStyle: { ...attributes.widgetItemsStyle, padding: value } } );
+                                    el('p', {}, 'Padding', el(DeviceSelector, {
+                                        onChange: function(device) {
+                                            setAttributes({ selectedDevice: device });
                                         }
-                                    } ),
-                                    el( 'p', {}, 'Margin' ),
+                                    }) ),
                                     el( CustomBoxControl, {
-                                        values: attributes.widgetItemsStyle.margin,
-                                        onChange: function( value ) {
-                                            setAttributes( { widgetItemsStyle: { ...attributes.widgetItemsStyle, margin: value } } );
+                                        values: attributes.widgetItemsStyle[attributes.selectedDevice]?.padding || { top: 0, right: 0, bottom: 0, left: 0 },
+                                        unit: 'px',
+                                        onChange: function (value) {
+                                            handleCustomBoxControl(value, 'widgetItemsStyle', 'padding');
                                         }
-                                    } ),
-                                    el( 'p', {}, 'Border Radius' ),
+                                    }),
+                                    el('p', {}, 'Margin', el(DeviceSelector, {
+                                        onChange: function(device) {
+                                            setAttributes({ selectedDevice: device });
+                                        }
+                                    }) ),
                                     el( CustomBoxControl, {
-                                        values: attributes.widgetItemsStyle["border-radius"],
-                                        onChange: function( value ) {
-                                            setAttributes( { widgetItemsStyle: { ...attributes.widgetItemsStyle, "border-radius": value } } );
+                                        values: attributes.widgetItemsStyle[attributes.selectedDevice]?.margin || { top: 0, right: 0, bottom: 0, left: 0 },
+                                        unit: 'px',
+                                        onChange: function (value) {
+                                            handleCustomBoxControl(value, 'widgetItemsStyle', 'margin');
                                         }
-                                    } ),
+                                    }),
+                                    el('p', {}, 'Border Radius', el(DeviceSelector, {
+                                        onChange: function(device) {
+                                            setAttributes({ selectedDevice: device });
+                                        }
+                                    }) ),
+                                    el( CustomBoxControl, {
+                                        values: attributes.widgetItemsStyle[attributes.selectedDevice]? attributes.widgetItemsStyle[attributes.selectedDevice]["border-radius"] : { top: 0, right: 0, bottom: 0, left: 0 },
+                                        unit: 'px',
+                                        onChange: function (value) {
+                                            handleCustomBoxControl(value, 'widgetItemsStyle', "border-radius");
+                                        }
+                                    }),
                                     el( 'p', {}, 'Gap' ),
                                     el( RangeControl, {
                                         value: attributes.widgetItemsStyle.gap,
@@ -539,40 +708,42 @@ const DeviceSelector = ({ onChange }) => {
                                             setAttributes( { buttonStyle: { ...attributes.buttonStyle, hoverColor: value } } );
                                         }
                                     } ),
-                                    el( 'p', {}, 'Border Type' ),
-                                    el( SelectControl, {
-                                        value: attributes.buttonStyle.borderType,
-                                        options: [
-                                            { label: 'None', value: 'none' },
-                                            { label: 'Solid', value: 'solid' },
-                                            { label: 'Dashed', value: 'dashed' },
-                                            { label: 'Dotted', value: 'dotted' },
-                                        ],
-                                        onChange: function( value ) {
-                                            setAttributes( { buttonStyle: { ...attributes.buttonStyle, borderType: value } } );
+                                    el('p', {}, 'Padding', el(DeviceSelector, {
+                                        onChange: function(device) {
+                                            setAttributes({ selectedDevice: device });
                                         }
-                                    } ),
-                                    el( 'p', {}, 'Padding' ),
+                                    }) ),
                                     el( CustomBoxControl, {
-                                        values: attributes.buttonStyle.padding,
-                                        onChange: function( value ) {
-                                            setAttributes( { buttonStyle: { ...attributes.buttonStyle, padding: value } } );
+                                        values: attributes.buttonStyle[attributes.selectedDevice]?.padding || { top: 0, right: 0, bottom: 0, left: 0 },
+                                        unit: 'px',
+                                        onChange: function (value) {
+                                            handleCustomBoxControl(value, 'buttonStyle', 'padding');
                                         }
-                                    } ),
-                                    el( 'p', {}, 'Margin' ),
+                                    }),
+                                    el('p', {}, 'Margin', el(DeviceSelector, {
+                                        onChange: function(device) {
+                                            setAttributes({ selectedDevice: device });
+                                        }
+                                    }) ),
                                     el( CustomBoxControl, {
-                                        values: attributes.buttonStyle.margin,
-                                        onChange: function( value ) {
-                                            setAttributes( { buttonStyle: { ...attributes.buttonStyle, margin: value } } );
+                                        values: attributes.buttonStyle[attributes.selectedDevice]?.margin || { top: 0, right: 0, bottom: 0, left: 0 },
+                                        unit: 'px',
+                                        onChange: function (value) {
+                                            handleCustomBoxControl(value, 'buttonStyle', 'margin');
                                         }
-                                    } ),
-                                    el( 'p', {}, 'Border Radius' ),
+                                    }),
+                                    el('p', {}, 'Border Radius', el(DeviceSelector, {
+                                        onChange: function(device) {
+                                            setAttributes({ selectedDevice: device });
+                                        }
+                                    }) ),
                                     el( CustomBoxControl, {
-                                        values: attributes.buttonStyle["border-radius"],
-                                        onChange: function( value ) {
-                                            setAttributes( { buttonStyle: { ...attributes.buttonStyle, "border-radius": value } } );
+                                        values: attributes.buttonStyle[attributes.selectedDevice]?attributes.buttonStyle[attributes.selectedDevice]["border-radius"] : { top: 0, right: 0, bottom: 0, left: 0 },
+                                        unit: 'px',
+                                        onChange: function (value) {
+                                            handleCustomBoxControl(value, 'buttonStyle', "border-radius");
                                         }
-                                    } )
+                                    })
                                 ),
                                 el( PanelBody, { title: 'Rating Style', initialOpen: false },
                                     el( 'p', {}, 'Rating Size' ),
@@ -603,13 +774,6 @@ const DeviceSelector = ({ onChange }) => {
                                             setAttributes( { ratingStyle: { ...attributes.ratingStyle, hoverColor: value } } );
                                         }
                                     } ),
-                                    el( 'p', {}, 'Gap' ),
-                                    el( RangeControl, {
-                                        value: attributes.ratingStyle.gap,
-                                        onChange: function( value ) {
-                                            setAttributes( { ratingStyle: { ...attributes.ratingStyle, gap: value } } );
-                                        }
-                                    } )
                                 ), 
                                 el( PanelBody, { title: 'Reset Button Style', initialOpen: false },
                                     el( 'p', {}, 'Background', el(DeviceSelector, {
@@ -656,20 +820,30 @@ const DeviceSelector = ({ onChange }) => {
                                             setAttributes( { resetButtonStyle: { ...attributes.resetButtonStyle, border: value } } );
                                         }
                                     } ),
-                                    el( 'p', {}, 'Padding' ),
-                                    el( CustomBoxControl, {
-                                        values: attributes.resetButtonStyle.padding,
-                                        onChange: function( value ) {
-                                            setAttributes( { resetButtonStyle: { ...attributes.resetButtonStyle, padding: value } } );
+                                    el('p', {}, 'Padding', el(DeviceSelector, {
+                                        onChange: function(device) {
+                                            setAttributes({ selectedDevice: device });
                                         }
-                                    } ),
-                                    el( 'p', {}, 'Margin' ),
+                                    }) ),
                                     el( CustomBoxControl, {
-                                        values: attributes.resetButtonStyle.margin,
-                                        onChange: function( value ) {
-                                            setAttributes( { resetButtonStyle: { ...attributes.resetButtonStyle, margin: value } } );
+                                        values: attributes.resetButtonStyle[attributes.selectedDevice]?.padding || { top: 0, right: 0, bottom: 0, left: 0 },
+                                        unit: 'px',
+                                        onChange: function (value) {
+                                            handleCustomBoxControl(value, 'resetButtonStyle', 'padding');
                                         }
-                                    } )
+                                    }),
+                                    el('p', {}, 'Margin', el(DeviceSelector, {
+                                        onChange: function(device) {
+                                            setAttributes({ selectedDevice: device });
+                                        }
+                                    }) ),
+                                    el( CustomBoxControl, {
+                                        values: attributes.resetButtonStyle[attributes.selectedDevice]?.margin || { top: 0, right: 0, bottom: 0, left: 0 },
+                                        unit: 'px',
+                                        onChange: function (value) {
+                                            handleCustomBoxControl(value, 'resetButtonStyle', 'margin');
+                                        }
+                                    }),
                                 ),
                                 el( PanelBody, { title: 'Input Style', initialOpen: false },
                                     el( 'p', {}, 'Background', el(DeviceSelector, {
@@ -688,27 +862,42 @@ const DeviceSelector = ({ onChange }) => {
                                             setAttributes( { inputStyle: { ...attributes.inputStyle, color: value } } );
                                         }
                                     } ),
-                                    el( 'p', {}, 'Padding' ),
-                                    el( CustomBoxControl, {
-                                        values: attributes.inputStyle.padding,
-                                        onChange: function( value ) {
-                                            setAttributes( { inputStyle: { ...attributes.inputStyle, padding: value } } );
+                                    el('p', {}, 'Padding', el(DeviceSelector, {
+                                        onChange: function(device) {
+                                            setAttributes({ selectedDevice: device });
                                         }
-                                    } ),
-                                    el( 'p', {}, 'Margin' ),
+                                    }) ),
                                     el( CustomBoxControl, {
-                                        values: attributes.inputStyle.margin,
-                                        onChange: function( value ) {
-                                            setAttributes( { inputStyle: { ...attributes.inputStyle, margin: value } } );
+                                        values: attributes.inputStyle[attributes.selectedDevice]?.padding || { top: 0, right: 0, bottom: 0, left: 0 },
+                                        unit: 'px',
+                                        onChange: function (value) {
+                                            handleCustomBoxControl(value, 'inputStyle', 'padding');
                                         }
-                                    } ),
-                                    el( 'p', {}, 'Border Radius' ),
+                                    }),
+                                    el('p', {}, 'Margin', el(DeviceSelector, {
+                                        onChange: function(device) {
+                                            setAttributes({ selectedDevice: device });
+                                        }
+                                    }) ),
                                     el( CustomBoxControl, {
-                                        values: attributes.inputStyle["border-radius"],
-                                        onChange: function( value ) {
-                                            setAttributes( { inputStyle: { ...attributes.inputStyle, "border-radius": value } } );
+                                        values: attributes.inputStyle[attributes.selectedDevice]?.margin || { top: 0, right: 0, bottom: 0, left: 0 },
+                                        unit: 'px',
+                                        onChange: function (value) {
+                                            handleCustomBoxControl(value, 'inputStyle', 'margin');
                                         }
-                                    } ),
+                                    }),
+                                    el('p', {}, 'Border Radius', el(DeviceSelector, {
+                                        onChange: function(device) {
+                                            setAttributes({ selectedDevice: device });
+                                        }
+                                    }) ),
+                                    el( CustomBoxControl, {
+                                        values: attributes.inputStyle[attributes.selectedDevice]?attributes.inputStyle[attributes.selectedDevice]["border-radius"] : { top: 0, right: 0, bottom: 0, left: 0 },
+                                        unit: 'px',
+                                        onChange: function (value) {
+                                            handleCustomBoxControl(value, 'inputStyle', "border-radius");
+                                        }
+                                    }),
                                     el( 'p', {}, 'Border' ),
                                     el( TextControl, {
                                         value: attributes.inputStyle.border,
@@ -727,13 +916,18 @@ const DeviceSelector = ({ onChange }) => {
                                         value: attributes.sliderStyle.background[attributes.selectedDevice],
                                         onChange: function(value) { handleBackgroundChange(value, 'sliderStyle') },
                                     } ),
-                                    el( 'p', {}, 'Border Radius' ),
-                                    el( CustomBoxControl, {
-                                        values: attributes.sliderStyle["border-radius"],
-                                        onChange: function( value ) {
-                                            setAttributes( { sliderStyle: { ...attributes.sliderStyle, "border-radius": value } } );
+                                    el('p', {}, 'Border Radius', el(DeviceSelector, {
+                                        onChange: function(device) {
+                                            setAttributes({ selectedDevice: device });
                                         }
-                                    } ),
+                                    }) ),
+                                    el( CustomBoxControl, {
+                                        values: attributes.sliderStyle[attributes.selectedDevice]?attributes.sliderStyle[attributes.selectedDevice]["border-radius"] : { top: 0, right: 0, bottom: 0, left: 0 },
+                                        unit: 'px',
+                                        onChange: function (value) {
+                                            handleCustomBoxControl(value, 'sliderStyle', "border-radius");
+                                        }
+                                    }),
                                     el( 'p', {}, 'Progress Background' ),
                                     el( ColorPalette, {
                                         value: attributes.sliderStyle.progressBackground,
@@ -741,20 +935,30 @@ const DeviceSelector = ({ onChange }) => {
                                             setAttributes( { sliderStyle: { ...attributes.sliderStyle, progressBackground: value } } );
                                         }
                                     } ),
-                                    el( 'p', {}, 'Progress Border Radius' ),
-                                    el( CustomBoxControl, {
-                                        values: attributes.sliderStyle["progress-border-radius"],
-                                        onChange: function( value ) {
-                                            setAttributes( { sliderStyle: { ...attributes.sliderStyle, "progress-border-radius": value } } );
+                                    el('p', {}, 'Progress Border Radius', el(DeviceSelector, {
+                                        onChange: function(device) {
+                                            setAttributes({ selectedDevice: device });
                                         }
-                                    } ),
-                                    el( 'p', {}, 'Margin' ),
+                                    }) ),
                                     el( CustomBoxControl, {
-                                        values: attributes.sliderStyle.margin,
-                                        onChange: function( value ) {
-                                            setAttributes( { sliderStyle: { ...attributes.sliderStyle, margin: value } } );
+                                        values: attributes.sliderStyle[attributes.selectedDevice]?attributes.sliderStyle[attributes.selectedDevice]["progress-border-radius"] : { top: 0, right: 0, bottom: 0, left: 0 },
+                                        unit: 'px',
+                                        onChange: function (value) {
+                                            handleCustomBoxControl(value, 'sliderStyle', "progress-border-radius");
                                         }
-                                    } ),
+                                    }),
+                                    el('p', {}, 'progress Margin', el(DeviceSelector, {
+                                        onChange: function(device) {
+                                            setAttributes({ selectedDevice: device });
+                                        }
+                                    }) ),
+                                    el( CustomBoxControl, {
+                                        values: attributes.sliderStyle[attributes.selectedDevice]?.progressmargin || { top: 0, right: 0, bottom: 0, left: 0 },
+                                        unit: 'px',
+                                        onChange: function (value) {
+                                            handleCustomBoxControl(value, 'sliderStyle', 'progressmargin');
+                                        }
+                                    }),
                                     el( 'p', {}, 'Thumb Size' ),
                                     el( RangeControl, {
                                         value: attributes.sliderStyle.thumbSize,
@@ -780,6 +984,26 @@ const DeviceSelector = ({ onChange }) => {
                             ];
                         }
                         return null;
+                        }
+                        else if ( tab.name === 'advanced' ) {
+                            return el( PanelBody, { title: 'Advanced' },
+                                el( TextControl, {
+                                    label: 'Extra Class Name',
+                                    value: attributes.className,
+                                    onChange: function( value ) {
+                                        setAttributes( { className: value } );
+                                    }
+                                } ),
+                                el('label', { htmlFor: 'custom-css-textarea' }, 'Custom CSS'),
+                                el('textarea', {
+                                    id: 'custom-css-textarea',
+                                    value: attributes.customCSS,
+                                    onChange: function(event) {
+                                        setAttributes({ customCSS: event.target.value });
+                                    },
+                                    style: { width: '100%', height: '100px' }
+                                })
+                            );
                         }
                     } )
                 ),

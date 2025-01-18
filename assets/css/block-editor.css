@@ -72,3 +72,24 @@ span.dashicons.selected {
     border-bottom: 2px solid #007cba;
     color: #007cba;
 }
+.components-base-control__label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.components-flex {
+    position: relative;
+    margin-bottom: 6px;
+}
+.components-circular-option-picker {
+    position: absolute;
+    top: -12px;
+    max-width: 7px !important;
+    min-width: 56px !important;
+    right: 0;
+}
+.components-circular-option-picker button.components-button {
+    background: red;
+    color: #fff !important;
+}

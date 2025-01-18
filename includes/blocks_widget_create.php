@@ -190,34 +190,99 @@ function register_dynamic_ajax_filter_block() {
 }
 add_action( 'init', 'register_dynamic_ajax_filter_block' );
 
-function generate_css($styles, $device = 'desktop') {
+function generate_css($styles, $device = 'desktop', $hover = false, $active = false, $sliderProgress = false, $sliderthumb = false, $slidertooltip = false) {
     $css = '';
 
     foreach ($styles as $key => $value) {
         switch ($key) {
             case 'font-size':
-            case 'height':
             case 'width':
             case 'gap':
                 $css .= "$key: {$value}px;";
                 break;
 
+            case 'height':
+                $css .= $key . ": " . $value[$device]['value'] . ($value[$device]['unit'] ?? 'px') . ";";
+                break;
+
             case 'padding':
             case 'margin':
             case 'border-radius':
-                if (is_array($value)) {
-                    $css .= "$key: {$value['top']}px {$value['right']}px {$value['bottom']}px {$value['left']}px;";
+                $css .= "$key: {$value['top']}px {$value['right']}px {$value['bottom']}px {$value['left']}px;";
+                break;
+
+            case 'progress-border-radius':
+                if ($sliderProgress) {
+                    $css .= "border-radius: {$value['top']}px {$value['right']}px {$value['bottom']}px {$value['left']}px;";
+                }
+                break;
+            case 'progressBackground':
+                if ($sliderProgress) {
+                    $css .= "background: {$value};";
                 }
                 break;
 
+            case 'progressmargin':
+                if ($sliderProgress) {
+                    $css .= "margin: {$value['top']}px {$value['right']}px {$value['bottom']}px {$value['left']}px;";
+                }
+                break;
+            
+            case 'thumbBackground':
+                if ($sliderthumb) {
+                    $css .= "background: {$value};";
+                }
+                break;
+
+            case 'thumbSize':
+                if ($sliderthumb) {
+                    $css .= "width: {$value}px; height: {$value}px;";
+                }
+                break;
+            case 'tooltipBackground':
+                if ($slidertooltip) {
+                    $css .= "background: {$value};";
+                }
+                break;
             case 'background':
                 if (is_array($value) && isset($value[$device])) {
                     $css .= "background: {$value[$device]};";
                 }
                 break;
+            case $device:
+                $css .= generate_css($value, $key);
+                break;
+
+            case 'desktop':
+            case 'tablet':
+            case 'mobile':
+            case 'smartphone':
+                break;
+
+            case 'text-align':
+                $css .= "$key: $value; justify-content: $value;";
+                break;
+
+            case 'hoverBackground':
+                if ($hover) {
+                    $css .= "background: $value !important;";
+                }
+                break;
+
+            case 'hoverColor':
+                if ($hover) {
+                    $css .= "color: $value !important;";
+                }
+                break;
+
+            case 'activeColor':
+                if ($active) {
+                    $css .= "color: $value !important;";
+                }
+                break;
 
             default:
-                $css .= "$key: $value;";
+                $css .= "$key: $value !important;";
                 break;
         }
     }
@@ -239,6 +304,11 @@ $button_style = $attributes['buttonStyle'] ?? [];
 $rating_style = $attributes['ratingStyle'] ?? [];
 $reset_button_style = $attributes['resetButtonStyle'] ?? [];
 $input_style = $attributes['inputStyle'] ?? [];
+$slider_style = $attributes['sliderStyle'] ?? [];
+$filter_word_mobile = $attributes['filterWordMobile'] ?? '';
+$custom_css = $attributes['customCSS'] ?? '';
+$class_name = $attributes['className'] ?? '';
+
 
 // Generate CSS for desktop, tablet, and smartphone
 $form_style_css = generate_css($form_style);
@@ -260,18 +330,33 @@ $widget_items_md_style_css = generate_css($widget_items_style, 'tablet');
 $button_style_css = generate_css($button_style);
 $button_sm_style_css = generate_css($button_style, 'smartphone');
 $button_md_style_css = generate_css($button_style, 'tablet');
+$button_hover_css = generate_css($button_style, '', true);
 
 $rating_style_css = generate_css($rating_style);
 $rating_sm_style_css = generate_css($rating_style, 'smartphone');
 $rating_md_style_css = generate_css($rating_style, 'tablet');
+$rating_hover_css = generate_css($rating_style, '', true);
+$rating_active_css = generate_css($rating_style, '', false, true);
 
 $reset_button_style_css = generate_css($reset_button_style);
 $reset_button_sm_style_css = generate_css($reset_button_style, 'smartphone');
 $reset_button_md_style_css = generate_css($reset_button_style, 'tablet');
+$reset_button_hover_css = generate_css($reset_button_style, '', true);
 
 $input_style_css = generate_css($input_style);
 $input_sm_style_css = generate_css($input_style, 'smartphone');
 $input_md_style_css = generate_css($input_style, 'tablet');
+
+$slider_style_css = generate_css($slider_style);
+$slider_sm_style_css = generate_css($slider_style, 'smartphone');
+$slider_md_style_css = generate_css($slider_style, 'tablet');
+$slider_progress_style_css = generate_css($slider_style, '', false, false, true);
+$slider_thumb_style_css = generate_css($slider_style, '', false, false, false, true);
+$slider_tooltip_style_css = generate_css($slider_style, '', false, false, false, false, true);
+
+$filter_word_mobile_css = generate_css($filter_word_mobile);
+
+
 
 
 
@@ -280,45 +365,62 @@ $input_md_style_css = generate_css($input_style, 'tablet');
             $product_selector = esc_attr( $attributes['productSelector'] );
             $pagination_selector = esc_attr( $attributes['paginationSelector'] );
             $output .= '<style>';
-            $output .= 'form#product-filter {' . $form_style_css . '}';
-            $output .= '.filter-group.attributes>div, .filter-group.category, .filter-group.tag, .filter-group.price-range, div#rating {' . $container_style_css . '}';
-            $output .= '.filter-group.attributes .title, .filter-group.category .title, .filter-group.tag .title, .filter-group.price-range .title, div#rating .title {' . $widget_title_style_css . '}';
-            $output .= '.filter-group.attributes .items, .filter-group.category .items, .filter-group.tag .items, .filter-group.price-range .items, div#rating .items {' . $widget_items_style_css . '}label {
-    color: unset!important;
-}';
-            $output .= 'form#product-filter button {' . $button_style_css . '}';
-            $output .= 'form#product-filter i {' . $rating_style_css . '}';
-            $output .= 'form#product-filter span#reset-rating {' . $reset_button_style_css . '}';
-            $output .= 'form#product-filter input[type="search"], form#product-filter input[type="number"] {' . $input_style_css . '}';
-            $output .= '@media screen and (max-width: 576px) {';
-            $output .= 'form#product-filter {' . $form_sm_style_css . '}';
-            $output .= '.filter-group.attributes>div, .filter-group.category, .filter-group.tag, .filter-group.price-range, div#rating{' . $container_sm_style_css . '}';
-            $output .= '.filter-group.attributes .title, .filter-group.category .title, .filter-group.tag .title, .filter-group.price-range .title, div#rating .title{' . $widget_sm_title_style_css . '}';
-            $output .= '.filter-group.attributes .items, .filter-group.category .items, .filter-group.tag .items, .filter-group.price-range .items, div#rating .items {' . $widget_items_sm_style_css . '}';
-            $output .= 'form#product-filter button {' . $button_sm_style_css . '}';
-            $output .= 'form#product-filter i {' . $rating_sm_style_css . '}';
-            $output .= 'form#product-filter span#reset-rating {' . $reset_button_sm_style_css . '}';
-            $output .= 'form#product-filter input[type="search"], form#product-filter input[type="number"] {' . $input_sm_style_css . '}';
+            if($form_style_css){$output .= 'form#product-filter {' . $form_style_css . '}';}
+            if($container_style_css){$output .= '.filter-group.attributes>div, .filter-group.category, .filter-group.tag, .filter-group.price-range, div#rating {' . $container_style_css . '}';}
+            if($widget_title_style_css){$output .= '.filter-group.attributes .title, .filter-group.category .title, .filter-group.tag .title, .filter-group.price-range .title, div#rating .title {' . $widget_title_style_css . '}';}
+            if($widget_items_style_css){$output .= '.filter-group.attributes .items, .filter-group.category .items, .filter-group.tag .items, .filter-group.price-range .items, div#rating .items {' . $widget_items_style_css . '    display: flex; flex-direction: column;} label { color: unset !important; }';}
+            if($button_style_css){$output .= 'form#product-filter button {' . $button_style_css . '}';}
+            if($rating_style_css){$output .= 'form#product-filter i {' . $rating_style_css . '} .dynamic-rating label{' . $rating_style_css . '}';}
+            if($reset_button_style_css){$output .= 'form#product-filter span#reset-rating {' . $reset_button_style_css . '}';}
+            if($input_style_css){$output .= 'form#product-filter input[type="search"], form#product-filter input[type="number"] {' . $input_style_css . '}';}
+            if($slider_style_css){$output .= 'form#product-filter .slider {' . $slider_style_css . '}';}
+            if($slider_progress_style_css){$output .= 'form#product-filter .slider .progress {' . $slider_progress_style_css . '}';}
+            if($slider_thumb_style_css){$output .= 'form#product-filter input[type="range"]::-webkit-slider-thumb {' . $slider_thumb_style_css . '} input[type="range"]::-moz-range-thumb {' . $slider_thumb_style_css . '}';}
+            if($slider_tooltip_style_css){$output .= 'form#product-filter .progress-percentage:before,form#product-filter  .progress-percentage:after {' . $slider_tooltip_style_css . '}';}
+            $output .= '
+            
+ @media screen and (max-width: 576px) {';
+            if($form_sm_style_css){$output .= 'form#product-filter {' . $form_sm_style_css . '}';}
+            if($container_sm_style_css){$output .= '.filter-group.attributes>div, .filter-group.category, .filter-group.tag, .filter-group.price-range, div#rating {' . $container_sm_style_css . '}';}
+            if($widget_sm_title_style_css){$output .= '.filter-group.attributes .title, .filter-group.category .title, .filter-group.tag .title, .filter-group.price-range .title, div#rating .title {' . $widget_sm_title_style_css . '}';}
+            if($widget_items_sm_style_css){$output .= '.filter-group.attributes .items, .filter-group.category .items, .filter-group.tag .items, .filter-group.price-range .items, div#rating .items {' . $widget_items_sm_style_css . '}';}
+            if($button_sm_style_css){$output .= 'form#product-filter button {' . $button_sm_style_css . '}';}
+            if($rating_sm_style_css){$output .= 'form#product-filter i {' . $rating_sm_style_css . '}';}
+            if($reset_button_sm_style_css){$output .= 'form#product-filter span#reset-rating {' . $reset_button_sm_style_css . '}';}
+            if($input_sm_style_css){$output .= 'form#product-filter input[type="search"], form#product-filter input[type="number"] {' . $input_sm_style_css . '}';}
+            if($filter_word_mobile_css){$output .= 'form#product-filter:before {' . $filter_word_mobile_css . '}';}
             $output .= '}';
-            $output .= '@media screen and (min-width: 576px) and (max-width: 768px) {';
-            $output .= 'form#product-filter {' . $form_md_style_css . '}';
-            $output .= '.filter-group.attributes>div, .filter-group.category, .filter-group.tag, .filter-group.price-range, div#rating{' . $container_md_style_css . '}';
-            $output .= '.filter-group.attributes .title, .filter-group.category .title, .filter-group.tag .title, .filter-group.price-range .title, div#rating .title {' . $widget_md_title_style_css . '}';
-            $output .= '.filter-group.attributes .items, .filter-group.category .items, .filter-group.tag .items, .filter-group.price-range .items, div#rating .items {' . $widget_items_md_style_css . '}';
-            $output .= 'form#product-filter button {' . $button_md_style_css . '}';
-            $output .= 'form#product-filter i {' . $rating_md_style_css . '}';
-            $output .= 'form#product-filter span#reset-rating {' . $reset_button_md_style_css . '}';
-            $output .= 'form#product-filter input[type="search"], form#product-filter input[type="number"] {' . $input_md_style_css . '}';
-            $output .= '}';
+            $output .= '
+            
+@media screen and (min-width: 576px) and (max-width: 768px) {';
+            if($form_md_style_css){$output .= 'form#product-filter {' . $form_md_style_css . '}';}
+            if($container_md_style_css){$output .= '.filter-group.attributes>div, .filter-group.category, .filter-group.tag, .filter-group.price-range, div#rating {' . $container_md_style_css . '}';}
+            if($widget_md_title_style_css){$output .= '.filter-group.attributes .title, .filter-group.category .title, .filter-group.tag .title, .filter-group.price-range .title, div#rating .title {' . $widget_md_title_style_css . '}';}
+            if($widget_items_md_style_css){$output .= '.filter-group.attributes .items, .filter-group.category .items, .filter-group.tag .items, .filter-group.price-range .items, div#rating .items {' . $widget_items_md_style_css . '}';}
+            if($button_md_style_css){$output .= 'form#product-filter button {' . $button_md_style_css . '}';}
+            if($rating_md_style_css){$output .= 'form#product-filter i {' . $rating_md_style_css . '}';}
+            if($reset_button_md_style_css){$output .= 'form#product-filter span#reset-rating {' . $reset_button_md_style_css . '}';}
+            if($input_md_style_css){$output .= 'form#product-filter input[type="search"], form#product-filter input[type="number"] {' . $input_md_style_css . '}';}
+            $output .= '}
+            
+';
+            $output .= $custom_css;
+            $output .= 'form#product-filter button:hover {' . $button_hover_css . '}';
+            $output .= 'form#product-filter span#reset-rating:hover {' . $reset_button_hover_css . '}';
+            $output .= 'form#product-filter i:hover,.dynamic-rating input:checked ~ label, .dynamic-rating:not(:checked) label:hover, .dynamic-rating:not(:checked) label:hover ~ label {' . $rating_hover_css . '}';
+            $output .= 'form#product-filter i.active,   .dynamic-rating  input:checked + label:hover,
+  .dynamic-rating  input:checked ~ label:hover,
+  .dynamic-rating  label:hover ~ input:checked ~ label,
+  .dynamic-rating  input:checked ~ label:hover ~ label {' . $rating_active_css . '}';
             $output .= '</style>';
-            $output .= do_shortcode( "[plugincy_filters product_selector=\"$product_selector\" pagination_selector=\"$pagination_selector\"]" );
+            $output .= '<div class="'.$class_name.'">'.do_shortcode( "[plugincy_filters product_selector=\"$product_selector\" pagination_selector=\"$pagination_selector\"]" ).'</div>';
             break;
         case 'single':
             $filter_name = esc_attr( $attributes['filterName'] );
-            $output .= do_shortcode( "[plugincy_filters_single name=\"$filter_name\"]" );
+            $output .= '<div class="'.$class_name.'">'.do_shortcode( "[plugincy_filters_single name=\"$filter_name\"]" ).'</div>';
             break;
         case 'selected':
-            $output .= do_shortcode( '[plugincy_filters_selected]' );
+            $output .= '<div class="'.$class_name.'">'.do_shortcode( '[plugincy_filters_selected]' ).'</div>';
             break;
     }
 
