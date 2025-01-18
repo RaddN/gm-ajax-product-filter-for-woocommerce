@@ -428,7 +428,7 @@ function dapfforwc_product_filter_shortcode_single($atts) {
 
     // Check if the name is provided
     if (empty($atts['name'])) {
-        return '<p style="background:red;background: red;text-align: center;color: #fff;">Please provide an attribute slug. Expample: [plugincy_filters_single name="conference-by-month"]</p>';
+        return '<p style="background:red;background: red;text-align: center;color: #fff;">Please provide an attribute slug.</p>';
     }
 
     // Generate the output

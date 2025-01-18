@@ -4,145 +4,6 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class Dapfforwc_Dynamic_Ajax_Filter_Widget_Wp_Widget extends WP_Widget {
-
-    public function __construct() {
-        parent::__construct(
-            'dapfforwc_dynamic_ajax_filter_widget_wp_widget',
-            __( 'Dynamic Ajax Filter', 'dynamic-ajax-product-filters-for-woocommerce' ),
-            [ 'description' => __( 'A widget for dynamic AJAX filtering.', 'dynamic-ajax-product-filters-for-woocommerce' ) ]
-        );
-    }
-
-    public function widget( $args, $instance ) {
-        echo $args['before_widget'];
-
-        // Output widget content
-        $filter_type = $instance['filter_type'] ?? 'all';
-        $output = '';
-
-        switch ( $filter_type ) {
-            case 'all':
-                $product_selector = esc_attr( $instance['product_selector'] ?? '' );
-                $pagination_selector = esc_attr( $instance['pagination_selector'] ?? '' );
-                $output .= do_shortcode( "[plugincy_filters product_selector=\"$product_selector\" pagination_selector=\"$pagination_selector\"]" );
-                break;
-            case 'single':
-                $filter_name = esc_attr( $instance['filter_name'] ?? '' );
-                $output .= do_shortcode( "[plugincy_filters_single name=\"$filter_name\"]" );
-                break;
-            case 'selected':
-                $output .= do_shortcode( '[plugincy_filters_selected]' );
-                break;
-        }
-
-        echo $output;
-
-        echo $args['after_widget'];
-    }
-
-    public function form( $instance ) {
-        $filter_type = $instance['filter_type'] ?? 'all';
-        $product_selector = $instance['product_selector'] ?? '';
-        $pagination_selector = $instance['pagination_selector'] ?? '';
-        $filter_name = $instance['filter_name'] ?? '';
-        $custom_style = $instance['custom_style'] ?? '';
-        $advanced_option = $instance['advanced_option'] ?? '';
-
-        ?>
-        <style>
-            .dapfforwc-tabs {
-                display: flex;
-                border-bottom: 1px solid #ddd;
-                margin-bottom: 10px;
-            }
-            .dapfforwc-tabs a {
-                background: #f9f9f9;
-                border: 1px solid #ddd;
-                padding: 5px 10px;
-                cursor: pointer;
-                margin-right: 5px;
-                border-bottom: none;
-            }
-            .dapfforwc-tabs a.active {
-                background: #fff;
-                border-bottom: 1px solid #fff;
-            }
-            .dapfforwc-tab-content {
-                display: none;
-                padding: 10px 0;
-            }
-            .dapfforwc-tab-content.active {
-                display: block;
-            }
-        </style>
-        
-        <div id="<?php echo $this->id; ?>">
-            <div class="dapfforwc-tabs">
-               <a href="#general-tab" class="active button"><?php esc_html_e( 'General', 'dynamic-ajax-product-filters-for-woocommerce' ); ?></a>
-                <a href="#style-tab" class="button"><?php esc_html_e( 'Style', 'dynamic-ajax-product-filters-for-woocommerce' ); ?></a>
-                <a href="#advanced-tab" class="button"><?php esc_html_e( 'Advanced', 'dynamic-ajax-product-filters-for-woocommerce' ); ?></a>
-            </div>
-
-            <!-- General Tab -->
-            <div class="dapfforwc-tab-content active">
-                <p>
-                    <label for="<?php echo $this->get_field_id( 'filter_type' ); ?>"><?php esc_html_e( 'Select Filter Type:', 'dynamic-ajax-product-filters-for-woocommerce' ); ?></label>
-                    <select class="widefat" id="<?php echo $this->get_field_id( 'filter_type' ); ?>" name="<?php echo $this->get_field_name( 'filter_type' ); ?>">
-                        <option value="all" <?php selected( $filter_type, 'all' ); ?>><?php esc_html_e( 'All Filters', 'dynamic-ajax-product-filters-for-woocommerce' ); ?></option>
-                        <option value="single" <?php selected( $filter_type, 'single' ); ?>><?php esc_html_e( 'Single Filter', 'dynamic-ajax-product-filters-for-woocommerce' ); ?></option>
-                        <option value="selected" <?php selected( $filter_type, 'selected' ); ?>><?php esc_html_e( 'Selected Filters', 'dynamic-ajax-product-filters-for-woocommerce' ); ?></option>
-                    </select>
-                </p>
-                <p>
-                    <label for="<?php echo $this->get_field_id( 'product_selector' ); ?>"><?php esc_html_e( 'Product Selector (for All Filters):', 'dynamic-ajax-product-filters-for-woocommerce' ); ?></label>
-                    <input class="widefat" id="<?php echo $this->get_field_id( 'product_selector' ); ?>" name="<?php echo $this->get_field_name( 'product_selector' ); ?>" type="text" value="<?php echo esc_attr( $product_selector ); ?>">
-                </p>
-                <p>
-                    <label for="<?php echo $this->get_field_id( 'pagination_selector' ); ?>"><?php esc_html_e( 'Pagination Selector (for All Filters):', 'dynamic-ajax-product-filters-for-woocommerce' ); ?></label>
-                    <input class="widefat" id="<?php echo $this->get_field_id( 'pagination_selector' ); ?>" name="<?php echo $this->get_field_name( 'pagination_selector' ); ?>" type="text" value="<?php echo esc_attr( $pagination_selector ); ?>">
-                </p>
-            </div>
-
-            <!-- Style Tab -->
-            <div class="dapfforwc-tab-content">
-                <p>
-                    <label for="<?php echo $this->get_field_id( 'custom_style' ); ?>"><?php esc_html_e( 'Custom CSS:', 'dynamic-ajax-product-filters-for-woocommerce' ); ?></label>
-                    <textarea class="widefat" id="<?php echo $this->get_field_id( 'custom_style' ); ?>" name="<?php echo $this->get_field_name( 'custom_style' ); ?>"><?php echo esc_attr( $custom_style ); ?></textarea>
-                </p>
-            </div>
-
-            <!-- Advanced Tab -->
-            <div class="dapfforwc-tab-content">
-                <p>
-                    <label for="<?php echo $this->get_field_id( 'advanced_option' ); ?>"><?php esc_html_e( 'Advanced Option:', 'dynamic-ajax-product-filters-for-woocommerce' ); ?></label>
-                    <input class="widefat" id="<?php echo $this->get_field_id( 'advanced_option' ); ?>" name="<?php echo $this->get_field_name( 'advanced_option' ); ?>" type="text" value="<?php echo esc_attr( $advanced_option ); ?>">
-                </p>
-            </div>
-        </div>
-        <?php
-    }
-
-    public function update( $new_instance, $old_instance ) {
-        $instance = [];
-        $instance['filter_type'] = sanitize_text_field( $new_instance['filter_type'] );
-        $instance['product_selector'] = sanitize_text_field( $new_instance['product_selector'] );
-        $instance['pagination_selector'] = sanitize_text_field( $new_instance['pagination_selector'] );
-        $instance['filter_name'] = sanitize_text_field( $new_instance['filter_name'] );
-        $instance['custom_style'] = sanitize_textarea_field( $new_instance['custom_style'] );
-        $instance['advanced_option'] = sanitize_text_field( $new_instance['advanced_option'] );
-        return $instance;
-    }
-}
-
-// Register the widget
-function dapfforwc_register_wp_widget() {
-    register_widget( 'Dapfforwc_Dynamic_Ajax_Filter_Widget_Wp_Widget' );
-}
-add_action( 'widgets_init', 'dapfforwc_register_wp_widget' );
-
-
-
 // creating blocks for gutenberg
 
 function register_dynamic_ajax_filter_block() {
@@ -309,6 +170,11 @@ $filter_word_mobile = $attributes['filterWordMobile'] ?? '';
 $custom_css = $attributes['customCSS'] ?? '';
 $class_name = $attributes['className'] ?? '';
 
+$single_filter_inactive_style = $attributes['singleFilterInactiveStyle'] ?? [];
+$single_filter_container_style = $attributes['singleFilterContainerStyle'] ?? [];
+$single_filter_active_style = $attributes['singleFilterActiveStyle'] ?? [];
+$single_filter_hover_style = $attributes['singleFilterHoverStyle'] ?? [];
+
 
 // Generate CSS for desktop, tablet, and smartphone
 $form_style_css = generate_css($form_style);
@@ -357,7 +223,10 @@ $slider_tooltip_style_css = generate_css($slider_style, '', false, false, false,
 $filter_word_mobile_css = generate_css($filter_word_mobile);
 
 
-
+$single_filter_inactive_css = generate_css($single_filter_inactive_style);
+$single_filter_container_css = generate_css($single_filter_container_style);
+$single_filter_active_css = generate_css($single_filter_active_style);
+$single_filter_hover_css = generate_css($single_filter_hover_style);
 
 
     switch ( $filter_type ) {
@@ -405,21 +274,33 @@ $filter_word_mobile_css = generate_css($filter_word_mobile);
             
 ';
             $output .= $custom_css;
-            $output .= 'form#product-filter button:hover {' . $button_hover_css . '}';
-            $output .= 'form#product-filter span#reset-rating:hover {' . $reset_button_hover_css . '}';
-            $output .= 'form#product-filter i:hover,.dynamic-rating input:checked ~ label, .dynamic-rating:not(:checked) label:hover, .dynamic-rating:not(:checked) label:hover ~ label {' . $rating_hover_css . '}';
-            $output .= 'form#product-filter i.active,   .dynamic-rating  input:checked + label:hover,
+            if($button_hover_css){$output .= 'form#product-filter button:hover {' . $button_hover_css . '}';}
+            if($reset_button_hover_css){$output .= 'form#product-filter span#reset-rating:hover {' . $reset_button_hover_css . '}';}
+            if($rating_hover_css){$output .= 'form#product-filter i:hover,.dynamic-rating input:checked ~ label, .dynamic-rating:not(:checked) label:hover, .dynamic-rating:not(:checked) label:hover ~ label {' . $rating_hover_css . '}';}
+            if($rating_active_css){$output .= 'form#product-filter i.active,   .dynamic-rating  input:checked + label:hover,
   .dynamic-rating  input:checked ~ label:hover,
   .dynamic-rating  label:hover ~ input:checked ~ label,
-  .dynamic-rating  input:checked ~ label:hover ~ label {' . $rating_active_css . '}';
+  .dynamic-rating  input:checked ~ label:hover ~ label {' . $rating_active_css . '}';}
             $output .= '</style>';
             $output .= '<div class="'.$class_name.'">'.do_shortcode( "[plugincy_filters product_selector=\"$product_selector\" pagination_selector=\"$pagination_selector\"]" ).'</div>';
             break;
         case 'single':
             $filter_name = esc_attr( $attributes['filterName'] );
+            $output .= '<style>';
+            $output .='.rfilterbuttons li{'.$single_filter_inactive_css.'}label { color: unset !important; }';
+            $output .='.rfilterbuttons ul {'.$single_filter_container_css.'}';
+            $output .='.rfilterbuttons ul li.checked {'.$single_filter_active_css.'}';
+            $output .='.rfilterbuttons ul li:hover {'.$single_filter_hover_css.'}';
+            $output .= '</style>';
             $output .= '<div class="'.$class_name.'">'.do_shortcode( "[plugincy_filters_single name=\"$filter_name\"]" ).'</div>';
             break;
         case 'selected':
+            $output .= '<style>';
+            $output .='.rfilterselected  li{'.$single_filter_inactive_css.'}label { color: unset !important; }';
+            $output .='.rfilterselected  ul {'.$single_filter_container_css.'}';
+            $output .='.rfilterselected  ul li.checked {'.$single_filter_active_css.'}';
+            $output .='.rfilterselected  ul li:hover {'.$single_filter_hover_css.'}';
+            $output .= '</style>';
             $output .= '<div class="'.$class_name.'">'.do_shortcode( '[plugincy_filters_selected]' ).'</div>';
             break;
     }

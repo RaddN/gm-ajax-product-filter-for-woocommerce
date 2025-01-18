@@ -104,6 +104,10 @@ const DeviceSelector = ({ onChange }) => {
     var TabPanel = components.TabPanel;
     var RangeControl = components.RangeControl;
     var __ = wp.i18n.__;
+    let storestyle =(defaultheight='') =>{ return { type: 'object', default: { background: { desktop: '', tablet: '', mobile: '' }, desktop: {}, tablet: {}, mobile: {},height:defaultheight, }, };};
+    let storestring = (defaultvalue = '') => {
+        return { type: 'string', default: defaultvalue };
+    };
 
     blocks.registerBlockType( 'plugin/dynamic-ajax-filter', {
         title: 'Dynamic Ajax Filter',
@@ -111,166 +115,46 @@ const DeviceSelector = ({ onChange }) => {
         icon: 'filter',
         category: 'widgets',
         attributes: {
-            filterType: {
-                type: 'string',
-                default: 'all',
-            },
-            productSelector: {
-                type: 'string',
-                default: '',
-            },
-            paginationSelector: {
-                type: 'string',
-                default: '',
-            },
-            filterName: {
-                type: 'string',
-                default: '',
-            },
-            backgroundColor: {
-                type: 'string',
-                default: '',
-            },
-            customCSS: {
-                type: 'string',
-                default: '',
-            },
-            className: {
-                type: 'string',
-                default: "",
-            },
-            formStyle: {
-                type: 'object',
-                default: {
-                    background: {
-                        desktop: '',
-                        tablet: '',
-                        mobile: ''
-                    },
-                desktop: {},
-                tablet: {},
-                mobile: {},
-                height: {
-                    desktop: { value: 0, unit: 'px' },
-                    tablet: { value: 0, unit: 'px' },
-                    mobile: { value: 0, unit: 'px' },
-                }
-                },
-            },
-            containerStyle: {
-                type: 'object',
-                default: {
-                    background: {
-                        desktop: '',
-                        tablet: '',
-                        mobile: ''
-                    },
-                desktop: {},
-                tablet: {},
-                mobile: {},
-                },
-            },
-            widgetTitleStyle: {
-                type: 'object',
-                default: {
-                    background: {
-                        desktop: '',
-                        tablet: '',
-                        mobile: ''
-                    },
-                desktop: {},
-                tablet: {},
-                mobile: {},
-                },
-            },
-            widgetItemsStyle: {
-                type: 'object',
-                default: {
-                    background: {
-                        desktop: '',
-                        tablet: '',
-                        mobile: ''
-                    },
-                desktop: {},
-                tablet: {},
-                mobile: {},
-                },
-            },
-            buttonStyle: {
-                type: 'object',
-                default: {
-                    background: {
-                        desktop: '',
-                        tablet: '',
-                        mobile: ''
-                    },
-                desktop: {},
-                tablet: {},
-                mobile: {},
-                },
-            },
-            ratingStyle: {
-                type: 'object',
-                default: {
-                    background: {
-                        desktop: '',
-                        tablet: '',
-                        mobile: ''
-                    },
-                desktop: {},
-                tablet: {},
-                mobile: {},
-                },
-            },
-            resetButtonStyle: {
-                type: 'object',
-                default: {
-                    background: {
-                        desktop: '',
-                        tablet: '',
-                        mobile: ''
-                    },
-                desktop: {},
-                tablet: {},
-                mobile: {},
-                },
-            },
-            inputStyle: {
-                type: 'object',
-                default: {
-                    background: {
-                        desktop: '',
-                        tablet: '',
-                        mobile: ''
-                    },
-                desktop: {},
-                tablet: {},
-                mobile: {},
-                },
-            },
-            sliderStyle: {
-                type: 'object',
-                default: {
-                    background: {
-                        desktop: '',
-                        tablet: '',
-                        mobile: ''
-                    },
-                desktop: {},
-                tablet: {},
-                mobile: {},
-                },
-            },
+            filterType: storestring(defaultvalue = 'all'),
+            productSelector:storestring(),
+            paginationSelector:storestring(),
+            filterName:storestring(),
+            backgroundColor:storestring(),
+            customCSS:storestring(),
+            className: storestring(),
+            formStyle: storestyle(defaultheight={desktop: { value: 0, unit: 'px' },tablet: { value: 0, unit: 'px' },mobile: { value: 0, unit: 'px' }}),
+            containerStyle: storestyle(),
+            widgetTitleStyle: storestyle(),
+            widgetItemsStyle: storestyle(),
+            buttonStyle: storestyle(),
+            ratingStyle: storestyle(),
+            resetButtonStyle: storestyle(),
+            inputStyle: storestyle(),
+            sliderStyle: storestyle(),
             filterWordMobile: {
                 type: 'object',
                 default:{
                     display: "block",
                 },
             },
-            selectedDevice: {
-                type: 'string',
-                default: 'desktop',
+            selectedDevice: storestring(defaultvalue = 'desktop'),
+            singleFilterInactiveStyle: {
+                type: 'object',
+                default: {},
             },
+            singleFilterActiveStyle: {
+                type: 'object',
+                default: {},
+            },
+            singleFilterHoverStyle: {
+                type: 'object',
+                default: {},
+            },
+            singleFilterContainerStyle: {
+                type: 'object',
+                default: {},
+            }
+            
         },
         edit: function( props ) {
             var attributes = props.attributes;
@@ -338,7 +222,7 @@ const DeviceSelector = ({ onChange }) => {
                                     }
                                 } ),
                                 attributes.filterType === 'single' && el( TextControl, {
-                                    label: 'Filter Name',
+                                    label: 'Attribute Id',
                                     value: attributes.filterName,
                                     onChange: function( value ) {
                                         setAttributes( { filterName: value } );
@@ -978,6 +862,113 @@ const DeviceSelector = ({ onChange }) => {
                                         value: attributes.sliderStyle.tooltipBackground,
                                         onChange: function( value ) {
                                             setAttributes( { sliderStyle: { ...attributes.sliderStyle, tooltipBackground: value } } );
+                                        }
+                                    } )
+                                )
+                            ];
+                        }
+                        else if(attributes.filterType==='single' || attributes.filterType==='selected') {
+                            return [
+                                el( PanelBody, { title: 'Inactive Style', initialOpen: true },
+                                    el( 'p', {}, 'Inactive Background Color' ),
+                                    el( ColorPalette, {
+                                        value: attributes.singleFilterInactiveStyle.background?attributes.singleFilterInactiveStyle.background[attributes.selectedDevice]:"",
+                                        onChange: function(value) { handleBackgroundChange(value, 'singleFilterInactiveStyle') },
+                                    } ),
+                                    el( 'p', {}, 'Inactive Text Color' ),
+                                    el( ColorPalette, {
+                                        value: attributes.singleFilterInactiveStyle?.color || '',
+                                        onChange: function(value) {
+                                            setAttributes({ singleFilterInactiveStyle: { ...attributes.singleFilterInactiveStyle, color: value } });
+                                        }
+                                    } )
+                                ),
+                                el( PanelBody, { title: 'Active Style', initialOpen: false },
+                                    el( 'p', {}, 'Active Background Color' ),
+                                    el( ColorPalette, {
+                                        value: attributes.singleFilterActiveStyle.background?attributes.singleFilterActiveStyle.background[attributes.selectedDevice]:"",
+                                        onChange: function(value) { handleBackgroundChange(value, 'singleFilterActiveStyle') },
+                                    } ),
+                                    el( 'p', {}, 'Active Text Color' ),
+                                    el( ColorPalette, {
+                                        value: attributes.singleFilterActiveStyle?.color || '',
+                                        onChange: function(value) {
+                                            setAttributes({ singleFilterActiveStyle: { ...attributes.singleFilterActiveStyle, color: value } });
+                                        }
+                                    } )
+                                ),
+                                el( PanelBody, { title: 'Hover Style', initialOpen: false },
+                                    el( 'p', {}, 'Background' ),
+                                    el( ColorPalette, {
+                                        value: attributes.singleFilterHoverStyle.background?attributes.singleFilterHoverStyle.background[attributes.selectedDevice]:"",
+                                        onChange: function(value) { handleBackgroundChange(value, 'singleFilterHoverStyle')
+                                         },
+                                    } ),
+                                    el( 'p', {}, 'Color' ),
+                                    el( ColorPalette, {
+                                        value: attributes.singleFilterHoverStyle?.color || '',
+                                        onChange: function(value) {
+                                            setAttributes({ singleFilterHoverStyle: { ...attributes.singleFilterHoverStyle, color: value } });
+                                        }
+                                    } )
+                                ),
+                                el( PanelBody, { title: 'Typography', initialOpen: false },
+                                    el( FontSizePicker, {
+                                        value: attributes.singleFilterInactiveStyle["font-size"]|| '',
+                                        onChange: function(value) {
+                                            setAttributes({ singleFilterInactiveStyle: { ...attributes.singleFilterInactiveStyle, "font-size": value } });
+                                        }
+                                    } )
+                                ),
+                                el( PanelBody, { title: 'Spacing', initialOpen: false },
+                                    el( 'p', {}, 'Padding' ),
+                                    el( CustomBoxControl, {
+                                        values: attributes.singleFilterInactiveStyle.padding || { top: 0, right: 0, bottom: 0, left: 0 },
+                                        unit: 'px',
+                                        onChange: function(value) {
+                                            setAttributes({ singleFilterInactiveStyle: { ...attributes.singleFilterInactiveStyle, padding: value } });
+                                        }
+                                    } ),
+                                    el( 'p', {}, 'Margin' ),
+                                    el( CustomBoxControl, {
+                                        values: attributes.singleFilterInactiveStyle.margin || { top: 0, right: 0, bottom: 0, left: 0 },
+                                        unit: 'px',
+                                        onChange: function(value) {
+                                            setAttributes({ singleFilterInactiveStyle: { ...attributes.singleFilterInactiveStyle, margin: value } });
+                                        }
+                                    } ),
+                                    el( 'p', {}, 'Gap' ),
+                                    el( RangeControl, {
+                                        value: attributes.singleFilterContainerStyle.gap || 0,
+                                        onChange: function(value) {
+                                            setAttributes({ singleFilterContainerStyle: { ...attributes.singleFilterContainerStyle, gap: value } });
+                                        }
+                                    } )
+                                ),
+                                el( PanelBody, { title: 'Container Style', initialOpen: false },
+                                    el( 'p', {}, 'Overflow' ),
+                                    el( SelectControl, {
+                                        value: attributes.singleFilterContainerStyle.overflow || 'visible',
+                                        options: [
+                                            { label: 'Visible', value: 'visible' },
+                                            { label: 'Hidden', value: 'hidden' },
+                                            { label: 'Scroll', value: 'scroll' },
+                                            { label: 'Auto', value: 'auto' },
+                                        ],
+                                        onChange: function(value) {
+                                            setAttributes({ singleFilterContainerStyle: { ...attributes.singleFilterContainerStyle, overflow: value } });
+                                        }
+                                    } ),
+                                    el( 'p', {}, 'Flex Wrap' ),
+                                    el( SelectControl, {
+                                        value: attributes.singleFilterContainerStyle["flex-wrap"] || 'nowrap',
+                                        options: [
+                                            { label: 'No Wrap', value: 'nowrap' },
+                                            { label: 'Wrap', value: 'wrap' },
+                                            { label: 'Wrap Reverse', value: 'wrap-reverse' },
+                                        ],
+                                        onChange: function(value) {
+                                            setAttributes({ singleFilterContainerStyle: { ...attributes.singleFilterContainerStyle, "flex-wrap": value } });
                                         }
                                     } )
                                 )

@@ -231,7 +231,7 @@ function dapfforwc_admin_page_content() { global $dapfforwc_options;
                     do_settings_sections('dapfforwc-admin');
                     submit_button();
                     ?>
-                    <p>Use shortcode to show filter: <b>[plugincy_filters attribute="your-attribute" terms="your-terms1, your-terms2" category="your-cata1, your-cata2" tag="your-tag1, your-tag2"]</b></p>
+                    <p>Use shortcode to show filter: <b>[plugincy_filters]</b></p>
                     <p>For button style filter use this shortcode: <b>[plugincy_filters_single name="conference-by-month"]</b></p>
                     <p>For show currently selected filter above product: <b>[plugincy_filters_selected]</b></p>
                 </form>

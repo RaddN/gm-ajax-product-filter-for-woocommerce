@@ -159,7 +159,9 @@ function anyFilterSelected() {
     }
     
     // Call this function after updating the product listings
+    if($('#product-filter').length){
     attachPaginationEvents();
+    }
     function changePseudoElementContent(beforeContent, afterContent) {
         // Create a new style element
         var style = $('<style></style>');
@@ -183,8 +185,8 @@ function anyFilterSelected() {
         const rangeInput = document.querySelectorAll(".range-input input"),
         priceInput = document.querySelectorAll(".price-input input"),
         range = document.querySelector(".slider .progress");
-        let minPrice = parseInt(rangeInput[0].value),
-        maxPrice = parseInt(rangeInput[1].value);
+        let minPrice = rangeInput[0]?parseInt(rangeInput[0].value):0,
+        maxPrice = rangeInput[1]?parseInt(rangeInput[1].value):0;
         changePseudoElementContent(`$${minPrice}`, `$${maxPrice}`);
         rangeInput.forEach((input) => {
         input.addEventListener("input", (e) => {

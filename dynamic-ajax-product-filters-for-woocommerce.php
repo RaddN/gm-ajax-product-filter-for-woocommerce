@@ -416,3 +416,68 @@ function enqueue_dynamic_ajax_filter_block_assets() {
     wp_enqueue_style('custom-box-control-styles', plugin_dir_url(__FILE__) . 'assets/css/block-editor.css', [], '1.0.6');
 }
 add_action( 'enqueue_block_editor_assets', 'enqueue_dynamic_ajax_filter_block_assets' );
+
+
+
+
+
+// filter error detector
+add_action('admin_bar_menu', 'dapfforwc_add_debug_menu', 100);
+
+function dapfforwc_add_debug_menu($wp_admin_bar) {
+    if (current_user_can('administrator')) {
+        $args = [
+            'id'    => 'dapfforwc_debug',
+            'title' => '<span class="ab-icon dashicons dashicons-filter"></span> Product Filter',
+            'meta'  => [
+                'class' => 'dapfforwc-debug-bar',
+            ],
+        ];
+        $wp_admin_bar->add_node($args);
+
+        $wp_admin_bar->add_node([
+            'id'     => 'dapfforwc_debug_sub',
+            'parent' => 'dapfforwc_debug',
+            'title'  => '<span id="dapfforwc_debug_message">Checking...</span>',
+            'meta'   => [
+                'class' => 'ab-sub-wrapper',
+            ],
+        ]);
+    }
+}
+
+add_action('wp_footer', 'dapfforwc_check_elements');
+
+function dapfforwc_check_elements() {
+    global $dapfforwc_advance_settings;
+    if (current_user_can('administrator')) {
+        ?>
+        <script type="text/javascript">
+            document.addEventListener('DOMContentLoaded', function() {
+                var debugMessage = document.getElementById('dapfforwc_debug_message');
+                if (!document.querySelector('#product-filter')) {
+                    debugMessage.innerHTML = '<span style="color: red;">&#10007;</span> Filter is not added';
+                } else if (!document.querySelector('<?php echo $dapfforwc_advance_settings["product_selector"]; ?>')) {
+                    debugMessage.innerHTML = '<span style="color: red;">&#10007;</span> Products are not found. Add product or <a href="#" style="display: inline; padding: 0;">change selector </a>';
+                } else if (!document.querySelector('<?php echo $dapfforwc_advance_settings["pagination_selector"]; ?>')) {
+                    debugMessage.innerHTML = '<span style="color: red;">&#10007;</span> Pagination is not found <a href="#" style="display: inline; padding: 0;">change selector </a>';
+                }
+                else {
+                    debugMessage.innerHTML = '<span style="color: green;">&#10003;</span> Filter working fine';
+                }
+            });
+        </script>
+        <style>
+            ul#wp-admin-bar-dapfforwc_debug-default {
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            li#wp-admin-bar-dapfforwc_debug_sub {
+                display: block !important;
+                padding: 10px 5px !important;
+                height: max-content;
+            }
+        </style>
+        <?php
+    }
+}
