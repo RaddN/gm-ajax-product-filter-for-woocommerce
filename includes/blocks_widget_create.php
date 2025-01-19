@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) {
 
 // creating blocks for gutenberg
 
-function register_dynamic_ajax_filter_block() {
+function dapfforwc_register_dynamic_ajax_filter_block() {
     wp_register_script(
         'dynamic-ajax-filter-block',
         plugins_url( 'block.js', __FILE__ ),
@@ -16,7 +16,7 @@ function register_dynamic_ajax_filter_block() {
 
     register_block_type( 'plugin/dynamic-ajax-filter', array(
         'editor_script' => 'dynamic-ajax-filter-block',
-        'render_callback' => 'render_dynamic_ajax_filter_block',
+        'render_callback' => 'dapfforwc_render_dynamic_ajax_filter_block',
         'attributes' => array(
             'filterType' => array(
                 'type' => 'string',
@@ -49,9 +49,9 @@ function register_dynamic_ajax_filter_block() {
         ),
     ) );
 }
-add_action( 'init', 'register_dynamic_ajax_filter_block' );
+add_action( 'init', 'dapfforwc_register_dynamic_ajax_filter_block' );
 
-function generate_css($styles, $device = 'desktop', $hover = false, $active = false, $sliderProgress = false, $sliderthumb = false, $slidertooltip = false) {
+function dapfforwc_generate_css($styles, $device = 'desktop', $hover = false, $active = false, $sliderProgress = false, $sliderthumb = false, $slidertooltip = false) {
     $css = '';
 
     foreach ($styles as $key => $value) {
@@ -111,7 +111,7 @@ function generate_css($styles, $device = 'desktop', $hover = false, $active = fa
                 }
                 break;
             case $device:
-                $css .= generate_css($value, $key);
+                $css .= dapfforwc_generate_css($value, $key);
                 break;
 
             case 'desktop':
@@ -152,7 +152,7 @@ function generate_css($styles, $device = 'desktop', $hover = false, $active = fa
 }
 
 
-function render_dynamic_ajax_filter_block($attributes) {
+function dapfforwc_render_dynamic_ajax_filter_block($attributes) {
     $filter_type = $attributes['filterType'];
     $output = '';
 
@@ -177,56 +177,56 @@ $single_filter_hover_style = $attributes['singleFilterHoverStyle'] ?? [];
 
 
 // Generate CSS for desktop, tablet, and smartphone
-$form_style_css = generate_css($form_style);
-$form_sm_style_css = generate_css($form_style, 'smartphone');
-$form_md_style_css = generate_css($form_style, 'tablet');
+$form_style_css = dapfforwc_generate_css($form_style);
+$form_sm_style_css = dapfforwc_generate_css($form_style, 'smartphone');
+$form_md_style_css = dapfforwc_generate_css($form_style, 'tablet');
 
-$container_style_css = generate_css($container_style);
-$container_sm_style_css = generate_css($container_style, 'smartphone');
-$container_md_style_css = generate_css($container_style, 'tablet');
+$container_style_css = dapfforwc_generate_css($container_style);
+$container_sm_style_css = dapfforwc_generate_css($container_style, 'smartphone');
+$container_md_style_css = dapfforwc_generate_css($container_style, 'tablet');
 
-$widget_title_style_css = generate_css($widget_title_style);
-$widget_sm_title_style_css = generate_css($widget_title_style, 'smartphone');
-$widget_md_title_style_css = generate_css($widget_title_style, 'tablet');
+$widget_title_style_css = dapfforwc_generate_css($widget_title_style);
+$widget_sm_title_style_css = dapfforwc_generate_css($widget_title_style, 'smartphone');
+$widget_md_title_style_css = dapfforwc_generate_css($widget_title_style, 'tablet');
 
-$widget_items_style_css = generate_css($widget_items_style);
-$widget_items_sm_style_css = generate_css($widget_items_style, 'smartphone');
-$widget_items_md_style_css = generate_css($widget_items_style, 'tablet');
+$widget_items_style_css = dapfforwc_generate_css($widget_items_style);
+$widget_items_sm_style_css = dapfforwc_generate_css($widget_items_style, 'smartphone');
+$widget_items_md_style_css = dapfforwc_generate_css($widget_items_style, 'tablet');
 
-$button_style_css = generate_css($button_style);
-$button_sm_style_css = generate_css($button_style, 'smartphone');
-$button_md_style_css = generate_css($button_style, 'tablet');
-$button_hover_css = generate_css($button_style, '', true);
+$button_style_css = dapfforwc_generate_css($button_style);
+$button_sm_style_css = dapfforwc_generate_css($button_style, 'smartphone');
+$button_md_style_css = dapfforwc_generate_css($button_style, 'tablet');
+$button_hover_css = dapfforwc_generate_css($button_style, '', true);
 
-$rating_style_css = generate_css($rating_style);
-$rating_sm_style_css = generate_css($rating_style, 'smartphone');
-$rating_md_style_css = generate_css($rating_style, 'tablet');
-$rating_hover_css = generate_css($rating_style, '', true);
-$rating_active_css = generate_css($rating_style, '', false, true);
+$rating_style_css = dapfforwc_generate_css($rating_style);
+$rating_sm_style_css = dapfforwc_generate_css($rating_style, 'smartphone');
+$rating_md_style_css = dapfforwc_generate_css($rating_style, 'tablet');
+$rating_hover_css = dapfforwc_generate_css($rating_style, '', true);
+$rating_active_css = dapfforwc_generate_css($rating_style, '', false, true);
 
-$reset_button_style_css = generate_css($reset_button_style);
-$reset_button_sm_style_css = generate_css($reset_button_style, 'smartphone');
-$reset_button_md_style_css = generate_css($reset_button_style, 'tablet');
-$reset_button_hover_css = generate_css($reset_button_style, '', true);
+$reset_button_style_css = dapfforwc_generate_css($reset_button_style);
+$reset_button_sm_style_css = dapfforwc_generate_css($reset_button_style, 'smartphone');
+$reset_button_md_style_css = dapfforwc_generate_css($reset_button_style, 'tablet');
+$reset_button_hover_css = dapfforwc_generate_css($reset_button_style, '', true);
 
-$input_style_css = generate_css($input_style);
-$input_sm_style_css = generate_css($input_style, 'smartphone');
-$input_md_style_css = generate_css($input_style, 'tablet');
+$input_style_css = dapfforwc_generate_css($input_style);
+$input_sm_style_css = dapfforwc_generate_css($input_style, 'smartphone');
+$input_md_style_css = dapfforwc_generate_css($input_style, 'tablet');
 
-$slider_style_css = generate_css($slider_style);
-$slider_sm_style_css = generate_css($slider_style, 'smartphone');
-$slider_md_style_css = generate_css($slider_style, 'tablet');
-$slider_progress_style_css = generate_css($slider_style, '', false, false, true);
-$slider_thumb_style_css = generate_css($slider_style, '', false, false, false, true);
-$slider_tooltip_style_css = generate_css($slider_style, '', false, false, false, false, true);
+$slider_style_css = dapfforwc_generate_css($slider_style);
+$slider_sm_style_css = dapfforwc_generate_css($slider_style, 'smartphone');
+$slider_md_style_css = dapfforwc_generate_css($slider_style, 'tablet');
+$slider_progress_style_css = dapfforwc_generate_css($slider_style, '', false, false, true);
+$slider_thumb_style_css = dapfforwc_generate_css($slider_style, '', false, false, false, true);
+$slider_tooltip_style_css = dapfforwc_generate_css($slider_style, '', false, false, false, false, true);
 
-$filter_word_mobile_css = generate_css($filter_word_mobile);
+$filter_word_mobile_css = dapfforwc_generate_css($filter_word_mobile);
 
 
-$single_filter_inactive_css = generate_css($single_filter_inactive_style);
-$single_filter_container_css = generate_css($single_filter_container_style);
-$single_filter_active_css = generate_css($single_filter_active_style);
-$single_filter_hover_css = generate_css($single_filter_hover_style);
+$single_filter_inactive_css = dapfforwc_generate_css($single_filter_inactive_style);
+$single_filter_container_css = dapfforwc_generate_css($single_filter_container_style);
+$single_filter_active_css = dapfforwc_generate_css($single_filter_active_style);
+$single_filter_hover_css = dapfforwc_generate_css($single_filter_hover_style);
 
 
     switch ( $filter_type ) {

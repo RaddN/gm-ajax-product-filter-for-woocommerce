@@ -391,7 +391,7 @@ include(plugin_dir_path(__FILE__) . 'includes/blocks_widget_create.php');
 
 // add alert for admin in 404 page
 
-function add_admin_message_before_footer() {
+function dapfforwc_add_admin_message_before_footer() {
     if (is_404() && current_user_can('administrator')) {
         ?>
         <div class="admin-message" style="background-color: #f9f9f9; padding: 20px; border: 1px solid #ccc; margin-top: 20px;">
@@ -401,11 +401,11 @@ function add_admin_message_before_footer() {
         <?php
     }
 }
-add_action('wp_head', 'add_admin_message_before_footer');
+add_action('wp_head', 'dapfforwc_add_admin_message_before_footer');
 
 
 // block editor script
-function enqueue_dynamic_ajax_filter_block_assets() {
+function dapfforwc_enqueue_dynamic_ajax_filter_block_assets() {
     wp_enqueue_script(
         'dynamic-ajax-filter-block',
         plugins_url( 'includes/block.js', __FILE__ ),
@@ -415,7 +415,7 @@ function enqueue_dynamic_ajax_filter_block_assets() {
 
     wp_enqueue_style('custom-box-control-styles', plugin_dir_url(__FILE__) . 'assets/css/block-editor.css', [], '1.0.6');
 }
-add_action( 'enqueue_block_editor_assets', 'enqueue_dynamic_ajax_filter_block_assets' );
+add_action( 'enqueue_block_editor_assets', 'dapfforwc_enqueue_dynamic_ajax_filter_block_assets' );
 
 
 

@@ -3,9 +3,9 @@
 if (!defined('ABSPATH')) {
     exit;
 }
-add_action('admin_head', 'add_review_popup');
+add_action('admin_head', 'dapfforwc_add_review_popup');
 
-function add_review_popup() {
+function dapfforwc_add_review_popup() {
     $current_page = isset($_GET['page']) ? $_GET['page'] : '';
 
     if ($current_page === 'dapfforwc-admin') {
@@ -61,11 +61,11 @@ function add_review_popup() {
         </script>
         <?php
     } else {
-        add_action('admin_notices', 'show_admin_notice');
+        add_action('admin_notices', 'dapfforwc_show_admin_notice');
     }
 }
 
-function show_admin_notice() {
+function dapfforwc_show_admin_notice() {
     ?>
     <div class="notice notice-info is-dismissible" id="admin-review-notice">
         <p>If you enjoy using <b>Dynamic AJAX Product Filters for WooCommerce</b>, please take a moment to leave us a review.</p>
