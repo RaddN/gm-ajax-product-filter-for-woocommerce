@@ -327,7 +327,6 @@ function dapfforwc_is_elementor_active() {
  */
 function dapfforwc_register_dynamic_ajax_filter_widget_elementor() {
     if ( ! dapfforwc_is_elementor_active() ) {
-        error_log( "Elementor is not installed or active." );
         return;
     }
 

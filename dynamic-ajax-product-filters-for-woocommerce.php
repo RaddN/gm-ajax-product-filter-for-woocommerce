@@ -9,10 +9,18 @@
  * License:     GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: dynamic-ajax-product-filters-for-woocommerce
+ * Domain Path: /languages
  */
 
 if (!defined('ABSPATH')) {
     exit;
+}
+
+
+// Load text domain for translations
+add_action('plugins_loaded', 'dapfforwc_load_textdomain');
+function dapfforwc_load_textdomain() {
+    load_plugin_textdomain('dynamic-ajax-product-filters-for-woocommerce', false, dirname(plugin_basename(__FILE__)) . '/languages');
 }
 
 // Global Variables
@@ -395,8 +403,8 @@ function dapfforwc_add_admin_message_before_footer() {
     if (is_404() && current_user_can('administrator')) {
         ?>
         <div class="admin-message" style="background-color: #f9f9f9; padding: 20px; border: 1px solid #ccc; margin-top: 20px;">
-            <h2>Admin Notice</h2>
-            <p>This page was not found. If you think it's an error goto <b> product filters > Form Manage <b> & turn on <b><a href="/wp-admin/admin.php?page=dapfforwc-admin#:~:text=use%20filters%20word%20in%20permalinks">use filters word in permalinks</a></b>. (only admin can see this.)</p>
+            <h2><?php _e('Admin Notice', 'dynamic-ajax-product-filters-for-woocommerce'); ?></h2>
+            <p><?php _e("This page was not found. If you think it's an error go to <b>product filters > Form Manage</b> & turn on <b><a href='/wp-admin/admin.php?page=dapfforwc-admin#:~:text=use%20filters%20word%20in%20permalinks'>use filters word in permalinks</a></b>. (only admin can see this.)", 'dynamic-ajax-product-filters-for-woocommerce'); ?></p>
         </div>
         <?php
     }
@@ -428,7 +436,7 @@ function dapfforwc_add_debug_menu($wp_admin_bar) {
     if (current_user_can('administrator')) {
         $args = [
             'id'    => 'dapfforwc_debug',
-            'title' => '<span class="ab-icon dashicons dashicons-filter"></span> Product Filter',
+            'title' => '<span class="ab-icon dashicons dashicons-filter"></span> ' . __('Product Filter', 'dynamic-ajax-product-filters-for-woocommerce'),
             'meta'  => [
                 'class' => 'dapfforwc-debug-bar',
             ],
@@ -438,7 +446,7 @@ function dapfforwc_add_debug_menu($wp_admin_bar) {
         $wp_admin_bar->add_node([
             'id'     => 'dapfforwc_debug_sub',
             'parent' => 'dapfforwc_debug',
-            'title'  => '<span id="dapfforwc_debug_message">Checking...</span>',
+            'title'  => '<span id="dapfforwc_debug_message">' . __('Checking...', 'dynamic-ajax-product-filters-for-woocommerce') . '</span>',
             'meta'   => [
                 'class' => 'ab-sub-wrapper',
             ],
@@ -456,14 +464,14 @@ function dapfforwc_check_elements() {
             document.addEventListener('DOMContentLoaded', function() {
                 var debugMessage = document.getElementById('dapfforwc_debug_message');
                 if (!document.querySelector('#product-filter')) {
-                    debugMessage.innerHTML = '<span style="color: red;">&#10007;</span> Filter is not added';
+                    debugMessage.innerHTML = '<span style="color: red;">&#10007;</span> <?php _e("Filter is not added", "dynamic-ajax-product-filters-for-woocommerce"); ?>';
                 } else if (!document.querySelector('<?php echo $dapfforwc_advance_settings["product_selector"]; ?>')) {
-                    debugMessage.innerHTML = '<span style="color: red;">&#10007;</span> Products are not found. Add product or <a href="#" style="display: inline; padding: 0;">change selector </a>';
+                    debugMessage.innerHTML = '<span style="color: red;">&#10007;</span> <?php _e("Products are not found. Add product or", "dynamic-ajax-product-filters-for-woocommerce"); ?> <a href="#" style="display: inline; padding: 0;"><?php _e("change selector", "dynamic-ajax-product-filters-for-woocommerce"); ?></a>';
                 } else if (!document.querySelector('<?php echo $dapfforwc_advance_settings["pagination_selector"]; ?>')) {
-                    debugMessage.innerHTML = '<span style="color: red;">&#10007;</span> Pagination is not found <a href="#" style="display: inline; padding: 0;">change selector </a>';
+                    debugMessage.innerHTML = '<span style="color: red;">&#10007;</span> <?php _e("Pagination is not found", "dynamic-ajax-product-filters-for-woocommerce"); ?> <a href="#" style="display: inline; padding: 0;"><?php _e("change selector", "dynamic-ajax-product-filters-for-woocommerce"); ?></a>';
                 }
                 else {
-                    debugMessage.innerHTML = '<span style="color: green;">&#10003;</span> Filter working fine';
+                    debugMessage.innerHTML = '<span style="color: green;">&#10003;</span> <?php _e("Filter working fine", "dynamic-ajax-product-filters-for-woocommerce"); ?>';
                 }
             });
         </script>

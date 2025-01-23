@@ -170,12 +170,12 @@ function dapfforwc_product_filter_shortcode($atts) {
     ?>
     <style>
     .progress-percentage:after{
-        content: "$<?php echo $min_max_prices['max'] ?>";
+        content: "<?php echo esc_html($min_max_prices['max']); ?>";
     }
     </style>
     <form id="product-filter" method="POST" 
-    <?php if (!empty($atts['product_selector'])) { echo 'data-product_selector="' . htmlspecialchars($atts["product_selector"]) . '"'; } ?> 
-    <?php if (!empty($atts['pagination_selector'])) { echo 'data-pagination_selector="' . htmlspecialchars($atts["pagination_selector"]) . '"'; } ?>>
+    <?php if (!empty($atts['product_selector'])) { echo 'data-product_selector="' . esc_attr($atts["product_selector"]) . '"'; } ?> 
+    <?php if (!empty($atts['pagination_selector'])) { echo 'data-pagination_selector="' . esc_attr($atts["pagination_selector"]) . '"'; } ?>>
     <?php
     wp_nonce_field('gm-product-filter-action', 'gm-product-filter-nonce'); 
     echo dapfforwc_filter_form($updated_filters,$default_filter,$use_anchor,$use_filters_word,$atts,$min_price=$dapfforwc_styleoptions["price"]["min_price"]??$min_max_prices['min'],$max_price=$dapfforwc_styleoptions["price"]["max_price"]??$min_max_prices['max']);

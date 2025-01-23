@@ -5,8 +5,8 @@ if (!defined('ABSPATH')) {
 
 function dapfforwc_admin_menu() {
     add_menu_page(
-        'WooCommerce Product Filters',
-        'Product Filters',
+        __('WooCommerce Product Filters', 'dynamic-ajax-product-filters-for-woocommerce'),
+        __('Product Filters', 'dynamic-ajax-product-filters-for-woocommerce'),
         'manage_options',
         'dapfforwc-admin',
         'dapfforwc_admin_page_content',
@@ -178,9 +178,9 @@ function dapfforwc_admin_page_content() { global $dapfforwc_options;
         $nonce = wp_create_nonce('dapfforwc_tab_nonce');
         ?>
         <h2 class="nav-tab-wrapper">
-            <a href="?page=dapfforwc-admin&tab=form_manage&_wpnonce=<?php echo esc_attr($nonce); ?>" class="nav-tab <?php echo isset($_GET['tab']) && sanitize_text_field(wp_unslash($_GET['tab'])) == 'form_manage' ? 'nav-tab-active' : ''; ?>">Form Manage</a>
-            <a href="?page=dapfforwc-admin&tab=form_style&_wpnonce=<?php echo esc_attr($nonce); ?>" class="nav-tab <?php echo isset($_GET['tab']) && sanitize_text_field(wp_unslash($_GET['tab'])) == 'form_style' ? 'nav-tab-active' : ''; ?>">Form Style</a>
-            <a href="?page=dapfforwc-admin&tab=advance_settings&_wpnonce=<?php echo esc_attr($nonce); ?>" class="nav-tab <?php echo isset($_GET['tab']) && sanitize_text_field(wp_unslash($_GET['tab'])) == 'advance_settings' ? 'nav-tab-active' : ''; ?>">Advance Settings</a>
+            <a href="?page=dapfforwc-admin&tab=form_manage&_wpnonce=<?php echo esc_attr($nonce); ?>" class="nav-tab <?php echo isset($_GET['tab']) && sanitize_text_field(wp_unslash($_GET['tab'])) == 'form_manage' ? 'nav-tab-active' : ''; ?>"><?php esc_html_e('Form Manage', 'dynamic-ajax-product-filters-for-woocommerce'); ?></a>
+            <a href="?page=dapfforwc-admin&tab=form_style&_wpnonce=<?php echo esc_attr($nonce); ?>" class="nav-tab <?php echo isset($_GET['tab']) && sanitize_text_field(wp_unslash($_GET['tab'])) == 'form_style' ? 'nav-tab-active' : ''; ?>"><?php esc_html_e('Form Style', 'dynamic-ajax-product-filters-for-woocommerce'); ?></a>
+            <a href="?page=dapfforwc-admin&tab=advance_settings&_wpnonce=<?php echo esc_attr($nonce); ?>" class="nav-tab <?php echo isset($_GET['tab']) && sanitize_text_field(wp_unslash($_GET['tab'])) == 'advance_settings' ? 'nav-tab-active' : ''; ?>"><?php esc_html_e('Advance Settings', 'dynamic-ajax-product-filters-for-woocommerce'); ?></a>
         </h2>
 
         <div class="tab-content">
@@ -231,9 +231,9 @@ function dapfforwc_admin_page_content() { global $dapfforwc_options;
                     do_settings_sections('dapfforwc-admin');
                     submit_button();
                     ?>
-                    <p>Use shortcode to show filter: <b>[plugincy_filters]</b></p>
-                    <p>For button style filter use this shortcode: <b>[plugincy_filters_single name="conference-by-month"]</b></p>
-                    <p>For show currently selected filter above product: <b>[plugincy_filters_selected]</b></p>
+                    <p><?php esc_html_e('Use shortcode to show filter:', 'dynamic-ajax-product-filters-for-woocommerce'); ?> <b>[plugincy_filters]</b></p>
+                    <p><?php esc_html_e('For button style filter use this shortcode:', 'dynamic-ajax-product-filters-for-woocommerce'); ?> <b>[plugincy_filters_single name="conference-by-month"]</b></p>
+                    <p><?php esc_html_e('For show currently selected filter above product:', 'dynamic-ajax-product-filters-for-woocommerce'); ?> <b>[plugincy_filters_selected]</b></p>
                 </form>
                 <?php
             } 
@@ -249,40 +249,44 @@ function dapfforwc_admin_page_content() { global $dapfforwc_options;
                     submit_button();
                     ?>
                 </form>
-                <h2>Import &amp; Export Settings</h2>
+                <h2><?php esc_html_e('Import & Export Settings', 'dynamic-ajax-product-filters-for-woocommerce'); ?></h2>
                 <table class="form-table" role="presentation">
                     <tbody>
                         <tr>
-                            <th scope="row">Import Settings</th>
+                            <th scope="row"><?php esc_html_e('Import Settings', 'dynamic-ajax-product-filters-for-woocommerce'); ?></th>
                             <td>    
                             <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                                 <?php wp_nonce_field( 'dapfforwc_import_settings_nonce' ); ?>
                                 <input type="hidden" name="action" value="dapfforwc_import_settings">
                                 <input type="file" name="dapfforwc_import_file" accept=".json" required>
-                                <button type="submit" name="wcapf_import_button" id="wcapf_import_button" class="button button-primary">Import Settings</button>
+                                <button type="submit" name="wcapf_import_button" id="wcapf_import_button" class="button button-primary"><?php esc_html_e('Import Settings', 'dynamic-ajax-product-filters-for-woocommerce'); ?></button>
                             </form>
                             </td>
                         </tr>
-                        <tr><th scope="row">Export Settings</th>
-                        <td>
-                            <form method="post" action="admin-post.php">
-                                <input type="hidden" name="action" value="dapfforwc_export_settings">
-                                <button type="submit" name="wcapf_export_button" id="wcapf_export_button" class="button button-primary">Export Settings</button>
-                            </form>
-                        </td></tr></tbody></table>
-                        <form method="post">
-                            <?php wp_nonce_field('reset_settings_nonce_action', 'reset_settings_nonce'); ?>
-                            <table class="form-table" role="presentation">
-                                <tbody>
-                                    <tr>
-                                        <th scope="row">Reset Settings</th>
-                                        <td>    
-                                            <input type="hidden" name="reset_settings" value="1">
-                                            <button type="submit" class="button button-danger">Reset Settings</button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <tr>
+                            <th scope="row"><?php esc_html_e('Export Settings', 'dynamic-ajax-product-filters-for-woocommerce'); ?></th>
+                            <td>
+                                <form method="post" action="admin-post.php">
+                                    <input type="hidden" name="action" value="dapfforwc_export_settings">
+                                    <button type="submit" name="wcapf_export_button" id="wcapf_export_button" class="button button-primary"><?php esc_html_e('Export Settings', 'dynamic-ajax-product-filters-for-woocommerce'); ?></button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <form method="post">
+                    <?php wp_nonce_field('reset_settings_nonce_action', 'reset_settings_nonce'); ?>
+                    <table class="form-table" role="presentation">
+                        <tbody>
+                            <tr>
+                                <th scope="row"><?php esc_html_e('Reset Settings', 'dynamic-ajax-product-filters-for-woocommerce'); ?></th>
+                                <td>    
+                                    <input type="hidden" name="reset_settings" value="1">
+                                    <button type="submit" class="button button-danger"><?php esc_html_e('Reset Settings', 'dynamic-ajax-product-filters-for-woocommerce'); ?></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                         </form>
                 <?php
             }

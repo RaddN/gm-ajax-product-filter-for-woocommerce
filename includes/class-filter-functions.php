@@ -15,7 +15,7 @@ class dapfforwc_Filter_Functions {
         }
             // Determine the current page number
     $paged = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
-    $orderbyFormUser = isset($_POST['orderby']) && $_POST['orderby']!== "undefined" ? $_POST['orderby'] : "";
+    $orderbyFormUser = isset($_POST['orderby']) && $_POST['orderby'] !== "undefined" ? sanitize_text_field(wp_unslash($_POST['orderby'])) : "";
     $currentpage_slug = isset($_POST['current-page']) ? sanitize_text_field(wp_unslash($_POST['current-page'])) : "";
         $args = array(
             'post_type' => 'product',

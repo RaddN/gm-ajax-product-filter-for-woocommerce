@@ -12,9 +12,9 @@ function dapfforwc_render_checkbox($key) {
     </label>
     <?php
     if($key ==="use_filters_word_in_permalinks") {
-        echo "<p>if you want to use permalinks filter in your front page turn it on.</p>";
+        echo "<p>" . esc_html__('If you want to use permalinks filter on your front page, turn it on.', 'dynamic-ajax-product-filters-for-woocommerce') . "</p>";
     } elseif($key ==="show_loader") {
-        echo "<p><a href='#' id='customize_loader'>customize</a> loading effect</p>";
+        echo "<p><a href='#' id='customize_loader'>" . esc_html__('customize', 'dynamic-ajax-product-filters-for-woocommerce') . "</a> " . esc_html__('loading effect', 'dynamic-ajax-product-filters-for-woocommerce') . "</p>";
     }
 }
 
