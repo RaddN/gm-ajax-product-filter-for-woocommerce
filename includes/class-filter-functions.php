@@ -6,8 +6,9 @@ class dapfforwc_Filter_Functions {
 
     public function process_filter() {
         global $dapfforwc_options,$dapfforwc_styleoptions,$dapfforwc_advance_settings;
-        $update_filter_options = $dapfforwc_options["update_filter_options"]??"";
-        $remove_outofStock_product = $dapfforwc_advance_settings["remove_outofStock"] ?? ""; 
+        // Initialize variables with default values
+        $update_filter_options =  isset($dapfforwc_options["update_filter_options"]) ? $dapfforwc_options["update_filter_options"] : "";
+        $remove_outofStock_product = isset($dapfforwc_advance_settings["remove_outofStock"]) ? $dapfforwc_advance_settings["remove_outofStock"] : ""; 
 
         if (!isset($_POST['gm-product-filter-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['gm-product-filter-nonce'])), 'gm-product-filter-action')) {
             wp_send_json_error(array('message' => 'Security check failed'), 403);
@@ -17,26 +18,10 @@ class dapfforwc_Filter_Functions {
     $paged = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
     $orderbyFormUser = isset($_POST['orderby']) && $_POST['orderby'] !== "undefined" ? sanitize_text_field(wp_unslash($_POST['orderby'])) : "";
     $currentpage_slug = isset($_POST['current-page']) ? sanitize_text_field(wp_unslash($_POST['current-page'])) : "";
-        $args = array(
-            'post_type' => 'product',
-            'posts_per_page' => isset($dapfforwc_options["product_show_settings"][$currentpage_slug]["per_page"]) ? 
-            intval($dapfforwc_options["product_show_settings"][$currentpage_slug]["per_page"]) : 12,
-            'post_status' => 'publish',
-            'orderby' => $orderbyFormUser!=="" ? $orderbyFormUser : $dapfforwc_options["product_show_settings"][$currentpage_slug]["orderby"] ?? 'date',
-            'order' => isset($dapfforwc_options["product_show_settings"][$currentpage_slug]["order"])?strtoupper($dapfforwc_options["product_show_settings"][$currentpage_slug]["order"]) : 'ASC',
-            'paged' => $paged,
-            'tax_query' => array(
-                'relation' => 'AND'
-            )
-        );
-        $args_options = array(
-            'post_type' => 'product',
-            'posts_per_page' => -1,
-            'post_status' => 'publish',
-            'tax_query' => array(
-                'relation' => 'AND'
-            )
-        );
+
+        $args = $this->build_query_args($paged, $orderbyFormUser, $currentpage_slug);
+        $args_options = $this->build_query_args(-1, '', $currentpage_slug);
+
         if ($remove_outofStock_product==="on") {
             $args['meta_query'][] =
                 array(
@@ -49,11 +34,6 @@ class dapfforwc_Filter_Functions {
                 'value' => 'instock',
             );
         }
-        $second_operator = isset($dapfforwc_options["product_show_settings"]["upcoming-conferences"]["operator_second"])?strtoupper($dapfforwc_options["product_show_settings"]["upcoming-conferences"]["operator_second"]) : "IN";
-
-        $args = $this->apply_filters_to_args($args,$second_operator);
-
-        $args_options = $this->apply_filters_to_args($args_options ,$second_operator);
 
         $filter_options = new WP_Query($args_options);
         $count_total_showing_product = $filter_options->post_count;
@@ -102,6 +82,21 @@ class dapfforwc_Filter_Functions {
         ));
 
         wp_die();
+    }
+    private function build_query_args($paged, $orderby, $currentpage_slug) {
+        global $wcapf_options;
+        $args = array(
+            'post_type' => 'product',
+            'posts_per_page' => $paged === -1 ? -1 : (isset($wcapf_options["product_show_settings"][$currentpage_slug]["per_page"]) ? intval($wcapf_options["product_show_settings"][$currentpage_slug]["per_page"]) : 12),
+            'post_status' => 'publish',
+            'orderby' => $orderby !== "" ? $orderby : ($wcapf_options["product_show_settings"][$currentpage_slug]["orderby"] ?? 'date'),
+            'order' => isset($wcapf_options["product_show_settings"][$currentpage_slug]["order"]) ? strtoupper($wcapf_options["product_show_settings"][$currentpage_slug]["order"]) : 'ASC',
+            'paged' => $paged,
+            'tax_query' => array('relation' => 'AND')
+        );
+
+        $second_operator = isset($wcapf_options["product_show_settings"]["upcoming-conferences"]["operator_second"]) ? strtoupper($wcapf_options["product_show_settings"]["upcoming-conferences"]["operator_second"]) : "IN";
+        return $this->apply_filters_to_args($args, $second_operator);
     }
     private function apply_filters_to_args($args,$second_operator) {
         if (!isset($_POST['gm-product-filter-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['gm-product-filter-nonce'])), 'gm-product-filter-action')) {

@@ -98,6 +98,7 @@ jQuery(document).ready(function($) {
             if (response.success) {
                 $(productSelector_shortcode ?? product_selector).html(response.data.products);
                 $('.woocommerce-result-count').text(`${response.data.total_product_fetch} results found`);
+                $('#rcountproduct').text(`show(${response.data.total_product_fetch})`);
                 if(dapfforwc_options["update_filter_options"]==="on"){
                     $('#product-filter div').remove();
                     $("form#product-filter").append(response.data.filter_options);
@@ -299,6 +300,7 @@ jQuery(document).ready(function($) {
     textChange();
      $(document).ajaxComplete(function() {
         textChange();
+        noproductfound();
     });
             // Use event delegation for dynamically added elements
             $('#product-filter').on('click', '.title', function(event) {
@@ -313,6 +315,16 @@ jQuery(document).ready(function($) {
                     $('.items').hide();
                 }
             });
+
+             // Show message if no products found
+             noproductfound();
+
+             function noproductfound() {
+                 if ($("form#product-filter").children().length === 2) {
+                     $(productSelector_shortcode ?? product_selector).html('<p>No products found</p>');
+                     $(paginationSelector_shortcode ?? pagination_selector).html('');
+                 }
+             }
 });
 
 

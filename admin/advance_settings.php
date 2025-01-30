@@ -39,6 +39,7 @@ function dapfforwc_product_shortcode_callback() {
 
 function dapfforwc_use_anchor_render() { dapfforwc_render_advance_checkbox('use_anchor'); }
 function dapfforwc_remove_outofStock_render() { dapfforwc_render_advance_checkbox('remove_outofStock'); }
+function dapfforwc_sidebar_top_render() { dapfforwc_render_advance_checkbox('sidebar_top'); }
 
 
 function dapfforwc_render_advance_checkbox($key) {
@@ -49,6 +50,10 @@ function dapfforwc_render_advance_checkbox($key) {
     <span class="slider round"></span>
     </label>
     <?php
+    if($key ==="sidebar_top") {
+        echo "<p>" . esc_html__('Try to move the sidebar to the top on mobile devices', 'dynamic-ajax-product-filters-for-woocommerce') . "</p>";
+    }
+    
 }
 
 

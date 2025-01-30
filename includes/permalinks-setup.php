@@ -11,23 +11,19 @@ function dapfforwc_register_template() {
     $request = $wp->request;
 
     
-    // Loop through each page and check if the current request starts with any of them
-    if (strpos($request, 'filters') !== false) { 
-        // Get the part before "filters"
-        $dapfforwc_root_slug = substr($request, 0, strpos($request, 'filters') - 1); // -1 to remove trailing slash
-        $dapfforwc_root_slug = sanitize_text_field($dapfforwc_root_slug); // Sanitize input
-    
-        // Get the part after "filters"
-        $dapfforwc_slug = substr($request, strpos($request, 'filters') + strlen("filters") + 1);
-        $dapfforwc_slug = sanitize_text_field($dapfforwc_slug); // Sanitize input
-    
-        // Store both values for debugging or processing
+    if (strpos($request, 'filters') === 0) {
+        // Handle requests starting with "filters"
+        $dapfforwc_slug = sanitize_text_field(substr($request, strlen("filters") + 1));
+        set_transient('dapfforwc_slug', $dapfforwc_slug, 30);
+        wp_redirect(home_url("/?filters=$dapfforwc_slug"), 301);
+        exit;
+    } elseif (strpos($request, 'filters') !== false) {
+        // Handle requests containing "filters"
+        $dapfforwc_root_slug = sanitize_text_field(substr($request, 0, strpos($request, 'filters') - 1));
+        $dapfforwc_slug = sanitize_text_field(substr($request, strpos($request, 'filters') + strlen("filters") + 1));
         set_transient('dapfforwc_root_slug', $dapfforwc_root_slug, 30);
         set_transient('dapfforwc_slug', $dapfforwc_slug, 30);
-    
-        // Redirect to a URL with the extracted parts
-        $redirect_url = home_url("/$dapfforwc_root_slug?filters=$dapfforwc_slug");
-        wp_redirect($redirect_url, 301);
+        wp_redirect(home_url("/$dapfforwc_root_slug?filters=$dapfforwc_slug"), 301);
         exit;
     }
     else {
@@ -36,7 +32,7 @@ function dapfforwc_register_template() {
             // Get the part of the URI after the page slug
             $dapfforwc_slug = substr($request, strlen($page) + 1);
             
-            if($dapfforwc_options["use_filters_word_in_permalinks"]!=="on"){
+            if(isset($dapfforwc_options["use_filters_word_in_permalinks"]) && $dapfforwc_options["use_filters_word_in_permalinks"]!=="on"){
                 set_transient('dapfforwc_slug', $dapfforwc_slug , 30);
             // Redirect to the main page
             wp_redirect(home_url("/$page?filters=$dapfforwc_slug "), 301);

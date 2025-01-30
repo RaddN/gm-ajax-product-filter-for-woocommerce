@@ -10,22 +10,46 @@ function dapfforwc_filter_form($updated_filters,$default_filter,$use_anchor,$use
 
 // Extract category counts
 $dapfforwc_product_count['categories'] = [];
-foreach ($updated_filters['categories'] as $category) {
-    $dapfforwc_product_count['categories'][$category->slug] = $category->count;
+if (isset($updated_filters['categories']) && is_array($updated_filters['categories'])) {
+    foreach ($updated_filters['categories'] as $category) {
+        // Ensure $category has the properties you're accessing
+        if (isset($category->slug) && isset($category->count)) {
+            $dapfforwc_product_count['categories'][$category->slug] = $category->count;
+        }
+    }
 }
 
 // Extract tag counts
 $dapfforwc_product_count['tags'] = [];
-foreach ($updated_filters['tags'] as $tag) {
-    $dapfforwc_product_count['tags'][$tag->slug] = $tag->count;
+
+// Check if 'tags' exists and is an array
+if (isset($updated_filters['tags']) && is_array($updated_filters['tags'])) {
+    foreach ($updated_filters['tags'] as $tag) {
+        // Ensure $tag has the properties you're accessing
+        if (isset($tag->slug) && isset($tag->count)) {
+            $dapfforwc_product_count['tags'][$tag->slug] = $tag->count;
+        }
+    }
 }
 
 // Extract attribute counts
 $dapfforwc_product_count['attributes'] = [];
-foreach ($updated_filters['attributes'] as $key => $terms) {
-    $dapfforwc_product_count['attributes'][$key] = [];
-    foreach ($terms as $term) {
-        $dapfforwc_product_count['attributes'][$key][$term->slug] = $term->count;
+
+// Check if 'attributes' exists and is an array
+if (isset($updated_filters['attributes']) && is_array($updated_filters['attributes'])) {
+    foreach ($updated_filters['attributes'] as $key => $terms) {
+        // Initialize the key in the attributes array
+        $dapfforwc_product_count['attributes'][$key] = [];
+        
+        // Check if $terms is an array
+        if (is_array($terms)) {
+            foreach ($terms as $term) {
+                // Ensure $term has the properties you're accessing
+                if (isset($term->slug) && isset($term->count)) {
+                    $dapfforwc_product_count['attributes'][$key][$term->slug] = $term->count;
+                }
+            }
+        }
     }
 }
 
@@ -35,8 +59,19 @@ foreach ($updated_filters['attributes'] as $key => $terms) {
     
     <?php 
     // display search
-    $sub_option = $dapfforwc_styleoptions["tag"]["sub_option"]??""; // Fetch the sub_option value
-    $minimizable = $dapfforwc_styleoptions["tag"]["minimize"]["type"]??"";
+    // Initialize variables with default values
+    $sub_option = "";
+    $minimizable = "";
+
+    // Check if 'tag' key exists in the style options
+    if (isset($dapfforwc_styleoptions['tag'])) {
+        // Fetch the sub_option value safely
+        $sub_option = $dapfforwc_styleoptions['tag']['sub_option'] ?? $sub_option;
+        // Check if 'minimize' key exists and fetch its type
+        if (isset($dapfforwc_styleoptions['tag']['minimize'])) {
+            $minimizable = $dapfforwc_styleoptions['tag']['minimize']['type'] ?? $minimizable;
+        }
+    }
     $formOutPut .= '<div id="tag" class="filter-group tag" style="display: ' . (!empty($dapfforwc_options['show_search']) ? 'block' : 'none') . ';"><div class="title collapsable_'.esc_attr($minimizable).'">Search Product '.($minimizable === "arrow" || $minimizable === "minimize_initial" ? '<div class="collaps"><svg class="rotatable" xmlns="https://www.w3.org/2000/svg" viewBox="0 0 448 512" role="graphics-symbol" aria-hidden="false" aria-label=""><path d="M224 416c-8.188 0-16.38-3.125-22.62-9.375l-192-192c-12.5-12.5-12.5-32.75 0-45.25s32.75-12.5 45.25 0L224 338.8l169.4-169.4c12.5-12.5 32.75-12.5 45.25 0s12.5 32.75 0 45.25l-192 192C240.4 412.9 232.2 416 224 416z"></path></svg></div>' : '').'</div>';
     $formOutPut .= '<div class="items '.esc_attr($sub_option).' search-container" style="flex-direction: row !important;">';
     $formOutPut .= '<input type="search" id="search-field" class="search-field" placeholder="Search products&hellip;" value="'.get_search_query().'" name="s" />';
@@ -45,10 +80,33 @@ foreach ($updated_filters['attributes'] as $key => $terms) {
     $formOutPut .= '</div>';
     // search ends
 
-    $sub_option = $dapfforwc_styleoptions["price"]["sub_option"]??""; // Fetch the sub_option value
-    $minimizable_price = $dapfforwc_styleoptions["price"]["minimize"]["type"]??"";
-    $sub_option_rating = $dapfforwc_styleoptions["rating"]["sub_option"]??""; // Fetch the sub_option value
-    $minimizable_rating = $dapfforwc_styleoptions["rating"]["minimize"]["type"]??"";
+    // Initialize variables with default values
+    $sub_option = "";
+    $minimizable_price = "";
+    $sub_option_rating = "";
+    $minimizable_rating = "";
+
+    // Check if 'price' key exists in the style options
+    if (isset($dapfforwc_styleoptions['price'])) {
+        // Fetch the sub_option value safely
+        $sub_option = $dapfforwc_styleoptions['price']['sub_option'] ?? $sub_option;
+
+        // Check if 'minimize' key exists and fetch its type
+        if (isset($dapfforwc_styleoptions['price']['minimize'])) {
+            $minimizable_price = $dapfforwc_styleoptions['price']['minimize']['type'] ?? $minimizable_price;
+        }
+    }
+
+    // Check if 'rating' key exists in the style options
+    if (isset($dapfforwc_styleoptions['rating'])) {
+        // Fetch the sub_option value safely
+        $sub_option_rating = $dapfforwc_styleoptions['rating']['sub_option'] ?? $sub_option_rating;
+
+        // Check if 'minimize' key exists and fetch its type
+        if (isset($dapfforwc_styleoptions['rating']['minimize'])) {
+            $minimizable_rating = $dapfforwc_styleoptions['rating']['minimize']['type'] ?? $minimizable_rating;
+        }
+    }
     ?>
       
 <?php $formOutPut .= '<div id="rating" class="filter-group rating" style="display: ' . (!empty($dapfforwc_options['show_rating']) ? 'block' : 'none') . ';">'; ?>

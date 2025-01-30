@@ -6,21 +6,16 @@ if (!defined('ABSPATH')) {
 
 function dapfforwc_product_filter_shortcode($atts) {
     global $dapfforwc_styleoptions,$post,$dapfforwc_options, $dapfforwc_advance_settings, $dapfforwc_min_max_price;
-    $use_anchor = $dapfforwc_advance_settings["use_anchor"] ?? "";
-    $use_filters_word = $dapfforwc_options["use_filters_word_in_permalinks"] ?? "";
-    $remove_outofStock_product = $dapfforwc_advance_settings["remove_outofStock"] ?? ""; 
-    $dapfforwc_slug = "";
-    // Check if the post object is available
-    if (isset($post)) {
-        // Use the dapfforwc_get_full_slug function to get the complete slug
-        $dapfforwc_slug = dapfforwc_get_full_slug($post->ID);
-    }
+    $use_anchor = isset($dapfforwc_advance_settings["use_anchor"]) ? $dapfforwc_advance_settings["use_anchor"] : "";
+    $use_filters_word = isset($dapfforwc_options["use_filters_word_in_permalinks"]) ? $dapfforwc_options["use_filters_word_in_permalinks"] : "";
+    $remove_outofStock_product = isset($dapfforwc_advance_settings["remove_outofStock"]) ? $dapfforwc_advance_settings["remove_outofStock"] : ""; 
+    $dapfforwc_slug = isset($post) ? dapfforwc_get_full_slug($post->ID) : "";
+    $second_operator = strtoupper($dapfforwc_options["product_show_settings"][$dapfforwc_slug]["operator_second"] ?? "IN");
+    $default_filter = array_merge(
+        $dapfforwc_options["default_filters"][$dapfforwc_slug] ?? [],
+        explode('/', str_replace('filters/', '', get_transient('dapfforwc_slug')?:''))
+    );
 
-    $second_operator = isset($dapfforwc_options["product_show_settings"][$dapfforwc_slug ]) ? strtoupper($dapfforwc_options["product_show_settings"][$dapfforwc_slug ]["operator_second"]) ?? "IN":"IN";
-    $default_filter =$dapfforwc_options["default_filters"][$dapfforwc_slug] ?? [] ;
-    $dapfforwc_store_slug = get_transient('dapfforwc_slug');
-    $filters_array = explode('/', str_replace('filters/', '', $dapfforwc_store_slug));
-    $default_filter = array_merge($default_filter , $filters_array);
     // Define default attributes and merge with user-defined attributes
     $atts = shortcode_atts(array(
         'attribute' => '',
@@ -28,7 +23,8 @@ function dapfforwc_product_filter_shortcode($atts) {
         'category' => '',
         'tag' => '',
         'product_selector' => '',
-        'pagination_selector' => ''
+        'pagination_selector' => '',
+        'mobile_responsive' => 'style_1',
     ), $atts);
 
     // Prepare the query arguments based on the provided attributes
@@ -39,47 +35,37 @@ function dapfforwc_product_filter_shortcode($atts) {
         'tax_query' => array('relation' => 'AND'),
     );
     
-    $all_cata = get_terms([
-        'taxonomy' => 'product_cat',
-        'hide_empty' => true,
-    ]);
-    $all_tags = get_terms([
-        'taxonomy' => 'product_tag',
-        'hide_empty' => true,
-    ]);
+    // Cache the terms data
+    $all_cata = get_transient('dapfforwc_all_cata') ?: set_transient('dapfforwc_all_cata', get_terms(['taxonomy' => 'product_cat', 'hide_empty' => true]), DAY_IN_SECONDS);
+    $all_tags = get_transient('dapfforwc_all_tags') ?: set_transient('dapfforwc_all_tags', get_terms(['taxonomy' => 'product_tag', 'hide_empty' => true]), DAY_IN_SECONDS);
+    $all_attributes = get_transient('dapfforwc_all_attributes') ?: set_transient('dapfforwc_all_attributes', wc_get_attribute_taxonomies(), DAY_IN_SECONDS);
+
+    if (isset($all_attributes) && is_array($all_attributes)) {
+        $attribute_taxonomies = array_column($all_attributes, 'attribute_name');
+        $attribute_taxonomies = array_map(fn($attr) => 'pa_' . $attr, $attribute_taxonomies);
+    } else {
+        $attribute_taxonomies = [];
+    }
     
-    // Fetch all attributes dynamically
-    $all_attributes = wc_get_attribute_taxonomies();
-    $attribute_taxonomies = array_map(function ($attr) {
-        return 'pa_' . $attr->attribute_name;
-    }, $all_attributes);
+    // Create lookup arrays
+    $cata_lookup =is_array($all_cata) ? array_column($all_cata, 'slug', 'slug') : [];
+    $tag_lookup = is_array($all_tags) ? array_column($all_tags, 'slug', 'slug') : [];
     
-    $matched_cata = array();
-    $matched_tag = array();
-    $matched_attributes = array();
-    
-    // Iterate through $default_filter
-    foreach ($default_filter as $filter) {
-        foreach ($all_cata as $term) {
-            if (strcasecmp($term->slug, $filter) === 0) {
-                $matched_cata[] = $term->slug;
-                break;
-            }
-        }
-        foreach ($all_tags as $term) {
-            if (strcasecmp($term->slug, $filter) === 0) {
-                $matched_tag[] = $term->slug;
-                break;
-            }
-        }
-        foreach ($attribute_taxonomies as $taxonomy) {
-            $attribute_terms = get_terms(['taxonomy' => $taxonomy, 'hide_empty' => true]);
-            foreach ($attribute_terms as $term) {
-                if (strcasecmp($term->slug, $filter) === 0) {
-                    $matched_attributes[$taxonomy][] = $term->slug;
-                    break;
-                }
-            }
+    $attribute_lookups = [];
+    foreach ($attribute_taxonomies as $taxonomy) {
+        $terms = get_terms(['taxonomy' => $taxonomy, 'hide_empty' => true]);
+        $attribute_lookups[$taxonomy] = array_column($terms, 'slug', 'slug');
+    }
+
+    // Match filters
+    $matched_cata = isset($cata_lookup) ? array_intersect_key($cata_lookup, array_flip($default_filter)) : [];
+    $matched_tag = isset($tag_lookup) ? array_intersect_key($tag_lookup, array_flip($default_filter)) : [];
+
+    $matched_attributes = [];
+    foreach ($attribute_lookups as $taxonomy => $lookup) {
+        $matched_terms = array_intersect_key($lookup, array_flip($default_filter));
+        if (!empty($matched_terms)) {
+            $matched_attributes[$taxonomy] = array_keys($matched_terms);
         }
     }
     
@@ -172,7 +158,182 @@ function dapfforwc_product_filter_shortcode($atts) {
     .progress-percentage:after{
         content: "<?php echo esc_html($min_max_prices['max']); ?>";
     }
+    <?php if($atts['mobile_responsive'] === 'style_1') { ?>
+        /* responsive filter */
+        @media (max-width: 781px) {
+            .rfilterbuttons {
+                display: none;
+            }
+            #product-filter .filter-group div .title{cursor:pointer !important;}
+            #product-filter:before {
+                content: "Filter";
+                background: linear-gradient(90deg, #041a57, #d62229);
+                color: white;
+                padding: 10px 11px;
+                width: 60px;
+                height: 45px;
+                position: absolute;
+                left: 0px;
+            }
+            form#product-filter {
+                display: flex ;
+                flex-direction: row !important;
+                overflow: scroll;
+                gap: 10px;
+                height: 66px;
+                margin-left: 64px;
+            }
+        .filter-group.attributes {
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 10px;
+        }
+        .filter-group.attributes .title, .filter-group.category .title, .filter-group.tag .title, .filter-group.price-range .title, div#rating .title{font-size: 16px !important;}
+        .child-categories {
+            display: block !important;
+        }
+        .filter-group.attributes>div, div#rating,div#price-range,div#category {
+            min-width: max-content;
+            height: min-content;
+        }
+            #product-filter .items {
+                position: absolute;
+                left:0;
+                background: white;
+                padding: 20px 15px;
+                box-shadow: #efefef99 0 -4px 10px 4px;
+                z-index: 999;
+            }
+        }
+    <?php } ?>
+    <?php if($atts['mobile_responsive'] === 'style_2') { ?>
+        
+    <?php } ?>
     </style>
+    <?php if($atts['mobile_responsive'] === 'style_3') { ?>
+
+        <style>
+            @media (min-width: 781px) {
+                #mobileonly, #filter-button {
+                    display: none !important;
+                }
+            }
+            @media (max-width: 781px) {
+            .items {
+                display: block !important;
+            }
+            .mobile-filter {
+            position: fixed;
+            z-index: 999;
+            background: #ffffff;
+            width: 95%;
+            padding: 30px 20px 300px 20px;
+            height: 100%;
+            overflow: scroll;
+            box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+            border-radius: 30px;
+            margin: 5px !important;
+            display: none;
+        }
+        .rfilterselected ul {
+            flex-wrap: nowrap;
+            overflow: scroll;
+        }
+        }
+        </style>
+    <?php } ?>
+    <?php if($atts['mobile_responsive'] === 'style_4') { ?>
+
+        <style>
+            @media (min-width: 781px) {
+                #mobileonly, #filter-button {
+                    display: none !important;
+                }
+            }
+            @media (max-width: 781px) {
+            .items {
+                display: block !important;
+            }
+            .mobile-filter {
+                position: fixed;
+                z-index: 999;
+                background: #ffffff;
+                width: 80%;
+                height: 100%;
+                overflow: scroll;
+                box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+                bottom: 0;
+                right: 0;
+                transition: transform 0.3s ease-in-out;
+                transform: translateX(150%);
+            }
+            .mobile-filter.open {
+                transform: translateX(0%);
+            }
+            .rfilterselected ul {
+                flex-wrap: nowrap;
+                overflow: scroll;
+            }
+            }
+        </style>
+    <?php } 
+    
+    if($atts['mobile_responsive'] === 'style_3' ||  $atts['mobile_responsive'] === 'style_4') { ?>
+        <button id="filter-button" style="position: fixed; z-index:999;     bottom: 20px;
+    right: 20px; background-color: #041a57; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+            <i class="fa fa-filter" aria-hidden="true"></i>
+        </button>
+        <div class="mobile-filter">
+        <div class="sm-top-btn" id="mobileonly" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; padding: 20px;margin-bottom: 10px;">
+            <button id="filter-cancel-button" style="background: none;padding:0;color: #000;"> Cancel </button>
+            <p style="margin: 0;" id="rcountproduct">Show(5)</p>
+        </div>
+    <?php 
+    echo '<div class="rfilterselected" id="mobileonly"><div><ul></ul></div></div>';
+
+     } 
+     if($atts['mobile_responsive'] === 'style_3') { ?>
+        <script>
+            jQuery(document).ready(function($) {
+                $('#filter-cancel-button').on('click', function(event) {
+                    event.preventDefault();
+                    $('.mobile-filter').slideUp();
+                });
+
+                $('#filter-button').on('click', function(event) {
+                    event.preventDefault();
+                    $('.mobile-filter').slideDown();
+                });
+
+                $(document).on('click', function(event) {
+                    if (!$(event.target).closest('.mobile-filter, #filter-button').length) {
+                        $('.mobile-filter').slideUp();
+                    }
+                });
+            });
+            </script>
+    <?php }
+
+    if($atts['mobile_responsive'] === 'style_4') { ?>
+        <script>
+            jQuery(document).ready(function($) {
+                $('#filter-button').on('click', function(event) {
+                    event.preventDefault();
+                    $('.mobile-filter').toggleClass('open');
+                });
+                $('#filter-cancel-button').on('click', function(event) {
+                    event.preventDefault();
+                    $('.mobile-filter').removeClass('open');
+                });
+
+                $(document).on('click', function(event) {
+                    if (!$(event.target).closest('.mobile-filter, #filter-button').length) {
+                        $('.mobile-filter').removeClass('open');
+                    }
+                });
+            });
+            </script>
+    <?php } ?>
     <form id="product-filter" method="POST" 
     <?php if (!empty($atts['product_selector'])) { echo 'data-product_selector="' . esc_attr($atts["product_selector"]) . '"'; } ?> 
     <?php if (!empty($atts['pagination_selector'])) { echo 'data-pagination_selector="' . esc_attr($atts["pagination_selector"]) . '"'; } ?>>
@@ -181,6 +342,9 @@ function dapfforwc_product_filter_shortcode($atts) {
     echo dapfforwc_filter_form($updated_filters,$default_filter,$use_anchor,$use_filters_word,$atts,$min_price=$dapfforwc_styleoptions["price"]["min_price"]??$min_max_prices['min'],$max_price=$dapfforwc_styleoptions["price"]["max_price"]??$min_max_prices['max']);
 
     echo '</form>';
+    if($atts['mobile_responsive'] === 'style_3' || $atts['mobile_responsive'] === 'style_4') { ?>
+        </div>
+    <?php }
     ?>
     
 <!-- Loader HTML -->

@@ -26,19 +26,44 @@ function dapfforwc_load_textdomain() {
 // Global Variables
 global $dapfforwc_options, $dapfforwc_advance_settings, $dapfforwc_styleoptions, $dapfforwc_use_url_filter, $dapfforwc_auto_detect_pages_filters, $dapfforwc_slug, $dapfforwc_sub_options ;
 
-$dapfforwc_options = get_option('dapfforwc_options');
-$dapfforwc_advance_settings = get_option('dapfforwc_advance_options');
-$dapfforwc_styleoptions = get_option('dapfforwc_style_options');
+if (isset($_GET['page']) && $_GET['page'] === 'dapfforwc-admin') {
+    $dapfforwc_options = get_option('dapfforwc_options') ?: [];
+    $dapfforwc_advance_settings = get_option('dapfforwc_advance_options') ?: [];
+    $dapfforwc_styleoptions = get_option('dapfforwc_style_options') ?: [];
+} 
+else {
+    $dapfforwc_options = get_transient('dapfforwc_options');
+    if ($dapfforwc_options === false) {
+        $dapfforwc_options = get_option('dapfforwc_options') ?: [];
+        set_transient('dapfforwc_options', $dapfforwc_options, 0.5 * HOUR_IN_SECONDS);
+    }
+
+    $dapfforwc_advance_settings = get_transient('dapfforwc_advance_options');
+    if ($dapfforwc_advance_settings === false) {
+        $dapfforwc_advance_settings = get_option('dapfforwc_advance_options') ?: [];
+        set_transient('dapfforwc_advance_options', $dapfforwc_advance_settings, 0.5 * HOUR_IN_SECONDS);
+    }
+
+    $dapfforwc_styleoptions = get_transient('dapfforwc_style_options');
+    if ($dapfforwc_styleoptions === false) {
+        $dapfforwc_styleoptions = get_option('dapfforwc_style_options') ?: [];
+        set_transient('dapfforwc_style_options', $dapfforwc_styleoptions, 0.5 * HOUR_IN_SECONDS);
+    }
+}
 $dapfforwc_use_url_filter = isset($dapfforwc_options['use_url_filter']) ? $dapfforwc_options['use_url_filter'] : false;
-$dapfforwc_auto_detect_pages_filters = $dapfforwc_options['pages_filter_auto'] ?? '';
+$dapfforwc_auto_detect_pages_filters = isset($dapfforwc_options['pages_filter_auto']) ? $dapfforwc_options['pages_filter_auto'] : '';
 $dapfforwc_slug = "";
 
 // Get the ID of the front page
-$dapfforwc_front_page_id = get_option('page_on_front');
+$dapfforwc_front_page_id = get_transient('dapfforwc_front_page_id')?:false;
+if ($dapfforwc_front_page_id === false) {
+    $dapfforwc_front_page_id = get_option('page_on_front') ?: null;
+    set_transient('dapfforwc_front_page_id', $dapfforwc_front_page_id, 0.5 * HOUR_IN_SECONDS);
+}
 // Get the front page object
-$dapfforwc_front_page = get_post($dapfforwc_front_page_id);
+$dapfforwc_front_page = isset($dapfforwc_front_page_id) ? get_post($dapfforwc_front_page_id) : null;
 // Get the slug of the front page
-$dapfforwc_front_page_slug = $dapfforwc_front_page? $dapfforwc_front_page->post_name : "";
+$dapfforwc_front_page_slug = isset($dapfforwc_front_page) ? $dapfforwc_front_page->post_name : "";
 
 // Define sub-options
 $dapfforwc_sub_options = [
@@ -87,12 +112,12 @@ function dapfforwc_check_woocommerce() {
     if (!class_exists('WooCommerce')) {
         add_action('admin_notices', 'dapfforwc_missing_woocommerce_notice');
     } else {
-        include_once plugin_dir_path(__FILE__) . 'admin/admin-notice.php';
-        include_once plugin_dir_path(__FILE__) . 'includes/filter-template.php';
+        require_once plugin_dir_path(__FILE__) . 'admin/admin-notice.php';
+        require_once plugin_dir_path(__FILE__) . 'includes/filter-template.php';
 
         add_action('wp_enqueue_scripts', 'dapfforwc_enqueue_scripts');
         add_action('admin_enqueue_scripts', 'dapfforwc_admin_scripts');
-        include_once plugin_dir_path(__FILE__) . 'includes/class-filter-functions.php';
+        require_once plugin_dir_path(__FILE__) . 'includes/class-filter-functions.php';
 
         add_action('wp_ajax_dapfforwc_filter_products', 'dapfforwc_filter_products');
         add_action('wp_ajax_nopriv_dapfforwc_filter_products', 'dapfforwc_filter_products');
@@ -100,13 +125,13 @@ function dapfforwc_check_woocommerce() {
         register_setting('dapfforwc_options_group', 'dapfforwc_filters', 'sanitize_text_field');
 
         add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'dapfforwc_add_settings_link');
-        include(plugin_dir_path(__FILE__) . 'admin/admin-page.php');
-        include(plugin_dir_path(__FILE__) . 'includes/common-functions.php');
+        require_once plugin_dir_path(__FILE__) . 'admin/admin-page.php';
+        require_once plugin_dir_path(__FILE__) . 'includes/common-functions.php';
     }
 }
 
 function dapfforwc_missing_woocommerce_notice() {
-    echo '<div class="notice notice-error"><p><strong>Filter Plugin</strong> requires WooCommerce to be installed and activated.</p></div>';
+    echo '<div class="notice notice-error"><p><strong>' . esc_html__('Filter Plugin', 'dynamic-ajax-product-filters-for-woocommerce') . '</strong> ' . esc_html__('requires WooCommerce to be installed and activated.', 'dynamic-ajax-product-filters-for-woocommerce') . '</p></div>';
 }
 
 // Enqueue scripts and styles
@@ -114,38 +139,46 @@ function dapfforwc_enqueue_scripts() {
     global $dapfforwc_use_url_filter, $dapfforwc_options, $dapfforwc_slug , $dapfforwc_styleoptions, $dapfforwc_advance_settings,$dapfforwc_front_page_slug;
 
     $script_handle = 'filter-ajax';
-    $script_path = 'assets/js/filter.js';
+    $script_path = 'assets/js/filter.min.js';
 
     if ($dapfforwc_use_url_filter === 'query_string') {
         $script_handle = 'urlfilter-ajax';
-        $script_path = 'assets/js/urlfilter.js';
+        $script_path = 'assets/js/urlfilter.min.js';
     } elseif ($dapfforwc_use_url_filter === 'permalinks') {
         $script_handle = 'permalinksfilter-ajax';
-        $script_path = 'assets/js/permalinksfilter.js';
+        $script_path = 'assets/js/permalinksfilter.min.js';
         $dapfforwc_slug = sanitize_text_field(get_transient('dapfforwc_slug')) ?: '';
     }
 
     wp_enqueue_script($script_handle, plugin_dir_url(__FILE__) . $script_path, ['jquery'], '1.0.6', true);
+    wp_script_add_data($script_handle, 'async', true); // Load script asynchronously
     wp_localize_script($script_handle, 'dapfforwc_data', compact('dapfforwc_options', 'dapfforwc_slug', 'dapfforwc_styleoptions', 'dapfforwc_advance_settings','dapfforwc_front_page_slug'));
     wp_localize_script($script_handle, 'dapfforwc_ajax', ['ajax_url' => admin_url('admin-ajax.php')]);
 
-    wp_enqueue_style('filter-style', plugin_dir_url(__FILE__) . 'assets/css/style.css', [], '1.0.6');
-    wp_enqueue_style('select2-css', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css', [], '1.0.6');
-    wp_enqueue_script('select2-js', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js', ['jquery'], '1.0.6', true);
-    // max hegith css generate
-    global $dapfforwc_styleoptions;
-
+    wp_enqueue_style('filter-style', plugin_dir_url(__FILE__) . 'assets/css/style.min.css', [], '1.0.6');
+    wp_enqueue_style('select2-css', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css', [], '1.0.6');
+    wp_enqueue_script('select2-js', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', ['jquery'], '1.0.6', true);
     $css = '';
-    $max_height = $dapfforwc_styleoptions["max_height"] ?? [];
+    // Generate inline css for sidebartop in mobile
+    if (isset($dapfforwc_advance_settings["sidebar_top"]) && $dapfforwc_advance_settings["sidebar_top"] === "on") {
+        $css .= "@media (max-width: 768px) {
+                    div#content>div {
+                        flex-direction: column !important;
+                    }
+        }";
+    }
+    // Generate CSS for max-height
+    
+    $max_height = (is_array($dapfforwc_styleoptions) && isset($dapfforwc_styleoptions["max_height"])) ? $dapfforwc_styleoptions["max_height"] : [];
     foreach ( $max_height as $key => $value) {
         // Sanitize the key to create a valid CSS class name
-        if($value>0){
-        $cssClass = strtolower($key); // Replace dashes with underscores
-        $css .= "#{$cssClass} .items{\n";
-        $css .= "    max-height: {$value}px;\n"; // Set max-height based on value
-        $css .= "    overflow-y: scroll;\n";
-        $css .= "    transition: max-height 0.3s ease;\n";
-        $css .= "}\n";
+        if (is_numeric($value) && $value > 0) {
+            $cssClass = strtolower($key); // Replace dashes with underscores
+            $css .= "#{$cssClass} .items{\n";
+            $css .= "    max-height: {$value}px;\n"; // Set max-height based on value
+            $css .= "    overflow-y: scroll;\n";
+            $css .= "    transition: max-height 0.3s ease;\n";
+            $css .= "}\n";
         }
     }
     // Add the generated CSS as inline style
@@ -200,15 +233,18 @@ function dapfforwc_enqueue_scripts() {
     ');
 }
 
-function dapfforwc_admin_scripts() {
+function dapfforwc_admin_scripts($hook) {
+    if ($hook !== 'toplevel_page_dapfforwc-admin') {
+        return; // Load only on the plugin's admin page
+    }
     global $dapfforwc_sub_options;
-    wp_enqueue_style('dapfforwc-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', [], '1.0.6');
+    wp_enqueue_style('dapfforwc-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.min.css', [], '1.0.6');
     wp_enqueue_style('dapfforwc-admin-codemirror-style', plugin_dir_url(__FILE__) . 'assets/css/codemirror.min.css', [], '5.65.2');
     wp_enqueue_script('dapfforwc-admin-codemirror-script', plugin_dir_url(__FILE__) . 'assets/js/codemirror.min.js', [], '5.65.2', true);
     wp_enqueue_script('dapfforwc-admin-xml-script', plugin_dir_url(__FILE__) . 'assets/js/xml.min.js', [], '5.65.2', true);
-    wp_enqueue_script('dapfforwc-admin-script', plugin_dir_url(__FILE__) . 'assets/js/admin-script.js', [], '1.0.6', true);
+    wp_enqueue_script('dapfforwc-admin-script', plugin_dir_url(__FILE__) . 'assets/js/admin-script.min.js', [], '1.0.6', true);
     wp_enqueue_media();
-    wp_enqueue_script('dapfforwc-media-uploader', plugin_dir_url(__FILE__) . 'assets/js/media-uploader.js', ['jquery'], '1.0.0', true);
+    wp_enqueue_script('dapfforwc-media-uploader', plugin_dir_url(__FILE__) . 'assets/js/media-uploader.min.js', ['jquery'], '1.0.0', true);
 
     $inline_script = 'document.addEventListener("DOMContentLoaded", function () {
     const dropdown = document.getElementById("attribute-dropdown");
@@ -351,8 +387,12 @@ attachSubOptionListeners();
 }
 
 function dapfforwc_filter_products() {
-    $filter = new dapfforwc_Filter_Functions();
-    $filter->process_filter();
+    if (class_exists('dapfforwc_Filter_Functions')) {
+        $filter = new dapfforwc_Filter_Functions();
+        $filter->process_filter();
+    } else {
+        wp_send_json_error('Filter class not found.');
+    }
 }
 
 
@@ -363,13 +403,16 @@ function dapfforwc_add_settings_link($links) {
 }
 
 
-include(plugin_dir_path(__FILE__) . 'includes/permalinks-setup.php');
+require_once(plugin_dir_path(__FILE__) . 'includes/permalinks-setup.php');
 
 if ($dapfforwc_auto_detect_pages_filters === "on") {
-    include(plugin_dir_path(__FILE__) . 'includes/auto-detect-pages-filters.php');
+    require_once(plugin_dir_path(__FILE__) . 'includes/auto-detect-pages-filters.php');
 }
 
 function dapfforwc_get_full_slug($post_id) {
+    if (empty($post_id)) {
+        return ''; // Return an empty string if $post_id is not defined
+    }
     $dapfforwc_slug_parts = [];
     $current_post_id = $post_id;
 
@@ -393,9 +436,9 @@ function dapfforwc_get_full_slug($post_id) {
 }
 
 
-include(plugin_dir_path(__FILE__) . 'includes/widget_design_template.php');
-include(plugin_dir_path(__FILE__) . 'includes/get_review.php');
-include(plugin_dir_path(__FILE__) . 'includes/blocks_widget_create.php');
+require_once(plugin_dir_path(__FILE__) . 'includes/widget_design_template.php');
+require_once(plugin_dir_path(__FILE__) . 'includes/get_review.php');
+require_once(plugin_dir_path(__FILE__) . 'includes/blocks_widget_create.php');
 
 // add alert for admin in 404 page
 
@@ -403,8 +446,21 @@ function dapfforwc_add_admin_message_before_footer() {
     if (is_404() && current_user_can('administrator')) {
         ?>
         <div class="admin-message" style="background-color: #f9f9f9; padding: 20px; border: 1px solid #ccc; margin-top: 20px;">
-            <h2><?php _e('Admin Notice', 'dynamic-ajax-product-filters-for-woocommerce'); ?></h2>
-            <p><?php _e("This page was not found. If you think it's an error go to <b>product filters > Form Manage</b> & turn on <b><a href='/wp-admin/admin.php?page=dapfforwc-admin#:~:text=use%20filters%20word%20in%20permalinks'>use filters word in permalinks</a></b>. (only admin can see this.)", 'dynamic-ajax-product-filters-for-woocommerce'); ?></p>
+          <h2><?php esc_html_e('Admin Notice', 'dynamic-ajax-product-filters-for-woocommerce'); ?></h2>
+          <?php
+            // Translators: This message is displayed when a page is not found. 
+            // The placeholders include navigation instructions and a link for admins.
+            ?>
+            <p><?php echo wp_kses(
+                __("This page was not found. If you think it's an error go to <b>product filters > Form Manage</b> & turn on <b><a href='/wp-admin/admin.php?page=dapfforwc-admin#:~:text=use%20filters%20word%20in%20permalinks'>use filters word in permalinks</a></b>. (only admin can see this.)", 'dynamic-ajax-product-filters-for-woocommerce'), 
+                array(
+                    'b' => array(), // Allow <b> tags
+                    'a' => array(
+                        'href' => array(), // Allow <a> tags with href attributes
+                        'title' => array() // Allow title attribute
+                    )
+                )
+            ); ?></p>
         </div>
         <?php
     }
@@ -416,12 +472,12 @@ add_action('wp_head', 'dapfforwc_add_admin_message_before_footer');
 function dapfforwc_enqueue_dynamic_ajax_filter_block_assets() {
     wp_enqueue_script(
         'dynamic-ajax-filter-block',
-        plugins_url( 'includes/block.js', __FILE__ ),
+        plugins_url( 'includes/block.min.js', __FILE__ ),
         array( 'wp-blocks', 'wp-element', 'wp-editor' ),
-        filemtime( plugin_dir_path( __FILE__ ) . 'includes/block.js' )
+        filemtime( plugin_dir_path( __FILE__ ) . 'includes/block.min.js' )
     );
 
-    wp_enqueue_style('custom-box-control-styles', plugin_dir_url(__FILE__) . 'assets/css/block-editor.css', [], '1.0.6');
+    wp_enqueue_style('custom-box-control-styles', plugin_dir_url(__FILE__) . 'assets/css/block-editor.min.css', [], '1.0.6');
 }
 add_action( 'enqueue_block_editor_assets', 'dapfforwc_enqueue_dynamic_ajax_filter_block_assets' );
 
@@ -463,15 +519,15 @@ function dapfforwc_check_elements() {
         <script type="text/javascript">
             document.addEventListener('DOMContentLoaded', function() {
                 var debugMessage = document.getElementById('dapfforwc_debug_message');
+
                 if (!document.querySelector('#product-filter')) {
-                    debugMessage.innerHTML = '<span style="color: red;">&#10007;</span> <?php _e("Filter is not added", "dynamic-ajax-product-filters-for-woocommerce"); ?>';
-                } else if (!document.querySelector('<?php echo $dapfforwc_advance_settings["product_selector"]; ?>')) {
-                    debugMessage.innerHTML = '<span style="color: red;">&#10007;</span> <?php _e("Products are not found. Add product or", "dynamic-ajax-product-filters-for-woocommerce"); ?> <a href="#" style="display: inline; padding: 0;"><?php _e("change selector", "dynamic-ajax-product-filters-for-woocommerce"); ?></a>';
-                } else if (!document.querySelector('<?php echo $dapfforwc_advance_settings["pagination_selector"]; ?>')) {
-                    debugMessage.innerHTML = '<span style="color: red;">&#10007;</span> <?php _e("Pagination is not found", "dynamic-ajax-product-filters-for-woocommerce"); ?> <a href="#" style="display: inline; padding: 0;"><?php _e("change selector", "dynamic-ajax-product-filters-for-woocommerce"); ?></a>';
-                }
-                else {
-                    debugMessage.innerHTML = '<span style="color: green;">&#10003;</span> <?php _e("Filter working fine", "dynamic-ajax-product-filters-for-woocommerce"); ?>';
+                    debugMessage.innerHTML = '<span style="color: red;">&#10007;</span> <?php echo esc_html__('Filter is not added', 'dynamic-ajax-product-filters-for-woocommerce'); ?>';
+                } else if (!document.querySelector('<?php echo esc_js(isset($dapfforwc_advance_settings["product_selector"]) && !empty($dapfforwc_advance_settings["product_selector"]) ? $dapfforwc_advance_settings["product_selector"] : ''); ?>')) {
+                    debugMessage.innerHTML = '<span style="color: red;">&#10007;</span> <?php echo esc_html__('Products are not found. Add product or', 'dynamic-ajax-product-filters-for-woocommerce'); ?> <a href="#" style="display: inline; padding: 0;"><?php echo esc_html__('change selector', 'dynamic-ajax-product-filters-for-woocommerce'); ?></a>';
+                } else if (!document.querySelector('<?php echo esc_js(isset($dapfforwc_advance_settings["pagination_selector"]) && !empty($dapfforwc_advance_settings["pagination_selector"]) ? $dapfforwc_advance_settings["pagination_selector"] : ''); ?>')) {
+                    debugMessage.innerHTML = '<span style="color: red;">&#10007;</span> <?php echo esc_html__('Pagination is not found', 'dynamic-ajax-product-filters-for-woocommerce'); ?> <a href="#" style="display: inline; padding: 0;"><?php echo esc_html__('change selector', 'dynamic-ajax-product-filters-for-woocommerce'); ?></a>';
+                } else {
+                    debugMessage.innerHTML = '<span style="color: green;">&#10003;</span> <?php echo esc_html__('Filter working fine', 'dynamic-ajax-product-filters-for-woocommerce'); ?>';
                 }
             });
         </script>

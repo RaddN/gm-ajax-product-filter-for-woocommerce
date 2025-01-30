@@ -116,6 +116,7 @@ const DeviceSelector = ({ onChange }) => {
         category: 'widgets',
         attributes: {
             filterType: storestring(defaultvalue = 'all'),
+            mobileStyle: storestring(defaultvalue = 'style_1'),
             productSelector:storestring(),
             paginationSelector:storestring(),
             filterName:storestring(),
@@ -194,7 +195,7 @@ const DeviceSelector = ({ onChange }) => {
                     },
                     function( tab ) {
                         if ( tab.name === 'general' ) {
-                            return el( PanelBody, { title: 'Filter Settings' },
+                            return [el( PanelBody, { title: 'Filter Settings' },
                                 el( SelectControl, {
                                     label: 'Filter Type',
                                     value: attributes.filterType,
@@ -228,7 +229,23 @@ const DeviceSelector = ({ onChange }) => {
                                         setAttributes( { filterName: value } );
                                     }
                                 } )
-                            );
+                            ),
+                            el( PanelBody, {title: "Mobile Responsive Style", initialOpen: false},
+                                el( SelectControl, {
+                                    label: 'Filter Type',
+                                    value: attributes.mobileStyle,
+                                    options: [
+                                        { label: 'Style 1', value: 'style_1' },
+                                        { label: 'Style 2', value: 'style_2' },
+                                        { label: 'Style 3', value: 'style_3' },
+                                        { label: 'Style 4', value: 'style_4' },
+                                    ],
+                                    onChange: function( value ) {
+                                        setAttributes( { mobileStyle: value } );
+                                    }
+                                } )
+                            )
+                        ];
                         } else if ( tab.name === 'style' ) {
                             if(attributes.filterType==='all') {
                             return [

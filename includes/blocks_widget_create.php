@@ -9,9 +9,9 @@ if (!defined('ABSPATH')) {
 function dapfforwc_register_dynamic_ajax_filter_block() {
     wp_register_script(
         'dynamic-ajax-filter-block',
-        plugins_url( 'block.js', __FILE__ ),
+        plugins_url( 'block.min.js', __FILE__ ),
         array( 'wp-blocks', 'wp-element', 'wp-editor', 'wp-components' ),
-        filemtime( plugin_dir_path( __FILE__ ) . 'block.js' )
+        filemtime( plugin_dir_path( __FILE__ ) . 'block.min.js' )
     );
 
     register_block_type( 'plugin/dynamic-ajax-filter', array(
@@ -53,7 +53,7 @@ add_action( 'init', 'dapfforwc_register_dynamic_ajax_filter_block' );
 
 function dapfforwc_generate_css($styles, $device = 'desktop', $hover = false, $active = false, $sliderProgress = false, $sliderthumb = false, $slidertooltip = false) {
     $css = '';
-
+    if (isset($styles) && is_array($styles)) {
     foreach ($styles as $key => $value) {
         switch ($key) {
             case 'font-size':
@@ -147,6 +147,7 @@ function dapfforwc_generate_css($styles, $device = 'desktop', $hover = false, $a
                 break;
         }
     }
+}
 
     return $css;
 }
@@ -154,6 +155,7 @@ function dapfforwc_generate_css($styles, $device = 'desktop', $hover = false, $a
 
 function dapfforwc_render_dynamic_ajax_filter_block($attributes) {
     $filter_type = $attributes['filterType'];
+    $mobile_style = $attributes['mobileStyle'];
     $output = '';
 
 // Extract styles
@@ -282,7 +284,7 @@ $single_filter_hover_css = dapfforwc_generate_css($single_filter_hover_style);
   .dynamic-rating  label:hover ~ input:checked ~ label,
   .dynamic-rating  input:checked ~ label:hover ~ label {' . $rating_active_css . '}';}
             $output .= '</style>';
-            $output .= '<div class="'.$class_name.'">'.do_shortcode( "[plugincy_filters product_selector=\"$product_selector\" pagination_selector=\"$pagination_selector\"]" ).'</div>';
+            $output .= '<div class="'.$class_name.'">'.do_shortcode( "[plugincy_filters mobile_responsive=\"$mobile_style\" product_selector=\"$product_selector\" pagination_selector=\"$pagination_selector\"]" ).'</div>';
             break;
         case 'single':
             $filter_name = esc_attr( $attributes['filterName'] );
@@ -409,6 +411,35 @@ function dapfforwc_register_dynamic_ajax_filter_widget_elementor() {
             );
         
             $this->end_controls_section();
+
+            $this->start_controls_section(
+                'mobile_responsive_style_section',
+                [
+                    'label' => __( 'Mobile Responsive Style', 'dynamic-ajax-product-filters-for-woocommerce' ),
+                    'condition' => [
+                        'filter_type' => 'all',
+                    ],
+                ]
+            );
+            
+            $this->add_control(
+                'mobile_responsive_style',
+                [
+                    'label'   => __( 'Choose style', 'dynamic-ajax-product-filters-for-woocommerce' ),
+                    'type'    => \Elementor\Controls_Manager::SELECT,
+                    'options' => [
+                        'style_1' => __( 'Style 1', 'dynamic-ajax-product-filters-for-woocommerce' ),
+                        'style_2' => __( 'Style 2', 'dynamic-ajax-product-filters-for-woocommerce' ),
+                        'style_3' => __( 'Style 3', 'dynamic-ajax-product-filters-for-woocommerce' ),
+                        'style_4' => __( 'Style 4', 'dynamic-ajax-product-filters-for-woocommerce' ),
+                    ],
+                    'default' => 'style_1',
+                ]
+            );
+
+            $this->end_controls_section();
+
+            // Style Tab: Form Styles
 
             $this->start_controls_section(
                 'filters_mobile_style_section',
@@ -747,13 +778,13 @@ function dapfforwc_register_dynamic_ajax_filter_widget_elementor() {
                 ]
             );
         
-            $this->add_control(
+            $this->add_responsive_control(
                 'widget_items_background_color',
                 [
                     'label' => __( 'Background Color', 'dynamic-ajax-product-filters-for-woocommerce' ),
                     'type' => \Elementor\Controls_Manager::COLOR,
                     'selectors' => [
-                        '{{WRAPPER}} .items' => 'background-color: {{VALUE}};',
+                        '{{WRAPPER}} .items' => 'background: {{VALUE}} !important;',
                     ],
                 ]
             );
@@ -1779,7 +1810,8 @@ function dapfforwc_register_dynamic_ajax_filter_widget_elementor() {
                 case 'all':
                     $product_selector = esc_attr( $settings['product_selector'] );
                     $pagination_selector = esc_attr( $settings['pagination_selector'] );
-                    $output .= do_shortcode( "[plugincy_filters product_selector=\"$product_selector\" pagination_selector=\"$pagination_selector\"]" );
+                    $mobile_responsive_style = esc_attr( $settings['mobile_responsive_style'] );
+                    $output .= do_shortcode( "[plugincy_filters mobile_responsive=\"$mobile_responsive_style\"  product_selector=\"$product_selector\" pagination_selector=\"$pagination_selector\"]" );
                     break;
 
                 case 'single':

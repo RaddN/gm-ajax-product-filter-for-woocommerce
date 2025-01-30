@@ -97,52 +97,7 @@ div#rating .items{
 .items label {
     cursor: pointer;
 }
-/* responsive filter */
-@media (max-width: 781px) {
-    .rfilterbuttons {
-        display: none;
-    }
-    #product-filter .filter-group div .title{cursor:pointer !important;}
-    #product-filter:before {
-        content: "Filter";
-        background: linear-gradient(90deg, #041a57, #d62229);
-        color: white;
-        padding: 10px 11px;
-        width: 60px;
-        height: 45px;
-        position: absolute;
-        left: 0px;
-    }
-    form#product-filter {
-        display: flex ;
-        flex-direction: row !important;
-        overflow: scroll;
-        gap: 10px;
-        height: 66px;
-        margin-left: 64px;
-    }
-.filter-group.attributes {
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 10px;
-}
-.filter-group.attributes .title, .filter-group.category .title, .filter-group.tag .title, .filter-group.price-range .title, div#rating .title{font-size: 16px !important;}
-.child-categories {
-    display: block !important;
-}
-.filter-group.attributes>div, div#rating,div#price-range,div#category {
-    min-width: max-content;
-    height: min-content;
-}
-    #product-filter .items {
-        position: absolute;
-        left:0;
-        background: white;
-        padding: 20px 15px;
-        box-shadow: #efefef99 0 -4px 10px 4px;
-        z-index: 999;
-    }
-}
+
 form.rfilterbuttons li {
     cursor: pointer;
 }

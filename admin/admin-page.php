@@ -238,7 +238,7 @@ function dapfforwc_admin_page_content() { global $dapfforwc_options;
                 <?php
             } 
             elseif ($active_tab == 'form_style') {
-                include(plugin_dir_path(__FILE__) . 'form_style_tab.php');
+                require_once(plugin_dir_path(__FILE__) . 'form_style_tab.php');
             }
             elseif ($active_tab == 'advance_settings') {
                 ?>
@@ -296,11 +296,11 @@ function dapfforwc_admin_page_content() { global $dapfforwc_options;
     <?php
 }
 // init settings first
-include(plugin_dir_path(__FILE__) . 'settings-init.php');
+require_once(plugin_dir_path(__FILE__) . 'settings-init.php');
 // include form_manage content
-include(plugin_dir_path(__FILE__) . 'form-manage.php');
+require_once(plugin_dir_path(__FILE__) . 'form-manage.php');
 // color converter include
-include(plugin_dir_path(__FILE__) . 'color_name_to_hex.php');
+require_once(plugin_dir_path(__FILE__) . 'color_name_to_hex.php');
 // before save image & color
 function dapfforwc_save_style_options($input) {
     foreach ($input as $attribute => $data) {
@@ -325,7 +325,7 @@ add_filter('pre_update_option_dapfforwc_style_options', 'dapfforwc_save_style_op
 
 // include advance settings
 
-include(plugin_dir_path(__FILE__) . 'advance_settings.php');
+require_once(plugin_dir_path(__FILE__) . 'advance_settings.php');
 
 
 // handle reset settings
@@ -351,7 +351,7 @@ function handle_reset_settings() {
 
 function reset_settings_notice() {
     dapfforwc_settings_init();
-    include(plugin_dir_path(__FILE__) . 'includes/auto-detect-pages-filters.php');
+    require_once(plugin_dir_path(__FILE__) . 'includes/auto-detect-pages-filters.php');
     dapfforwc_update_filter_options_with_page_slugs();
     ?>
     <div class="notice notice-success is-dismissible">

@@ -3,8 +3,8 @@ jQuery(document).ready(function($) {
     let dapfforwc_options ;
     let front_page_slug;
     let selectedValesbyuser = store_selected_values();
-    if (typeof dapfforwc_data !== 'undefined' && dapfforwc_data.front_page_slug) {
-        front_page_slug = dapfforwc_data.front_page_slug;
+    if (typeof dapfforwc_data !== 'undefined' && dapfforwc_data.dapfforwc_front_page_slug) {
+        front_page_slug = dapfforwc_data.dapfforwc_front_page_slug;
     }
     if (typeof dapfforwc_data !== 'undefined' && dapfforwc_data.dapfforwc_options) {
         dapfforwc_options = dapfforwc_data.dapfforwc_options;
@@ -99,6 +99,7 @@ jQuery(document).ready(function($) {
 
 
 function selectfromurl(){
+    if(currentPage){
     let urlvalues = currentPage.split('/');
 urlvalues.forEach(value => {
     // Check the input checkbox
@@ -109,6 +110,7 @@ urlvalues.forEach(value => {
         $(`select option[value="${value}"]`).prop('selected', true);
     }
 });
+    }
 }
 selectfromurl();
 
@@ -135,6 +137,7 @@ function anyFilterSelected() {
             if (response.success) {
                 $(productSelector_shortcode ?? product_selector).html(response.data.products);
                 $('.woocommerce-result-count').text(`${response.data.total_product_fetch} results found`);
+                $('#rcountproduct').text(`show(${response.data.total_product_fetch})`);
                 if(dapfforwc_options["update_filter_options"]==="on"){
                 $('#product-filter div').remove();
                 $("form#product-filter").append(response.data.filter_options);
@@ -386,6 +389,7 @@ function anyFilterSelected() {
     textChange();
      $(document).ajaxComplete(function() {
         textChange();
+        noproductfound();
     });
             // Use event delegation for dynamically added elements
             $('#product-filter').on('click', '.title', function(event) {
@@ -400,6 +404,16 @@ function anyFilterSelected() {
                     $('.items').hide();
                 }
             });
+
+         // Show message if no products found
+         noproductfound();
+
+         function noproductfound() {
+             if ($("form#product-filter").children().length === 2) {
+                 $(productSelector_shortcode ?? product_selector).html('<p>No products found</p>');
+                 $(paginationSelector_shortcode ?? pagination_selector).html('');
+             }
+         }
 });
 
 
