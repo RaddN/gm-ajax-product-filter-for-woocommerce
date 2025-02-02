@@ -84,18 +84,18 @@ class dapfforwc_Filter_Functions {
         wp_die();
     }
     private function build_query_args($paged, $orderby, $currentpage_slug) {
-        global $wcapf_options;
+        global $dapfforwc_options;
         $args = array(
             'post_type' => 'product',
-            'posts_per_page' => $paged === -1 ? -1 : (isset($wcapf_options["product_show_settings"][$currentpage_slug]["per_page"]) ? intval($wcapf_options["product_show_settings"][$currentpage_slug]["per_page"]) : 12),
+            'posts_per_page' => $paged === -1 ? -1 : (isset($dapfforwc_options["product_show_settings"][$currentpage_slug]["per_page"]) ? intval($dapfforwc_options["product_show_settings"][$currentpage_slug]["per_page"]) : 12),
             'post_status' => 'publish',
-            'orderby' => $orderby !== "" ? $orderby : ($wcapf_options["product_show_settings"][$currentpage_slug]["orderby"] ?? 'date'),
-            'order' => isset($wcapf_options["product_show_settings"][$currentpage_slug]["order"]) ? strtoupper($wcapf_options["product_show_settings"][$currentpage_slug]["order"]) : 'ASC',
+            'orderby' => $orderby !== "" ? $orderby : ($dapfforwc_options["product_show_settings"][$currentpage_slug]["orderby"] ?? 'date'),
+            'order' => isset($dapfforwc_options["product_show_settings"][$currentpage_slug]["order"]) ? strtoupper($dapfforwc_options["product_show_settings"][$currentpage_slug]["order"]) : 'ASC',
             'paged' => $paged,
             'tax_query' => array('relation' => 'AND')
         );
 
-        $second_operator = isset($wcapf_options["product_show_settings"]["upcoming-conferences"]["operator_second"]) ? strtoupper($wcapf_options["product_show_settings"]["upcoming-conferences"]["operator_second"]) : "IN";
+        $second_operator = isset($dapfforwc_options["product_show_settings"]["upcoming-conferences"]["operator_second"]) ? strtoupper($dapfforwc_options["product_show_settings"]["upcoming-conferences"]["operator_second"]) : "IN";
         return $this->apply_filters_to_args($args, $second_operator);
     }
     private function apply_filters_to_args($args,$second_operator) {

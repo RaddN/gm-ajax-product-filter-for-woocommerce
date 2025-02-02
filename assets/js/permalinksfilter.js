@@ -190,24 +190,23 @@ function anyFilterSelected() {
         range = document.querySelector(".slider .progress");
         let minPrice = rangeInput[0]?parseInt(rangeInput[0].value):0,
         maxPrice = rangeInput[1]?parseInt(rangeInput[1].value):0;
+        const minPriceDefault = rangeInput[0]?parseInt(rangeInput[0].value):0;
         changePseudoElementContent(`$${minPrice}`, `$${maxPrice}`);
         rangeInput.forEach((input) => {
-        input.addEventListener("input", (e) => {
-          let minPrice = parseInt(rangeInput[0].value);
-            maxPrice = parseInt(rangeInput[1].value);
-            changePseudoElementContent(`$${minPrice}`, `$${maxPrice}`);
-            priceInput[0].value = minPrice;
-            priceInput[1].value = maxPrice;
-            range.style.left = (minPrice / rangeInput[0].max) * 100 + "%";
-            range.style.right = 100 - (maxPrice / rangeInput[1].max) * 100 + "%";
-        });
-      });
+            input.addEventListener("input", (e) => {
+                minPrice = parseInt(rangeInput[0].value) || 0; // Default to 0 if NaN
+                maxPrice = parseInt(rangeInput[1].value) || 0; // Default to 0 if NaN
+                changePseudoElementContent(`$${minPrice}`, `$${maxPrice}`);
+                priceInput[0].value = minPrice;
+                priceInput[1].value = maxPrice;
+                range.style.left = ((minPrice - minPriceDefault)/ (rangeInput[0].max - minPriceDefault)) * 100 + "%";
+                range.style.right = 100 - (maxPrice / rangeInput[1].max) * 100 + "%";
+            });
+          });
       priceInput.forEach((input) => {
         input.addEventListener("input", (e) => {
-            console.log("hello");
           let minPrice = parseInt(priceInput[0].value),
             maxPrice = parseInt(priceInput[1].value);
-            console.log(minPrice);
             if (e.target.className === "input-min") {
               rangeInput[0].value = minPrice;
               range.style.left = (minPrice / rangeInput[0].max) * 100 + "%";

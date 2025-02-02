@@ -155,7 +155,7 @@ function dapfforwc_generate_css($styles, $device = 'desktop', $hover = false, $a
 
 function dapfforwc_render_dynamic_ajax_filter_block($attributes) {
     $filter_type = $attributes['filterType'];
-    $mobile_style = $attributes['mobileStyle'];
+    $mobile_style = $attributes['mobileStyle']??"style_1";
     $output = '';
 
 // Extract styles
@@ -1401,16 +1401,6 @@ function dapfforwc_register_dynamic_ajax_filter_widget_elementor() {
             'type' => \Elementor\Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .rfilterbuttons li' => 'background-color: {{VALUE}};',
-            ],
-        ]
-    );
-    $this->add_control(
-        'inactive_item_color',
-        [
-            'label' => __( 'Inactive Text Color', 'dynamic-ajax-product-filters-for-woocommerce' ),
-            'type' => \Elementor\Controls_Manager::COLOR,
-            'selectors' => [
-                '{{WRAPPER}} .rfilterbuttons ul li label' => 'color: {{VALUE}} !important;',
             ],
         ]
     );

@@ -52,9 +52,11 @@ function dapfforwc_product_filter_shortcode($atts) {
     $tag_lookup = is_array($all_tags) ? array_column($all_tags, 'slug', 'slug') : [];
     
     $attribute_lookups = [];
-    foreach ($attribute_taxonomies as $taxonomy) {
-        $terms = get_terms(['taxonomy' => $taxonomy, 'hide_empty' => true]);
-        $attribute_lookups[$taxonomy] = array_column($terms, 'slug', 'slug');
+    if (isset($attribute_taxonomies) && is_array($attribute_taxonomies)) {
+        foreach ($attribute_taxonomies as $taxonomy) {
+            $terms = get_terms(['taxonomy' => $taxonomy, 'hide_empty' => true]);
+            $attribute_lookups[$taxonomy] = array_column($terms, 'slug', 'slug');
+        }
     }
 
     // Match filters
@@ -62,11 +64,13 @@ function dapfforwc_product_filter_shortcode($atts) {
     $matched_tag = isset($tag_lookup) ? array_intersect_key($tag_lookup, array_flip($default_filter)) : [];
 
     $matched_attributes = [];
-    foreach ($attribute_lookups as $taxonomy => $lookup) {
-        $matched_terms = array_intersect_key($lookup, array_flip($default_filter));
-        if (!empty($matched_terms)) {
-            $matched_attributes[$taxonomy] = array_keys($matched_terms);
-        }
+    if (isset($attribute_lookups) && is_array($attribute_lookups)) {
+        foreach ($attribute_lookups as $taxonomy => $lookup) {
+            $matched_terms = array_intersect_key($lookup, array_flip($default_filter));
+            if (!empty($matched_terms)) {
+                $matched_attributes[$taxonomy] = array_keys($matched_terms);
+            }
+            }
     }
     
     // Add category filter
@@ -147,13 +151,14 @@ function dapfforwc_product_filter_shortcode($atts) {
     $products = new WP_Query($args);
     
     $updated_filters = dapfforwc_get_updated_filters($products);
-    // echo "<pre>"; print_r($dapfforwc_styleoptions["max_height"]); echo "</pre>";
+    // echo "hello <pre>"; print_r($dapfforwc_options["product_show_settings"]); echo "</pre>";
     $min_max_prices = dapfforwc_get_min_max_price();
 // echo "Minimum Price: " . wc_price($prices['min']);
 // echo "Maximum Price: " . wc_price($prices['max']);
     
     ob_start(); // Start output buffering
     ?>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
     .progress-percentage:after{
         content: "<?php echo esc_html($min_max_prices['max']); ?>";
@@ -350,6 +355,15 @@ function dapfforwc_product_filter_shortcode($atts) {
 <!-- Loader HTML -->
 <?php echo $dapfforwc_options["loader_html"] ?>
 <style><?php echo $dapfforwc_options["loader_css"] ?></style>
+<?php
+if (isset($dapfforwc_options["loader_html"])) {
+    echo $dapfforwc_options["loader_html"];
+}
+
+if (isset($dapfforwc_options["loader_css"])) {
+    echo '<style>' .$dapfforwc_options["loader_css"]. '</style>';
+}
+?>
 <div id="roverlay" style="display: none;"></div>
 
 <div id="filtered-products">

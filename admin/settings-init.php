@@ -90,7 +90,7 @@ function dapfforwc_settings_init() {
 
 //   advance settings register
 $Advance_options = get_option('dapfforwc_advance_options') ?: [
-    'product_selector' => '.products',
+    'product_selector' => 'ul.products',
     'pagination_selector' => '.woocommerce-pagination ul.page-numbers',
     'product_shortcode' => 'products',
     'use_anchor' => 0,

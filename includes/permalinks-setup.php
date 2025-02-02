@@ -7,7 +7,7 @@ if (!defined('ABSPATH')) {
 function dapfforwc_register_template() {
     global $wp;
     global $dapfforwc_options;
-    $pages = $dapfforwc_options['pages'];
+    $pages = $dapfforwc_options['pages']?:[];
     $request = $wp->request;
 
     
@@ -17,7 +17,8 @@ function dapfforwc_register_template() {
         set_transient('dapfforwc_slug', $dapfforwc_slug, 30);
         wp_redirect(home_url("/?filters=$dapfforwc_slug"), 301);
         exit;
-    } elseif (strpos($request, 'filters') !== false) {
+    } 
+    elseif (strpos($request, 'filters/') !== false) {
         // Handle requests containing "filters"
         $dapfforwc_root_slug = sanitize_text_field(substr($request, 0, strpos($request, 'filters') - 1));
         $dapfforwc_slug = sanitize_text_field(substr($request, strpos($request, 'filters') + strlen("filters") + 1));

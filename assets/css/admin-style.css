@@ -495,3 +495,13 @@
     display: flex;
 }
 
+.customizer-pro-overlay:after {
+    height: 90%;
+    bottom: 0;
+    top: unset;
+    left: 0;
+}
+.customizer-pro-overlay:before {
+    left: 23%;
+}
+

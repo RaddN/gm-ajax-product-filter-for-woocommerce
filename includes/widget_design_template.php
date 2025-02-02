@@ -66,7 +66,7 @@ if (isset($updated_filters['attributes']) && is_array($updated_filters['attribut
     // Check if 'tag' key exists in the style options
     if (isset($dapfforwc_styleoptions['tag'])) {
         // Fetch the sub_option value safely
-        $sub_option = $dapfforwc_styleoptions['tag']['sub_option'] ?? $sub_option;
+        $sub_option = $dapfforwc_styleoptions['tag']['sub_option'] ?? (isset($sub_option) ? $sub_option : "");
         // Check if 'minimize' key exists and fetch its type
         if (isset($dapfforwc_styleoptions['tag']['minimize'])) {
             $minimizable = $dapfforwc_styleoptions['tag']['minimize']['type'] ?? $minimizable;
@@ -122,11 +122,31 @@ if (isset($updated_filters['attributes']) && is_array($updated_filters['attribut
     $formOutPut .='</div></div>';
 // Fetch global options and style configurations
 
-$sub_option = $dapfforwc_styleoptions['category']['sub_option'] ?? '';
-$minimizable = $dapfforwc_styleoptions['category']['minimize']['type'] ?? '';
-$show_count = $dapfforwc_styleoptions['category']['show_product_count'] ?? '';
-$singlevaluecataSelect = $dapfforwc_styleoptions['category']['single_selection'] ?? '';
-$hierarchical = $dapfforwc_styleoptions['category']['hierarchical']['type'] ?? '';
+$sub_option = '';
+$minimizable = '';
+$show_count = '';
+$singlevaluecataSelect = '';
+$hierarchical = '';
+
+// Additional checks to ensure the structure exists before accessing
+if (isset($dapfforwc_styleoptions['category'])) {
+    $sub_option = $dapfforwc_styleoptions['category']['sub_option'] ?? '';
+    
+    if (isset($dapfforwc_styleoptions['category']['minimize'])) {
+        $minimizable = $dapfforwc_styleoptions['category']['minimize']['type'] ?? '';
+    } else {
+        $minimizable = '';
+    }
+
+    $show_count = $dapfforwc_styleoptions['category']['show_product_count'] ?? '';
+    $singlevaluecataSelect = $dapfforwc_styleoptions['category']['single_selection'] ?? '';
+
+    if (isset($dapfforwc_styleoptions['category']['hierarchical'])) {
+        $hierarchical = $dapfforwc_styleoptions['category']['hierarchical']['type'] ?? '';
+    } else {
+        $hierarchical = '';
+    }
+}
 $selected_categories = !empty($default_filter) ? $default_filter : []; //explode(',', $atts['category'])
 
 // Fetch categories
@@ -146,7 +166,7 @@ if ($hierarchical !== 'enable_separate' && !empty($updated_filters["categories"]
 if ($hierarchical === 'enable' || $hierarchical === 'enable_hide_child') {
     $parent_categories = [];
     $child_category = [];
-    if (isset($updated_filters["categories"])) {
+    if (isset($updated_filters["categories"]) && is_array($updated_filters["categories"])) {
         foreach ($updated_filters["categories"] as $category) {
             // Check if the category is an instance of WP_Term and if its parent is 0
             if ($category instanceof WP_Term && $category->parent == 0) {
@@ -164,7 +184,7 @@ if ($hierarchical === 'enable' || $hierarchical === 'enable_hide_child') {
     // Render parent categories in a unified section
     $parent_categories = [];
     $child_category = [];
-    if (isset($updated_filters["categories"])) {
+    if (isset($updated_filters["categories"]) && is_array($updated_filters["categories"])) {
         foreach ($updated_filters["categories"] as $category) {
             // Check if the category is an instance of WP_Term and if its parent is 0
             if ($category instanceof WP_Term && $category->parent == 0) {
@@ -203,7 +223,7 @@ if ($hierarchical === 'enable' || $hierarchical === 'enable_hide_child') {
 
     // Render child categories grouped by parent
     foreach ($parent_categories as $parent_category) {
-        $child_categories = dapfforwc_get_child_categories($child_category, $parent_category->term_id);
+        $child_categories = dapfforwc_get_child_categories($child_category, $parent_category->term_id)?:[];
 
         if (!empty($child_categories)) {
             $formOutPut .= '<div id="category-with-child" class="filter-group category with-child" style="display: ' . (!empty($dapfforwc_options['show_categories']) ? 'block' : 'none') . ';">';
