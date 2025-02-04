@@ -116,7 +116,7 @@ const DeviceSelector = ({ onChange }) => {
         category: 'widgets',
         attributes: {
             filterType: storestring(defaultvalue = 'all'),
-            mobileStyle: storestring(defaultvalue = 'style_1'),
+            mobileStyle: storestring(defaultvalue = 'style_4'),
             productSelector:storestring(),
             paginationSelector:storestring(),
             filterName:storestring(),

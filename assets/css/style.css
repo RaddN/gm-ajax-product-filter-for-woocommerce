@@ -7,6 +7,9 @@
     margin-bottom: 5px;
     gap: 7px;
     align-items: center;
+    font-family: "Open Sans", sans-serif !important;
+    color: #727272;
+    font-weight: 400;
 }
 .filter-group label:last-child {
     margin-bottom: 0px;
@@ -35,12 +38,15 @@ div#roverlay {
     top: -64px;
     left: 0;
 }
-.rfilterbuttons li,.rfilterselected li {
-    padding: 10px 20px;
-    border: 1px solid;
+.rfilterbuttons li, .rfilterselected li {
+    padding: 1px 12px 3px;
+    border: 1px solid #eee;
     border-radius: 30px;
     min-width: max-content;
 }
+.rfilterselected li label,.rfilterbuttons li label{
+    font-weight: 400;
+  }
 .rfilterbuttons ul,.rfilterselected ul {
     display: flex;
     list-style: none;
@@ -54,43 +60,47 @@ div#roverlay {
     display: none;
 }
 .rfilterbuttons ul li.checked,.rfilterselected ul li.checked  {
-    background: red;
-    color: #fff !important;
+    border: 1px solid red;
+    color: #000 !important;
+    background: none;
 }
-.rfilterbuttons ul li.checked label,.rfilterselected ul li.checked label{
-    color: #fff !important;
-}
-.filter-group.attributes .title, .filter-group.category .title,.filter-group.tag .title,.filter-group.price-range .title,div#rating .title {
-    background: linear-gradient(90deg, #501A73 9%, #432FB8 37%);
-    color: white;
+.filter-group .title {
+    background: none;
+    color: #000;
     text-align: center;
     padding: 10px 0;
-    font-size: 20px;
     display: flex;
     justify-content: space-between;
     padding-left: 14px ;
     padding-right: 13px;
+    font-family: "Open Sans", sans-serif;
+    font-size: 16px;
 }
 .title .collaps svg {
     width: 16px;
     height: 16px;
-    fill: #fff;
+    fill: #000;
 }
-.filter-group.attributes>div,.filter-group.category,.filter-group.tag,.filter-group.price-range, div#rating {
+.title {
+    text-transform: capitalize;
+}
+.filter-group {
     background: rgba(255, 255, 255, 0.7);
-    padding-bottom: 1px;
-    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
     overflow: hidden;
+    padding: 10px 10px 0;
+    border-radius: 8px;
 }
-.filter-group.attributes  .items ,.filter-group.category .items, .filter-group.tag .items,.filter-group.price-range .items, div#rating .items{
+.filter-group .items {
     padding: 20px 10px;
     width: 100%;
+    border-top: 1px solid #eee;
 }
 div#rating .items{
     align-items: baseline;
     display: flex;
 }
-.filter-group.attributes .items>label,.filter-group.category .items>label,.filter-group.tag .items>label,.rfilterbuttons label,.rfilterselected label {
+.filter-group .items>label {
     text-transform: capitalize;
     cursor: pointer ;
 }
@@ -138,7 +148,7 @@ form.rfilterbuttons li {
     height: 20px !important;
 }
 .items.color,.items.color_no_border,.items.image,.items.image_no_border,.items.color_circle,.items.button_check {
-    display: grid;
+    display: grid !important;
     grid-template-columns: repeat(6, 1fr);
     gap: 6px;
     justify-items: stretch;
@@ -432,7 +442,7 @@ input#searchFilter {
     width: 65%;
 }
 .search-submit {
-    padding: 10px 15px;
+    padding: 12px 15px;
     border: none;
     background-color: #0073aa;
     color: white;
@@ -443,9 +453,13 @@ span#reset-rating{
     font-size: 14px;
     color: red;
     cursor: pointer;
+    color: #ffffff;
+    cursor: pointer;
+    background: #ff4d4d;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-size: 13px;
 }
 input#search-field {
     width: 63%;
 }
-
-

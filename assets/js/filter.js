@@ -152,7 +152,7 @@ jQuery(document).ready(function($) {
         range = document.querySelector(".slider .progress");
         let minPrice = rangeInput[0]?parseInt(rangeInput[0].value):0,
         maxPrice = rangeInput[1]?parseInt(rangeInput[1].value):0;
-        const minPriceDefault = rangeInput[0]?parseInt(rangeInput[0].value):0;
+        const minPriceDefault = rangeInput[0].min?parseInt(rangeInput[0].min):0;
         changePseudoElementContent(`$${minPrice}`, `$${maxPrice}`);
         rangeInput.forEach((input) => {
             input.addEventListener("input", (e) => {
@@ -298,9 +298,17 @@ jQuery(document).ready(function($) {
         }
     }
     textChange();
-     $(document).ajaxComplete(function() {
+    $(document).ajaxComplete(function() {
         textChange();
         noproductfound();
+        const rangeInput = document.querySelectorAll(".range-input input"),
+        priceInput = document.querySelectorAll(".price-input input"),
+        range = document.querySelector(".slider .progress");
+        const minPriceDefault = rangeInput[0].min?parseInt(rangeInput[0].min):0;
+        let minPrice = parseInt(rangeInput[0].value) || 0; // Default to 0 if NaN
+        let maxPrice = parseInt(rangeInput[1].value) || 0; // Default to 0 if NaN
+        range.style.left = ((minPrice - minPriceDefault)/ (rangeInput[0].max - minPriceDefault)) * 100 + "%";
+        range.style.right = 100 - (maxPrice / rangeInput[1].max) * 100 + "%";
     });
             // Use event delegation for dynamically added elements
             $('#product-filter').on('click', '.title', function(event) {

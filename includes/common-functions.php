@@ -1,15 +1,20 @@
 <?php
+
 if (!defined('ABSPATH')) {
     exit;
 }
 
-function dapfforwc_get_min_max_price() {
-    $args = array(
-        'post_type' => 'product',
-        'posts_per_page' => -1, // Get all products
-    );
-
-    $loop = new WP_Query($args);
+function dapfforwc_get_min_max_price($products="") {
+    if($products){
+        $loop = $products;
+    }else{
+        $args = array(
+            'post_type' => 'product',
+            'posts_per_page' => -1, // Get all products
+        );
+    
+        $loop = new WP_Query($args);
+    }
     $min_price = null;
     $max_price = null;
 

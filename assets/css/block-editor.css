@@ -93,3 +93,21 @@ span.dashicons.selected {
     background: red;
     color: #fff !important;
 }
+.draggable-options {
+    display: flex;
+    flex-direction: column;
+}
+
+.draggable-option {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin: 5px 0;
+    background: #f1f1f1;
+    border: 1px solid #ccc;
+    cursor: move;
+}
+
+.dashicons-visibility {
+    color: #000;
+}

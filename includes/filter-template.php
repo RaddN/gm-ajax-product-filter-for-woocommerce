@@ -5,15 +5,17 @@ if (!defined('ABSPATH')) {
 }
 
 function dapfforwc_product_filter_shortcode($atts) {
-    global $dapfforwc_styleoptions,$post,$dapfforwc_options, $dapfforwc_advance_settings, $dapfforwc_min_max_price;
+    global $dapfforwc_styleoptions,$post,$dapfforwc_options, $dapfforwc_advance_settings, $dapfforwc_min_max_price,$wp;
     $use_anchor = isset($dapfforwc_advance_settings["use_anchor"]) ? $dapfforwc_advance_settings["use_anchor"] : "";
     $use_filters_word = isset($dapfforwc_options["use_filters_word_in_permalinks"]) ? $dapfforwc_options["use_filters_word_in_permalinks"] : "";
     $remove_outofStock_product = isset($dapfforwc_advance_settings["remove_outofStock"]) ? $dapfforwc_advance_settings["remove_outofStock"] : ""; 
     $dapfforwc_slug = isset($post) ? dapfforwc_get_full_slug($post->ID) : "";
     $second_operator = strtoupper($dapfforwc_options["product_show_settings"][$dapfforwc_slug]["operator_second"] ?? "IN");
+    $request = $wp->request;
     $default_filter = array_merge(
         $dapfforwc_options["default_filters"][$dapfforwc_slug] ?? [],
-        explode('/', str_replace('filters/', '', get_transient('dapfforwc_slug')?:''))
+        explode('/', str_replace('filters/', '', get_transient('dapfforwc_slug')?:'')),
+        explode('/', $request)
     );
 
     // Define default attributes and merge with user-defined attributes
@@ -152,7 +154,8 @@ function dapfforwc_product_filter_shortcode($atts) {
     
     $updated_filters = dapfforwc_get_updated_filters($products);
     // echo "hello <pre>"; print_r($dapfforwc_options["product_show_settings"]); echo "</pre>";
-    $min_max_prices = dapfforwc_get_min_max_price();
+    $min_max_prices = dapfforwc_get_min_max_price($products);
+    set_transient("dapfforwc_min_max_price", array('min' => $min_max_prices['min'], 'max' => $min_max_prices['max']), 0.5 * HOUR_IN_SECONDS);
 // echo "Minimum Price: " . wc_price($prices['min']);
 // echo "Maximum Price: " . wc_price($prices['max']);
     
@@ -188,16 +191,11 @@ function dapfforwc_product_filter_shortcode($atts) {
                 height: 66px;
                 margin-left: 64px;
             }
-        .filter-group.attributes {
-            display: flex !important;
-            flex-direction: row !important;
-            gap: 10px;
-        }
-        .filter-group.attributes .title, .filter-group.category .title, .filter-group.tag .title, .filter-group.price-range .title, div#rating .title{font-size: 16px !important;}
+        .filter-group .title{font-size: 16px !important;}
         .child-categories {
             display: block !important;
         }
-        .filter-group.attributes>div, div#rating,div#price-range,div#category {
+        .filter-group {
             min-width: max-content;
             height: min-content;
         }
@@ -299,44 +297,57 @@ function dapfforwc_product_filter_shortcode($atts) {
      } 
      if($atts['mobile_responsive'] === 'style_3') { ?>
         <script>
-            jQuery(document).ready(function($) {
-                $('#filter-cancel-button').on('click', function(event) {
-                    event.preventDefault();
-                    $('.mobile-filter').slideUp();
-                });
+                jQuery(document).ready(function($) {
+                    function isMobile() {
+                        return $(window).width() < 768; // Adjust the width as needed
+                    }
 
-                $('#filter-button').on('click', function(event) {
-                    event.preventDefault();
-                    $('.mobile-filter').slideDown();
-                });
+                    if (isMobile()) {
+                        $('#filter-cancel-button').on('click', function(event) {
+                            event.preventDefault();
+                            $('.mobile-filter').slideUp();
+                        });
 
-                $(document).on('click', function(event) {
-                    if (!$(event.target).closest('.mobile-filter, #filter-button').length) {
-                        $('.mobile-filter').slideUp();
+                        $('#filter-button').on('click', function(event) {
+                            event.preventDefault();
+                            $('.mobile-filter').slideDown();
+                        });
+
+                        $(document).on('click', function(event) {
+                            if (!$(event.target).closest('.mobile-filter, #filter-button').length) {
+                                $('.mobile-filter').slideUp();
+                            }
+                        });
                     }
                 });
-            });
             </script>
     <?php }
 
     if($atts['mobile_responsive'] === 'style_4') { ?>
-        <script>
-            jQuery(document).ready(function($) {
-                $('#filter-button').on('click', function(event) {
-                    event.preventDefault();
-                    $('.mobile-filter').toggleClass('open');
-                });
-                $('#filter-cancel-button').on('click', function(event) {
-                    event.preventDefault();
-                    $('.mobile-filter').removeClass('open');
-                });
+         <script>
+                jQuery(document).ready(function($) {
+                    function isMobile() {
+                        return $(window).width() < 768; // Adjust the width as needed
+                    }
 
-                $(document).on('click', function(event) {
-                    if (!$(event.target).closest('.mobile-filter, #filter-button').length) {
-                        $('.mobile-filter').removeClass('open');
+                    if (isMobile()) {
+                        $('#filter-button').on('click', function(event) {
+                            event.preventDefault();
+                            $('.mobile-filter').toggleClass('open');
+                        });
+
+                        $('#filter-cancel-button').on('click', function(event) {
+                            event.preventDefault();
+                            $('.mobile-filter').removeClass('open');
+                        });
+
+                        $(document).on('click', function(event) {
+                            if (!$(event.target).closest('.mobile-filter, #filter-button').length) {
+                                $('.mobile-filter').removeClass('open');
+                            }
+                        });
                     }
                 });
-            });
             </script>
     <?php } ?>
     <form id="product-filter" method="POST" 
@@ -344,7 +355,7 @@ function dapfforwc_product_filter_shortcode($atts) {
     <?php if (!empty($atts['pagination_selector'])) { echo 'data-pagination_selector="' . esc_attr($atts["pagination_selector"]) . '"'; } ?>>
     <?php
     wp_nonce_field('gm-product-filter-action', 'gm-product-filter-nonce'); 
-    echo dapfforwc_filter_form($updated_filters,$default_filter,$use_anchor,$use_filters_word,$atts,$min_price=$dapfforwc_styleoptions["price"]["min_price"]??$min_max_prices['min'],$max_price=$dapfforwc_styleoptions["price"]["max_price"]??$min_max_prices['max']);
+    echo dapfforwc_filter_form($updated_filters,$default_filter,$use_anchor,$use_filters_word,$atts,$min_price=$dapfforwc_styleoptions["price"]["min_price"]??$min_max_prices['min'],$max_price=$dapfforwc_styleoptions["price"]["max_price"]??$min_max_prices['max']+1);
 
     echo '</form>';
     if($atts['mobile_responsive'] === 'style_3' || $atts['mobile_responsive'] === 'style_4') { ?>
@@ -398,7 +409,7 @@ function dapfforwc_customSort($a, $b) {
 }
 function dapfforwc_render_filter_option($sub_option, $title, $value, $checked, $dapfforwc_styleoptions , $name, $attribute,$singlevalueSelect, $count,$min_price=0,$max_price=10000) {
     $output = '';
-    $min_max_prices = dapfforwc_get_min_max_price();
+    $min_max_prices = get_transient("dapfforwc_min_max_price") ?: dapfforwc_get_min_max_price();
     switch ($sub_option) {
         case 'checkbox':
             $output .= '<label><input type="'.($singlevalueSelect==="yes"?'radio':'checkbox').'" class="filter-checkbox" name="' . $name . '[]" value="' . $value . '"' . $checked . '> ' . $title . ($count!=0?' ('.$count.')':''). '</label>';
@@ -451,7 +462,7 @@ function dapfforwc_render_filter_option($sub_option, $title, $value, $checked, $
             break;
         case 'input-price-range':
                 $default_min_price= $dapfforwc_styleoptions["price"]["min_price"] ?? $min_max_prices['min'];
-                $default_max_price=$dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max'];
+                $default_max_price=$dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max']+1;
                 $output .= '<div class="range-input"><label for="min-price">Min Price:</label>
         <input type="number" id="min-price" name="min_price" min="'.$default_min_price.'" step="1" placeholder="Min" value="'.$min_price.'" style="position: relative; height: max-content; top: unset; pointer-events: all;">
         
@@ -460,7 +471,7 @@ function dapfforwc_render_filter_option($sub_option, $title, $value, $checked, $
                 break;
         case 'slider':
             $default_min_price= $dapfforwc_styleoptions["price"]["min_price"] ?? $min_max_prices['min'];
-            $default_max_price=$dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max'];
+            $default_max_price=$dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max']+1;
             $output .= '<div class="price-input">
         <div class="field">
           <span>Min</span>
@@ -482,7 +493,7 @@ function dapfforwc_render_filter_option($sub_option, $title, $value, $checked, $
             break;
         case 'price':
             $default_min_price= $dapfforwc_styleoptions["price"]["min_price"] ?? $min_max_prices['min'];
-            $default_max_price=$dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max'];
+            $default_max_price=$dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max']+1;
             $output .= '<div class="price-input" style="visibility: hidden; margin: 0;">
         <div class="field">
             <input type="number" id="min-price" name="min_price" class="input-min" min="'.$default_min_price.'" value="'.$min_price.'">

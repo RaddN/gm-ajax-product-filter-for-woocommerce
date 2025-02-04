@@ -3,28 +3,13 @@
 if (!defined('ABSPATH')) {
     exit;
 }
-// Automatic add & remove pages slug list based on shortcode used
-function dapfforwc_find_filter_shortcode_pages() {
-    $shortcode = 'plugincy_filters';
-
-    // Use WP_Query instead of direct SQL
-    $query = new WP_Query([
-        'post_type'      => 'page',
-        'post_status'    => 'publish',
-        'posts_per_page' => -1, // To get all pages
-        's'              => $shortcode // Search for the shortcode in content
-    ]);
-    
-    // Return the pages with the shortcode
-    return $query->posts;
-}
-
 function dapfforwc_update_filter_options_with_page_slugs() {
+    $shortcode = 'plugincy_filters';
     // Fetch pages containing the shortcode
-    $dapfforwc_pages_with_shortcode = dapfforwc_find_filter_shortcode_pages();
+    $dapfforwc_pages_with_shortcode = dapfforwc_find_shortcode_pages($shortcode);
     
     // Get the current options
-    $dapfforwc_options = get_option('dapfforwc_options');
+    $dapfforwc_options = get_option('dapfforwc_options')?:[];
     $dapfforwc_options['pages'] = [];
 
     // Extract slugs from the pages with the shortcode
@@ -42,10 +27,6 @@ function dapfforwc_update_filter_options_with_page_slugs() {
 
 // Hook the function to an action, for example, when the admin initializes
 add_action('admin_init', 'dapfforwc_update_filter_options_with_page_slugs');
-
-
-
-
 
 // Step 1: Find pages containing a specific shortcode
 function dapfforwc_find_shortcode_pages($shortcode) {
@@ -81,7 +62,7 @@ function dapfforwc_update_options_with_filters() {
     $pages_with_shortcode = dapfforwc_find_shortcode_pages($shortcode);
 
     // Get the current options
-    $dapfforwc_options = get_option('dapfforwc_options');
+    $dapfforwc_options = get_option('dapfforwc_options')?:[];
     $dapfforwc_options['default_filters'] = []; // Initialize if not set
     $dapfforwc_options['product_show_settings'] = [];
 

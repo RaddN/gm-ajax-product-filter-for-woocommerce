@@ -24,7 +24,7 @@ function dapfforwc_load_textdomain() {
 }
 
 // Global Variables
-global $dapfforwc_options, $dapfforwc_advance_settings, $dapfforwc_styleoptions, $dapfforwc_use_url_filter, $dapfforwc_auto_detect_pages_filters, $dapfforwc_slug, $dapfforwc_sub_options ;
+global $dapfforwc_options, $dapfforwc_advance_settings, $dapfforwc_styleoptions, $dapfforwc_use_url_filter, $dapfforwc_auto_detect_pages_filters, $dapfforwc_slug, $dapfforwc_sub_options,$dapfforwc_front_page_slug;
 
 
 $dapfforwc_options = get_option('dapfforwc_options') ?: [];
@@ -93,7 +93,11 @@ function dapfforwc_check_woocommerce() {
     if (!class_exists('WooCommerce')) {
         add_action('admin_notices', 'dapfforwc_missing_woocommerce_notice');
     } else {
-        require_once plugin_dir_path(__FILE__) . 'admin/admin-notice.php';
+        if(is_admin()){
+            require_once plugin_dir_path(__FILE__) . 'admin/admin-notice.php';
+            require_once(plugin_dir_path(__FILE__) . 'includes/get_review.php');
+            require_once plugin_dir_path(__FILE__) . 'admin/admin-page.php';
+            }
         require_once plugin_dir_path(__FILE__) . 'includes/filter-template.php';
 
         add_action('wp_enqueue_scripts', 'dapfforwc_enqueue_scripts');
@@ -106,7 +110,6 @@ function dapfforwc_check_woocommerce() {
         register_setting('dapfforwc_options_group', 'dapfforwc_filters', 'sanitize_text_field');
 
         add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'dapfforwc_add_settings_link');
-        require_once plugin_dir_path(__FILE__) . 'admin/admin-page.php';
         require_once plugin_dir_path(__FILE__) . 'includes/common-functions.php';
     }
 }
@@ -387,7 +390,7 @@ function dapfforwc_add_settings_link($links) {
 
 require_once(plugin_dir_path(__FILE__) . 'includes/permalinks-setup.php');
 
-if ($dapfforwc_auto_detect_pages_filters === "on") {
+if ($dapfforwc_auto_detect_pages_filters === "on" && is_admin()) {
     require_once(plugin_dir_path(__FILE__) . 'includes/auto-detect-pages-filters.php');
 }
 
@@ -419,7 +422,6 @@ function dapfforwc_get_full_slug($post_id) {
 
 
 require_once(plugin_dir_path(__FILE__) . 'includes/widget_design_template.php');
-require_once(plugin_dir_path(__FILE__) . 'includes/get_review.php');
 require_once(plugin_dir_path(__FILE__) . 'includes/blocks_widget_create.php');
 
 // add alert for admin in 404 page
@@ -451,7 +453,7 @@ add_action('wp_head', 'dapfforwc_add_admin_message_before_footer');
 
 
 // block editor script
-function dapfforwc_enqueue_dynamic_ajax_filter_block_assets() {
+function dapfforwc_enqueue_dapfforwc_filter_block_assets() {
     wp_enqueue_script(
         'dynamic-ajax-filter-block',
         plugins_url( 'includes/block.min.js', __FILE__ ),
@@ -461,7 +463,7 @@ function dapfforwc_enqueue_dynamic_ajax_filter_block_assets() {
 
     wp_enqueue_style('custom-box-control-styles', plugin_dir_url(__FILE__) . 'assets/css/block-editor.min.css', [], '1.0.4');
 }
-add_action( 'enqueue_block_editor_assets', 'dapfforwc_enqueue_dynamic_ajax_filter_block_assets' );
+add_action( 'enqueue_block_editor_assets', 'dapfforwc_enqueue_dapfforwc_filter_block_assets' );
 
 
 
@@ -526,4 +528,34 @@ function dapfforwc_check_elements() {
         </style>
         <?php
     }
+}
+
+
+function dapfforwc_register_api_routes() {
+    register_rest_route('dynamic-ajax-product-filters-for-woocommerce/v1', '/attributes/', array(
+        'methods' => 'GET',
+        'callback' => 'dapfforwc_get_product_attributes',
+        'permission_callback' => '__return_true', // Adjust permissions as needed
+    ));
+}
+add_action('rest_api_init', 'dapfforwc_register_api_routes');
+
+function dapfforwc_get_product_attributes() {
+    // Fetch WooCommerce attribute taxonomies
+    $attributes = wc_get_attribute_taxonomies();
+    $result = [];
+
+    foreach ($attributes as $attribute) {
+        $result[] = [
+            'id' => $attribute->attribute_id,
+            'name' => $attribute->attribute_label,
+            'slug' => $attribute->attribute_name,
+        ];
+    }
+
+    if (empty($result)) {
+        return new WP_Error('no_attributes', __('No product attributes found', 'dynamic-ajax-product-filters-for-woocommerce'), array('status' => 404));
+    }
+
+    return rest_ensure_response($result);
 }

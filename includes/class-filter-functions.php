@@ -43,7 +43,7 @@ class dapfforwc_Filter_Functions {
 
         $updated_filters = dapfforwc_get_updated_filters($filter_options);
         $default_filter = [];
-        $min_max_prices = dapfforwc_get_min_max_price();
+        $min_max_prices = dapfforwc_get_min_max_price($query);
 
         // Check if 'selectedvalues' is set and not empty
         if (!empty($_POST['selectedvalues'])) {
@@ -51,7 +51,7 @@ class dapfforwc_Filter_Functions {
             $default_filter = array_map('sanitize_text_field', explode(',', wp_unslash($_POST['selectedvalues'])));
         }
         
-        $filterform = dapfforwc_filter_form($updated_filters,$default_filter,"","","",$min_price=floatval($_POST['min_price']) ?? $dapfforwc_styleoptions["price"]["min_price"] ?? $min_max_prices['min'],$max_price=floatval($_POST['max_price']) ?? $dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max']);
+        $filterform = dapfforwc_filter_form($updated_filters,$default_filter,"","","",$min_price=floatval($_POST['min_price']) ?? $dapfforwc_styleoptions["price"]["min_price"] ?? $min_max_prices['min'],$max_price=floatval($_POST['max_price']) ?? $dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max']+1);
         // Capture the product listing
         ob_start();
         
@@ -84,13 +84,42 @@ class dapfforwc_Filter_Functions {
         wp_die();
     }
     private function build_query_args($paged, $orderby, $currentpage_slug) {
-        global $dapfforwc_options;
+        global $dapfforwc_options, $dapfforwc_front_page_slug;
+        $currentpage_slug = $currentpage_slug=="/"?$dapfforwc_front_page_slug:$currentpage_slug;
+        $orderProductby = 'date';
+        $meta_key = "";
+        $order = isset($dapfforwc_options["product_show_settings"][$currentpage_slug]["order"]) ? strtoupper($dapfforwc_options["product_show_settings"][$currentpage_slug]["order"]) : 'ASC';
+        if($orderby == ""){
+            $orderProductby = $dapfforwc_options["product_show_settings"][$currentpage_slug]["orderby"] ?? 'date';
+        }
+        elseif($orderby == "popularity"){
+            $orderProductby = 'meta_value_num';
+            $meta_key = 'total_sales';
+        }
+        elseif($orderby == "rating"){
+            $orderProductby = 'meta_value_num';
+            $meta_key = '_wc_average_rating';
+        }
+        elseif($orderby == "price"){
+            $orderProductby = 'meta_value_num';
+            $meta_key = '_price';
+            $order = "ASC";
+        }
+        elseif($orderby == "price-desc"){
+            $orderProductby = 'meta_value_num';
+            $meta_key = '_price';
+            $order = "desc";
+        }
+        else{
+            $orderProductby = $orderby;
+        }
         $args = array(
             'post_type' => 'product',
             'posts_per_page' => $paged === -1 ? -1 : (isset($dapfforwc_options["product_show_settings"][$currentpage_slug]["per_page"]) ? intval($dapfforwc_options["product_show_settings"][$currentpage_slug]["per_page"]) : 12),
             'post_status' => 'publish',
-            'orderby' => $orderby !== "" ? $orderby : ($dapfforwc_options["product_show_settings"][$currentpage_slug]["orderby"] ?? 'date'),
-            'order' => isset($dapfforwc_options["product_show_settings"][$currentpage_slug]["order"]) ? strtoupper($dapfforwc_options["product_show_settings"][$currentpage_slug]["order"]) : 'ASC',
+            'meta_key'      => $meta_key,
+            'orderby' => $orderProductby,
+            'order' => $order,
             'paged' => $paged,
             'tax_query' => array('relation' => 'AND')
         );
