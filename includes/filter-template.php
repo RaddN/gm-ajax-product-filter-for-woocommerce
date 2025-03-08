@@ -14,9 +14,21 @@ function dapfforwc_product_filter_shortcode($atts)
     $dapfforwc_slug = isset($post) ? dapfforwc_get_full_slug($post->ID) : "";
     $second_operator = strtoupper($dapfforwc_options["product_show_settings"][$dapfforwc_slug]["operator_second"] ?? "IN");
     $request = $wp->request;
-    $url_page = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+    // Validate and sanitize host
+    $host = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '';
+
+    // Validate and sanitize request URI
+    $request_uri = isset($_SERVER['REQUEST_URI']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])) : '';
+
+    // Build the sanitized URL
+    if (!empty($host) && !empty($request_uri)) {
+        $url_page = esc_url("http://{$host}{$request_uri}");
+    } else {
+        $url_page = home_url(); // Fallback to homepage if values are missing
+    }
+
     // Parse the URL
-    $parsed_url = parse_url($url_page);
+    $parsed_url = wp_parse_url($url_page);
     // Parse the query string into an associative array
     if (isset($parsed_url['query'])) {
         parse_str($parsed_url['query'], $query_params);
@@ -119,69 +131,64 @@ function dapfforwc_product_filter_shortcode($atts)
     // End Output
     $formOutPut .= "</div>";
 
-    if ($update_filter_options !== "on") {
-        // Prepare the query arguments based on the provided attributes
-        $args = array(
-            'post_type' => 'product',
-            'posts_per_page' => -1,
-            'post_status' => 'publish',
-            'tax_query' => array('relation' => 'AND'),
-            'fields'    => 'ids',
-        );
+    // Prepare the query arguments based on the provided attributes
+    $args = array(
+        'post_type' => 'product',
+        'posts_per_page' => -1,
+        'post_status' => 'publish',
+        'tax_query' => array('relation' => 'AND'),
+        'fields'    => 'ids',
+    );
 
-        if (!empty($matched_cata)) {
-            $args['tax_query'][] = array(
-                'taxonomy' => 'product_cat',
-                'field' => 'slug',
-                'terms' => array_map('sanitize_text_field', $matched_cata),
-                'operator' => $second_operator,
-            );
-        }
-        // Handle matched tags from $default_filter
-        if (!empty($matched_tag)) {
-            $args['tax_query'][] = array(
-                'taxonomy' => 'product_tag',
-                'field' => 'slug',
-                'terms' => array_map('sanitize_text_field', $matched_tag),
-                'operator' => $second_operator,
-            );
-        }
-        // Handle matched attributes from $default_filter
-        if (!empty($matched_attributes)) {
-            foreach ($matched_attributes as $taxonomy => $terms) {
-                if (!empty($terms)) {
-                    $args['tax_query'][] = array(
-                        'taxonomy' => 'pa_' . $taxonomy,
-                        'field' => 'slug',
-                        'terms' => $terms,
-                        'operator' => $second_operator,
-                    );
-                }
+    if (!empty($matched_cata)) {
+        $args['tax_query'][] = array(
+            'taxonomy' => 'product_cat',
+            'field' => 'slug',
+            'terms' => array_map('sanitize_text_field', $matched_cata),
+            'operator' => $second_operator,
+        );
+    }
+    // Handle matched tags from $default_filter
+    if (!empty($matched_tag)) {
+        $args['tax_query'][] = array(
+            'taxonomy' => 'product_tag',
+            'field' => 'slug',
+            'terms' => array_map('sanitize_text_field', $matched_tag),
+            'operator' => $second_operator,
+        );
+    }
+    // Handle matched attributes from $default_filter
+    if (!empty($matched_attributes)) {
+        foreach ($matched_attributes as $taxonomy => $terms) {
+            if (!empty($terms)) {
+                $args['tax_query'][] = array(
+                    'taxonomy' => 'pa_' . $taxonomy,
+                    'field' => 'slug',
+                    'terms' => $terms,
+                    'operator' => $second_operator,
+                );
             }
         }
-        if ($remove_outofStock_product === "on") {
-            $args['meta_query'][] =
-                array(
-                    'key' => '_stock_status',
-                    'value' => 'instock',
-                );
-        }
-
-        // Query the products based on the filters
-        $products = new WP_Query($args);
-        $product_ids = $products->posts;
-        $updated_filters = dapfforwc_get_updated_filters($product_ids);
-        $min_max_prices = dapfforwc_get_min_max_price($products);
-    } else {
-        $updated_filters = [];
-        $min_max_prices = ["min" => "0", "max" => "10000"];
     }
+    if ($remove_outofStock_product === "on") {
+        $args['meta_query'][] =
+            array(
+                'key' => '_stock_status',
+                'value' => 'instock',
+            );
+    }
+
+    // Query the products based on the filters
+    $products = new WP_Query($args);
+    $product_ids = $products->posts;
+    $updated_filters = dapfforwc_get_updated_filters($product_ids);
+    $min_max_prices = dapfforwc_get_min_max_price($products);
     ob_start(); // Start output buffering
 ?>
-    <!-- <script src="https://kit.fontawesome.com/5f97c36a12.js" crossorigin="anonymous"></script> -->
+    
     <style>
         .progress-percentage:after {
-            content: "<?php echo esc_html($min_max_prices['max']);?> ";
+            content: "<?php echo esc_html($min_max_prices['max']); ?> ";
         }
 
         <?php if ($atts['mobile_responsive'] === 'style_1') { ?>
@@ -397,7 +404,7 @@ function dapfforwc_product_filter_shortcode($atts)
             <?php
             wp_nonce_field('gm-product-filter-action', 'gm-product-filter-nonce');
             echo $formOutPut;
-            echo dapfforwc_filter_form($updated_filters, $default_filter, $use_anchor, $use_filters_word, $atts, $min_price=$dapfforwc_styleoptions["price"]["min_price"]??$min_max_prices['min'],$max_price=$dapfforwc_styleoptions["price"]["max_price"]??$min_max_prices['max']+1);
+            echo dapfforwc_filter_form($updated_filters, $default_filter, $use_anchor, $use_filters_word, $atts, $min_price = $dapfforwc_styleoptions["price"]["min_price"] ?? $min_max_prices['min'], $max_price = $dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max'] + 1);
             echo '</form>';
             if ($atts['mobile_responsive'] === 'style_3' || $atts['mobile_responsive'] === 'style_4') { ?>
         </div>
@@ -850,12 +857,6 @@ function dapfforwc_get_updated_filters($product_ids)
         }
     }
 
-    error_log(json_encode([
-        'categories' => array_values($categories), // Return as array
-        'attributes' => $attributes,
-        'tags' => array_values($tags), // Return as array
-    ]));
-
     return [
         'categories' => array_values($categories), // Return as array
         'attributes' => $attributes,
@@ -891,7 +892,10 @@ function dapfforwc_get_woocommerce_attributes_with_terms()
     ORDER BY tt.taxonomy, t.name;
 ";
 
-    $results = $wpdb->get_results($query, ARRAY_A);
+    // Prepare the query with placeholders
+    $prepared_query = $wpdb->prepare($query, 'product_cat', 'product_tag');
+
+    $results = $wpdb->get_results($prepared_query, ARRAY_A);
 
     if (is_array($results) || is_object($results)) {
         foreach ($results as $row) {
@@ -962,7 +966,7 @@ function dapfforwc_get_woocommerce_attributes_with_terms()
 add_action('edited_term', function ($term_id) {
     $cache_file = __DIR__ . '/woocommerce_attributes_cache.json';
     if (file_exists($cache_file)) {
-        unlink($cache_file);
+        wp_delete_file($cache_file);
     }
 });
 
@@ -970,6 +974,6 @@ add_action('edited_term', function ($term_id) {
 add_action('save_post_product', function ($post_id) {
     $cache_file = __DIR__ . '/woocommerce_attributes_cache.json';
     if (file_exists($cache_file)) {
-        unlink($cache_file);
+        wp_delete_file($cache_file);
     }
 });

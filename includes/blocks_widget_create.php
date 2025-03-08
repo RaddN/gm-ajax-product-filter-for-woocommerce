@@ -12,7 +12,8 @@ function dapfforwc_register_dynamic_ajax_filter_block()
         'dynamic-ajax-filter-block',
         plugins_url('block.min.js', __FILE__),
         array('wp-blocks', 'wp-element', 'wp-editor', 'wp-components'),
-        filemtime(plugin_dir_path(__FILE__) . 'block.min.js')
+        filemtime(plugin_dir_path(__FILE__) . 'block.min.js'),
+        true
     );
 
     register_block_type('plugin/dynamic-ajax-filter', array(
@@ -158,7 +159,7 @@ function dapfforwc_generate_css($styles, $device = 'desktop', $hover = false, $a
 function dapfforwc_render_dynamic_ajax_filter_block($attributes)
 {
     $filter_type = $attributes['filterType'];
-    $use_custom_design = $attributes['usecustomdesign'];
+    $use_custom_design = $attributes['usecustomdesign']??'';
     $filter_options_manage = isset($attributes['filterOptions'])?$attributes['filterOptions']:[];
     $mobile_style = $attributes['mobileStyle'] ?? "style_1";
     $output = '';

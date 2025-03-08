@@ -455,7 +455,8 @@ function dapfforwc_enqueue_dapfforwc_filter_block_assets() {
         'dynamic-ajax-filter-block',
         plugins_url( 'includes/block.min.js', __FILE__ ),
         array( 'wp-blocks', 'wp-element', 'wp-editor' ),
-        filemtime( plugin_dir_path( __FILE__ ) . 'includes/block.min.js' )
+        filemtime( plugin_dir_path( __FILE__ ) . 'includes/block.min.js' ),
+        true
     );
 
     wp_enqueue_style('custom-box-control-styles', plugin_dir_url(__FILE__) . 'assets/css/block-editor.min.css', [], '1.0.4');

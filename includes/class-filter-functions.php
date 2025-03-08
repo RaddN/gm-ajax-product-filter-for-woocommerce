@@ -43,13 +43,13 @@ class dapfforwc_Filter_Functions
 
         $query = new WP_Query($args);
         if ($update_filter_options === "on") {
-        $filter_options = new WP_Query($args_options);
-        // $product_ids = wp_list_pluck($query->posts, 'ID');
-        $product_ids = $filter_options->posts;
-        $count_total_showing_product = $filter_options->post_count;
+            $filter_options = new WP_Query($args_options);
+            // $product_ids = wp_list_pluck($query->posts, 'ID');
+            $product_ids = $filter_options->posts;
+            $count_total_showing_product = $filter_options->post_count;
 
-        $updated_filters = dapfforwc_get_updated_filters($product_ids);
-        }else{
+            $updated_filters = dapfforwc_get_updated_filters($product_ids);
+        } else {
             $updated_filters = [];
             $count_total_showing_product = $query->post_count;
         }
@@ -59,10 +59,16 @@ class dapfforwc_Filter_Functions
         // Check if 'selectedvalues' is set and not empty
         if (!empty($_POST['selectedvalues'])) {
             // Convert the string to an array
-            $default_filter = array_map('sanitize_text_field', explode(',', wp_unslash($_POST['selectedvalues'])));
+            $default_filter = array_map('sanitize_text_field', explode(',', sanitize_text_field(wp_unslash($_POST['selectedvalues']))));
         }
 
-        $filterform = dapfforwc_filter_form($updated_filters, $default_filter, "", "", "", $min_price = floatval($_POST['min_price']) ?? $dapfforwc_styleoptions["price"]["min_price"] ?? $min_max_prices['min'], $max_price = floatval($_POST['max_price']) ?? $dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max'] + 1);
+        $min_price = isset($_POST['min_price']) ? floatval(sanitize_text_field(wp_unslash($_POST['min_price']))) : ($dapfforwc_styleoptions["price"]["min_price"] ?? $min_max_prices['min']);
+
+        $max_price = isset($_POST['max_price']) ? floatval(sanitize_text_field(wp_unslash($_POST['max_price']))) : ($dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max'] + 1);
+
+        // Pass sanitized values to the function
+        $filterform = dapfforwc_filter_form($updated_filters, $default_filter, "", "", "", $min_price, $max_price);
+
         // Capture the product listing
         ob_start();
 
@@ -219,7 +225,7 @@ class dapfforwc_Filter_Functions
     {
         global $dapfforwc_options;
         $product = wc_get_product($post->ID);
-        if (isset($dapfforwc_options['use_custom_template']) && $dapfforwc_options['use_custom_template'] === "on" && in_array($currentpage_slug, $dapfforwc_options['use_custom_template_in_page'])) {
+        if (isset($dapfforwc_options['use_custom_template']) && $dapfforwc_options['use_custom_template'] === "on" && in_array($currentpage_slug, $dapfforwc_options['use_custom_template_in_page'] ?? [])) {
             // Get product details
             $product_link = get_permalink();
             $product_title = get_the_title();
