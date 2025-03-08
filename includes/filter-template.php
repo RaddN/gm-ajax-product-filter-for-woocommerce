@@ -4,17 +4,28 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-function dapfforwc_product_filter_shortcode($atts) {
-    global $dapfforwc_styleoptions,$post,$dapfforwc_options, $dapfforwc_advance_settings, $dapfforwc_min_max_price,$wp;
+function dapfforwc_product_filter_shortcode($atts)
+{
+    global $dapfforwc_styleoptions, $post, $dapfforwc_options, $dapfforwc_advance_settings, $dapfforwc_min_max_price, $wp;
+    $update_filter_options =  isset($dapfforwc_options["update_filter_options"]) ? $dapfforwc_options["update_filter_options"] : "";
     $use_anchor = isset($dapfforwc_advance_settings["use_anchor"]) ? $dapfforwc_advance_settings["use_anchor"] : "";
     $use_filters_word = isset($dapfforwc_options["use_filters_word_in_permalinks"]) ? $dapfforwc_options["use_filters_word_in_permalinks"] : "";
-    $remove_outofStock_product = isset($dapfforwc_advance_settings["remove_outofStock"]) ? $dapfforwc_advance_settings["remove_outofStock"] : ""; 
+    $remove_outofStock_product = isset($dapfforwc_advance_settings["remove_outofStock"]) ? $dapfforwc_advance_settings["remove_outofStock"] : "";
     $dapfforwc_slug = isset($post) ? dapfforwc_get_full_slug($post->ID) : "";
     $second_operator = strtoupper($dapfforwc_options["product_show_settings"][$dapfforwc_slug]["operator_second"] ?? "IN");
     $request = $wp->request;
+    $url_page = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+    // Parse the URL
+    $parsed_url = parse_url($url_page);
+    // Parse the query string into an associative array
+    if (isset($parsed_url['query'])) {
+        parse_str($parsed_url['query'], $query_params);
+    }
+    // Get the value of 'filters'
+    $filters = $query_params['filters'] ?? null;
     $default_filter = array_merge(
         $dapfforwc_options["default_filters"][$dapfforwc_slug] ?? [],
-        explode('/', str_replace('filters/', '', get_transient('dapfforwc_slug')?:'')),
+        explode('/', $filters ?? ''),
         explode('/', $request)
     );
 
@@ -27,152 +38,163 @@ function dapfforwc_product_filter_shortcode($atts) {
         'product_selector' => '',
         'pagination_selector' => '',
         'mobile_responsive' => 'style_1',
+        'use_custom_template_design' => 'no'
     ), $atts);
 
-    // Prepare the query arguments based on the provided attributes
-    $args = array(
-        'post_type' => 'product',
-        'posts_per_page' => -1,
-        'post_status' => 'publish',
-        'tax_query' => array('relation' => 'AND'),
-    );
-    
-    // Cache the terms data
-    $all_cata = get_transient('dapfforwc_all_cata') ?: set_transient('dapfforwc_all_cata', get_terms(['taxonomy' => 'product_cat', 'hide_empty' => true]), DAY_IN_SECONDS);
-    $all_tags = get_transient('dapfforwc_all_tags') ?: set_transient('dapfforwc_all_tags', get_terms(['taxonomy' => 'product_tag', 'hide_empty' => true]), DAY_IN_SECONDS);
-    $all_attributes = get_transient('dapfforwc_all_attributes') ?: set_transient('dapfforwc_all_attributes', wc_get_attribute_taxonomies(), DAY_IN_SECONDS);
+    if (!empty($atts['use_custom_template_design']) && $atts['use_custom_template_design'] === "yes") {
+        // Ensure it's an array
+        $dapfforwc_options['use_custom_template_in_page'] = isset($dapfforwc_options['use_custom_template_in_page']) ? $dapfforwc_options['use_custom_template_in_page'] : [];
 
-    if (isset($all_attributes) && is_array($all_attributes)) {
-        $attribute_taxonomies = array_column($all_attributes, 'attribute_name');
-        $attribute_taxonomies = array_map(fn($attr) => 'pa_' . $attr, $attribute_taxonomies);
+        // Merge and ensure uniqueness
+        if (is_string($dapfforwc_slug)) {
+            $dapfforwc_options['use_custom_template_in_page'] = array_unique(array_merge($dapfforwc_options['use_custom_template_in_page'], [$dapfforwc_slug]));
+        }
+
+        // Update options
+        update_option('dapfforwc_options', $dapfforwc_options);
     } else {
-        $attribute_taxonomies = [];
-    }
-    
-    // Create lookup arrays
-    $cata_lookup =is_array($all_cata) ? array_column($all_cata, 'slug', 'slug') : [];
-    $tag_lookup = is_array($all_tags) ? array_column($all_tags, 'slug', 'slug') : [];
-    
-    $attribute_lookups = [];
-    if (isset($attribute_taxonomies) && is_array($attribute_taxonomies)) {
-        foreach ($attribute_taxonomies as $taxonomy) {
-            $terms = get_terms(['taxonomy' => $taxonomy, 'hide_empty' => true]);
-            $attribute_lookups[$taxonomy] = array_column($terms, 'slug', 'slug');
+        // Remove the slug from the settings if it exists
+        if (isset($dapfforwc_options['use_custom_template_in_page']) && is_array($dapfforwc_options['use_custom_template_in_page'])) {
+            $dapfforwc_options['use_custom_template_in_page'] = array_values(array_diff($dapfforwc_options['use_custom_template_in_page'], [$dapfforwc_slug]));
+
+            // Update options after removal
+            update_option('dapfforwc_options', $dapfforwc_options);
         }
     }
 
-    // Match filters
-    $matched_cata = isset($cata_lookup) ? array_intersect_key($cata_lookup, array_flip($default_filter)) : [];
-    $matched_tag = isset($tag_lookup) ? array_intersect_key($tag_lookup, array_flip($default_filter)) : [];
+    $formOutPut = "<div class='defaultfilters'>";
+    // Get Categories, Tags, attributes using the existing function
+    $all_data = dapfforwc_get_woocommerce_attributes_with_terms();
+    $all_cata = $all_data['categories'];
+    $all_tags = $all_data['tags'];
+
+    // Create Lookup Arrays
+    $cata_lookup = array_column($all_cata, 'slug', 'slug');
+    $tag_lookup = array_column($all_tags, 'slug', 'slug');
+
+    // Match Filters
+    $matched_cata = array_intersect_key($cata_lookup, array_flip($default_filter));
+    $matched_tag  = array_intersect_key($tag_lookup, array_flip($default_filter));
+
+
+    // Match Attributes
 
     $matched_attributes = [];
-    if (isset($attribute_lookups) && is_array($attribute_lookups)) {
-        foreach ($attribute_lookups as $taxonomy => $lookup) {
-            $matched_terms = array_intersect_key($lookup, array_flip($default_filter));
-            if (!empty($matched_terms)) {
-                $matched_attributes[$taxonomy] = array_keys($matched_terms);
+
+    if (!empty($all_data['attributes']) && (is_array($all_data['attributes']) || is_object($all_data['attributes']))) {
+        foreach ($all_data['attributes'] as $taxonomy => $lookup) {
+            // Ensure 'terms' key exists and is an array
+            if (isset($lookup['terms']) && is_array($lookup['terms'])) {
+                // Extract the term slugs using array_column
+                $term_names = array_column($lookup['terms'], 'slug');
+
+                // Use array_intersect to find matched terms with the default filter
+                $matched_attributes[$taxonomy] = array_intersect($term_names, $default_filter);
             }
-            }
+        }
     }
-    
-    // Add category filter
-    if (!empty($atts['category'])) {
-        $categories = array_map('sanitize_text_field', explode(',', $atts['category']));
-        foreach ($categories as $category) {
+    // Generate Hidden Inputs for Categories
+    if (is_array($matched_cata) || is_object($matched_cata)) {
+        foreach ($matched_cata as $value) {
+            $formOutPut .= '<input type="checkbox" name="category[]" value="' . htmlspecialchars($value) . '" checked style="display:none;">';
+        }
+    }
+    // Generate Hidden Inputs for Tags
+    if (is_array($matched_tag) || is_object($matched_tag)) {
+        foreach ($matched_tag as $value) {
+            $formOutPut .= '<input type="checkbox" name="tag[]" value="' . htmlspecialchars($value) . '" checked style="display:none;">';
+        }
+    }
+    // Generate Hidden Inputs for Attributes
+    if (is_array($matched_attributes) || is_object($matched_attributes)) {
+        foreach ($matched_attributes as $taxonomy => $terms) {
+            $taxonomy = str_replace('pa_', '', $taxonomy);
+            if (is_array($terms) || is_object($terms)) {
+                foreach ($terms as $term) {
+                    $formOutPut .= '<input type="checkbox" name="attribute[' . $taxonomy . '][]" value="' . htmlspecialchars($term) . '" checked style="display:none;">';
+                }
+            }
+        }
+    }
+    // End Output
+    $formOutPut .= "</div>";
+
+    if ($update_filter_options !== "on") {
+        // Prepare the query arguments based on the provided attributes
+        $args = array(
+            'post_type' => 'product',
+            'posts_per_page' => -1,
+            'post_status' => 'publish',
+            'tax_query' => array('relation' => 'AND'),
+            'fields'    => 'ids',
+        );
+
+        if (!empty($matched_cata)) {
             $args['tax_query'][] = array(
                 'taxonomy' => 'product_cat',
                 'field' => 'slug',
-                'terms' => $category,
+                'terms' => array_map('sanitize_text_field', $matched_cata),
                 'operator' => $second_operator,
             );
         }
-    } 
-    // Add attribute filter
-    if (!empty($atts['attribute']) && !empty($atts['terms'])) {
-        $terms = array_map('sanitize_text_field', explode(',', $atts['terms']));
-        foreach ($terms as $term) {
-            $args['tax_query'][] = array(
-                'taxonomy' => 'pa_' . sanitize_title($atts['attribute']),
-                'field' => 'slug',
-                'terms' => $term,
-                'operator' => $second_operator,
-            );
-        }
-    } 
-    // Add tag filter
-     if (!empty($atts['tag'])) {
-        $tags = array_map('sanitize_text_field', explode(',', $atts['tag']));
-        foreach ($tags as $tag) {
+        // Handle matched tags from $default_filter
+        if (!empty($matched_tag)) {
             $args['tax_query'][] = array(
                 'taxonomy' => 'product_tag',
                 'field' => 'slug',
-                'terms' => $tag,
+                'terms' => array_map('sanitize_text_field', $matched_tag),
                 'operator' => $second_operator,
             );
         }
-    } 
-    // Handle matched categories from $default_filter
-    if (!empty($matched_cata)) {
-        $args['tax_query'][] = array(
-            'taxonomy' => 'product_cat',
-            'field' => 'slug',
-            'terms' => array_map('sanitize_text_field', $matched_cata),
-            'operator' => $second_operator,
-        );
-        
-    } 
-    // Handle matched tags from $default_filter
-     if (!empty($matched_tag)) {
-        $args['tax_query'][] = array(
-            'taxonomy' => 'product_tag',
-            'field' => 'slug',
-            'terms' => array_map('sanitize_text_field', $matched_tag),
-            'operator' => $second_operator,
-        );
-    } 
-    // Handle matched attributes from $default_filter
-    if (!empty($matched_attributes)) {
-        foreach ($matched_attributes as $taxonomy => $terms) {
-            $args['tax_query'][] = array(
-                'taxonomy' => $taxonomy,
-                'field' => 'slug',
-                'terms' => $terms,
-                'operator' => $second_operator,
-            );
+        // Handle matched attributes from $default_filter
+        if (!empty($matched_attributes)) {
+            foreach ($matched_attributes as $taxonomy => $terms) {
+                if (!empty($terms)) {
+                    $args['tax_query'][] = array(
+                        'taxonomy' => 'pa_' . $taxonomy,
+                        'field' => 'slug',
+                        'terms' => $terms,
+                        'operator' => $second_operator,
+                    );
+                }
+            }
         }
+        if ($remove_outofStock_product === "on") {
+            $args['meta_query'][] =
+                array(
+                    'key' => '_stock_status',
+                    'value' => 'instock',
+                );
+        }
+
+        // Query the products based on the filters
+        $products = new WP_Query($args);
+        $product_ids = $products->posts;
+        $updated_filters = dapfforwc_get_updated_filters($product_ids);
+        $min_max_prices = dapfforwc_get_min_max_price($products);
+    } else {
+        $updated_filters = [];
+        $min_max_prices = ["min" => "0", "max" => "10000"];
     }
-    if ($remove_outofStock_product==="on") {
-        $args['meta_query'][] =
-            array(
-                'key' => '_stock_status',
-                'value' => 'instock',
-            );
-    }
-    
-    // Query the products based on the filters
-    $products = new WP_Query($args);
-    
-    $updated_filters = dapfforwc_get_updated_filters($products);
-    // echo "hello <pre>"; print_r($dapfforwc_options["product_show_settings"]); echo "</pre>";
-    $min_max_prices = dapfforwc_get_min_max_price($products);
-    set_transient("dapfforwc_min_max_price", array('min' => $min_max_prices['min'], 'max' => $min_max_prices['max']), 0.5 * HOUR_IN_SECONDS);
-// echo "Minimum Price: " . wc_price($prices['min']);
-// echo "Maximum Price: " . wc_price($prices['max']);
-    
     ob_start(); // Start output buffering
-    ?>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+?>
+    <!-- <script src="https://kit.fontawesome.com/5f97c36a12.js" crossorigin="anonymous"></script> -->
     <style>
-    .progress-percentage:after{
-        content: "<?php echo esc_html($min_max_prices['max']); ?>";
-    }
-    <?php if($atts['mobile_responsive'] === 'style_1') { ?>
+        .progress-percentage:after {
+            content: "<?php echo esc_html($min_max_prices['max']);?> ";
+        }
+
+        <?php if ($atts['mobile_responsive'] === 'style_1') { ?>
         /* responsive filter */
         @media (max-width: 781px) {
             .rfilterbuttons {
                 display: none;
             }
-            #product-filter .filter-group div .title{cursor:pointer !important;}
+
+            #product-filter .filter-group div .title {
+                cursor: pointer !important;
+            }
+
             #product-filter:before {
                 content: "Filter";
                 background: linear-gradient(90deg, #041a57, #d62229);
@@ -183,120 +205,135 @@ function dapfforwc_product_filter_shortcode($atts) {
                 position: absolute;
                 left: 0px;
             }
+
             form#product-filter {
-                display: flex ;
+                display: flex;
                 flex-direction: row !important;
                 overflow: scroll;
                 gap: 10px;
                 height: 66px;
                 margin-left: 64px;
             }
-        .filter-group .title{font-size: 16px !important;}
-        .child-categories {
-            display: block !important;
-        }
-        .filter-group {
-            min-width: max-content;
-            height: min-content;
-        }
+
+            .filter-group .title {
+                font-size: 16px !important;
+            }
+
+            .child-categories {
+                display: block !important;
+            }
+
+            .filter-group {
+                min-width: max-content;
+                height: min-content;
+            }
+
             #product-filter .items {
                 position: absolute;
-                left:0;
+                left: 0;
                 background: white;
                 padding: 20px 15px;
                 box-shadow: #efefef99 0 -4px 10px 4px;
                 z-index: 999;
             }
         }
-    <?php } ?>
-    <?php if($atts['mobile_responsive'] === 'style_2') { ?>
-        
-    <?php } ?>
+
+        <?php } ?><?php if ($atts['mobile_responsive'] === 'style_2') { ?><?php } ?>
     </style>
-    <?php if($atts['mobile_responsive'] === 'style_3') { ?>
+    <?php if ($atts['mobile_responsive'] === 'style_3') { ?>
 
         <style>
             @media (min-width: 781px) {
-                #mobileonly, #filter-button {
+
+                #mobileonly,
+                #filter-button {
                     display: none !important;
                 }
             }
+
             @media (max-width: 781px) {
-            .items {
-                display: block !important;
+                .items {
+                    display: block !important;
+                }
+
+                .mobile-filter {
+                    position: fixed;
+                    z-index: 999;
+                    background: #ffffff;
+                    width: 95%;
+                    padding: 30px 20px 300px 20px;
+                    height: 100%;
+                    overflow: scroll;
+                    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+                    border-radius: 30px;
+                    margin: 5px !important;
+                    display: none;
+                }
+
+                .rfilterselected ul {
+                    flex-wrap: nowrap;
+                    overflow: scroll;
+                }
             }
-            .mobile-filter {
-            position: fixed;
-            z-index: 999;
-            background: #ffffff;
-            width: 95%;
-            padding: 30px 20px 300px 20px;
-            height: 100%;
-            overflow: scroll;
-            box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
-            border-radius: 30px;
-            margin: 5px !important;
-            display: none;
-        }
-        .rfilterselected ul {
-            flex-wrap: nowrap;
-            overflow: scroll;
-        }
-        }
         </style>
     <?php } ?>
-    <?php if($atts['mobile_responsive'] === 'style_4') { ?>
+    <?php if ($atts['mobile_responsive'] === 'style_4') { ?>
 
         <style>
             @media (min-width: 781px) {
-                #mobileonly, #filter-button {
+
+                #mobileonly,
+                #filter-button {
                     display: none !important;
                 }
             }
+
             @media (max-width: 781px) {
-            .items {
-                display: block !important;
-            }
-            .mobile-filter {
-                position: fixed;
-                z-index: 999;
-                background: #ffffff;
-                width: 80%;
-                height: 100%;
-                overflow: scroll;
-                box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
-                bottom: 0;
-                right: 0;
-                transition: transform 0.3s ease-in-out;
-                transform: translateX(150%);
-            }
-            .mobile-filter.open {
-                transform: translateX(0%);
-            }
-            .rfilterselected ul {
-                flex-wrap: nowrap;
-                overflow: scroll;
-            }
+                .items {
+                    display: block !important;
+                }
+
+                .mobile-filter {
+                    position: fixed;
+                    z-index: 999;
+                    background: #ffffff;
+                    width: 80%;
+                    height: 100%;
+                    overflow: scroll;
+                    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+                    bottom: 0;
+                    right: 0;
+                    transition: transform 0.3s ease-in-out;
+                    transform: translateX(150%);
+                }
+
+                .mobile-filter.open {
+                    transform: translateX(0%);
+                }
+
+                .rfilterselected ul {
+                    flex-wrap: nowrap;
+                    overflow: scroll;
+                }
             }
         </style>
-    <?php } 
-    
-    if($atts['mobile_responsive'] === 'style_3' ||  $atts['mobile_responsive'] === 'style_4') { ?>
+    <?php }
+
+    if ($atts['mobile_responsive'] === 'style_3' ||  $atts['mobile_responsive'] === 'style_4') { ?>
         <button id="filter-button" style="position: fixed; z-index:999;     bottom: 20px;
     right: 20px; background-color: #041a57; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
             <i class="fa fa-filter" aria-hidden="true"></i>
         </button>
         <div class="mobile-filter">
-        <div class="sm-top-btn" id="mobileonly" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; padding: 20px;margin-bottom: 10px;">
-            <button id="filter-cancel-button" style="background: none;padding:0;color: #000;"> Cancel </button>
-            <p style="margin: 0;" id="rcountproduct">Show(5)</p>
-        </div>
-    <?php 
-    echo '<div class="rfilterselected" id="mobileonly"><div><ul></ul></div></div>';
-
-     } 
-     if($atts['mobile_responsive'] === 'style_3') { ?>
-        <script>
+            <div class="sm-top-btn" id="mobileonly" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; padding: 20px;margin-bottom: 10px;">
+                <button id="filter-cancel-button" style="background: none;padding:0;color: #000;"> Cancel </button>
+                <p style="margin: 0;" id="rcountproduct">Show(5)</p>
+            </div>
+        <?php
+        echo '<div class="rfilterselected" id="mobileonly"><div><ul></ul></div></div>';
+    }
+    if ($atts['mobile_responsive'] === 'style_3') { ?>
+            <script>
                 jQuery(document).ready(function($) {
                     function isMobile() {
                         return $(window).width() < 768; // Adjust the width as needed
@@ -321,10 +358,10 @@ function dapfforwc_product_filter_shortcode($atts) {
                     }
                 });
             </script>
-    <?php }
+        <?php }
 
-    if($atts['mobile_responsive'] === 'style_4') { ?>
-         <script>
+    if ($atts['mobile_responsive'] === 'style_4') { ?>
+            <script>
                 jQuery(document).ready(function($) {
                     function isMobile() {
                         return $(window).width() < 768; // Adjust the width as needed
@@ -349,48 +386,54 @@ function dapfforwc_product_filter_shortcode($atts) {
                     }
                 });
             </script>
-    <?php } ?>
-    <form id="product-filter" method="POST" 
-    <?php if (!empty($atts['product_selector'])) { echo 'data-product_selector="' . esc_attr($atts["product_selector"]) . '"'; } ?> 
-    <?php if (!empty($atts['pagination_selector'])) { echo 'data-pagination_selector="' . esc_attr($atts["pagination_selector"]) . '"'; } ?>>
-    <?php
-    wp_nonce_field('gm-product-filter-action', 'gm-product-filter-nonce'); 
-    echo dapfforwc_filter_form($updated_filters,$default_filter,$use_anchor,$use_filters_word,$atts,$min_price=$dapfforwc_styleoptions["price"]["min_price"]??$min_max_prices['min'],$max_price=$dapfforwc_styleoptions["price"]["max_price"]??$min_max_prices['max']+1);
-
-    echo '</form>';
-    if($atts['mobile_responsive'] === 'style_3' || $atts['mobile_responsive'] === 'style_4') { ?>
+        <?php } ?>
+        <form id="product-filter" method="POST"
+            <?php if (!empty($atts['product_selector'])) {
+                echo 'data-product_selector="' . esc_attr($atts["product_selector"]) . '"';
+            } ?>
+            <?php if (!empty($atts['pagination_selector'])) {
+                echo 'data-pagination_selector="' . esc_attr($atts["pagination_selector"]) . '"';
+            } ?>>
+            <?php
+            wp_nonce_field('gm-product-filter-action', 'gm-product-filter-nonce');
+            echo $formOutPut;
+            echo dapfforwc_filter_form($updated_filters, $default_filter, $use_anchor, $use_filters_word, $atts, $min_price=$dapfforwc_styleoptions["price"]["min_price"]??$min_max_prices['min'],$max_price=$dapfforwc_styleoptions["price"]["max_price"]??$min_max_prices['max']+1);
+            echo '</form>';
+            if ($atts['mobile_responsive'] === 'style_3' || $atts['mobile_responsive'] === 'style_4') { ?>
         </div>
     <?php }
     ?>
-    
-<!-- Loader HTML -->
-<?php echo $dapfforwc_options["loader_html"] ?>
-<style><?php echo $dapfforwc_options["loader_css"] ?></style>
-<?php
-if (isset($dapfforwc_options["loader_html"])) {
-    echo $dapfforwc_options["loader_html"];
-}
 
-if (isset($dapfforwc_options["loader_css"])) {
-    echo '<style>' .$dapfforwc_options["loader_css"]. '</style>';
-}
-?>
-<div id="roverlay" style="display: none;"></div>
+    <!-- Loader HTML -->
+    <?php echo $dapfforwc_options["loader_html"] ?>
+    <style>
+        <?php echo $dapfforwc_options["loader_css"] ?>
+    </style>
+    <?php
+    if (isset($dapfforwc_options["loader_html"])) {
+        echo $dapfforwc_options["loader_html"];
+    }
 
-<div id="filtered-products">
-    <!-- AJAX results will be displayed here -->
-</div>
+    if (isset($dapfforwc_options["loader_css"])) {
+        echo '<style>' . $dapfforwc_options["loader_css"] . '</style>';
+    }
+    ?>
+    <div id="roverlay" style="display: none;"></div>
+
+    <div id="filtered-products">
+        <!-- AJAX results will be displayed here -->
+    </div>
 
 <?php
 
     // End output buffering and return content
     return ob_get_clean();
-
 }
 add_shortcode('plugincy_filters', 'dapfforwc_product_filter_shortcode');
 
 // General sorting function
-function dapfforwc_customSort($a, $b) {
+function dapfforwc_customSort($a, $b)
+{
     // Try to convert to timestamp for date comparison
     $dateA = strtotime($a);
     $dateB = strtotime($b);
@@ -407,32 +450,33 @@ function dapfforwc_customSort($a, $b) {
     // Fallback to string comparison
     return strcmp($a, $b);
 }
-function dapfforwc_render_filter_option($sub_option, $title, $value, $checked, $dapfforwc_styleoptions , $name, $attribute,$singlevalueSelect, $count,$min_price=0,$max_price=10000) {
+function dapfforwc_render_filter_option($sub_option, $title, $value, $checked, $dapfforwc_styleoptions, $name, $attribute, $singlevalueSelect, $count, $min_price = 0, $max_price = 10000)
+{
     $output = '';
-    $min_max_prices = get_transient("dapfforwc_min_max_price") ?: dapfforwc_get_min_max_price();
+    $min_max_prices = dapfforwc_get_min_max_price();
     switch ($sub_option) {
         case 'checkbox':
-            $output .= '<label><input type="'.($singlevalueSelect==="yes"?'radio':'checkbox').'" class="filter-checkbox" name="' . $name . '[]" value="' . $value . '"' . $checked . '> ' . $title . ($count!=0?' ('.$count.')':''). '</label>';
+            $output .= '<label><input type="' . ($singlevalueSelect === "yes" ? 'radio' : 'checkbox') . '" class="filter-checkbox" name="' . $name . '[]" value="' . $value . '"' . $checked . '> ' . $title . ($count != 0 ? ' (' . $count . ')' : '') . '</label>';
             break;
 
         case 'radio_check':
-            $output .= '<label><input type="'.($singlevalueSelect==="yes"?'radio':'checkbox').'" class="filter-radio-check" name="' . $name . '[]" value="' . $value . '"' . $checked . '> ' . $title . ($count!=0?' ('.$count.')':''). '</label>';
+            $output .= '<label><input type="' . ($singlevalueSelect === "yes" ? 'radio' : 'checkbox') . '" class="filter-radio-check" name="' . $name . '[]" value="' . $value . '"' . $checked . '> ' . $title . ($count != 0 ? ' (' . $count . ')' : '') . '</label>';
             break;
 
         case 'radio':
-            $output .= '<label><input type="'.($singlevalueSelect==="yes"?'radio':'checkbox').'" class="filter-radio" name="' . $name . '[]" value="' . $value . '"' . $checked . '> ' . $title . ($count!=0?' ('.$count.')':''). '</label>';
+            $output .= '<label><input type="' . ($singlevalueSelect === "yes" ? 'radio' : 'checkbox') . '" class="filter-radio" name="' . $name . '[]" value="' . $value . '"' . $checked . '> ' . $title . ($count != 0 ? ' (' . $count . ')' : '') . '</label>';
             break;
 
         case 'square_check':
-            $output .= '<label class="square-option"><input type="'.($singlevalueSelect==="yes"?'radio':'checkbox').'" class="filter-square-check" name="' . $name . '[]" value="' . $value . '"' . $checked . '> <span>' . $title . ($count!=0?' ('.$count.')':''). '</span></label>';
+            $output .= '<label class="square-option"><input type="' . ($singlevalueSelect === "yes" ? 'radio' : 'checkbox') . '" class="filter-square-check" name="' . $name . '[]" value="' . $value . '"' . $checked . '> <span>' . $title . ($count != 0 ? ' (' . $count . ')' : '') . '</span></label>';
             break;
 
         case 'square':
-            $output .= '<label class="square-option"><input type="'.($singlevalueSelect==="yes"?'radio':'checkbox').'" class="filter-square" name="' . $name . '[]" value="' . $value . '"' . $checked . '> <span>' . $title . ($count!=0?' ('.$count.')':''). '</span></label>';
+            $output .= '<label class="square-option"><input type="' . ($singlevalueSelect === "yes" ? 'radio' : 'checkbox') . '" class="filter-square" name="' . $name . '[]" value="' . $value . '"' . $checked . '> <span>' . $title . ($count != 0 ? ' (' . $count . ')' : '') . '</span></label>';
             break;
 
         case 'checkbox_hide':
-            $output .= '<label><input type="'.($singlevalueSelect==="yes"?'radio':'checkbox').'" class="filter-checkbox" name="' . $name . '[]" value="' . $value . '"' . $checked . ' style="display:none;"> <span>' . $title . ($count!=0?' ('.$count.')':''). '</span></label>';
+            $output .= '<label><input type="' . ($singlevalueSelect === "yes" ? 'radio' : 'checkbox') . '" class="filter-checkbox" name="' . $name . '[]" value="' . $value . '"' . $checked . ' style="display:none;"> <span>' . $title . ($count != 0 ? ' (' . $count . ')' : '') . '</span></label>';
             break;
 
         case 'color':
@@ -442,8 +486,8 @@ function dapfforwc_render_filter_option($sub_option, $title, $value, $checked, $
             $color = $dapfforwc_styleoptions[$attribute]['colors'][$value] ?? '#000'; // Default color
             $border = ($sub_option === 'color_no_border') ? 'none' : '1px solid #000';
             $value_show = ($sub_option === 'color_value') ? 'block' : 'none';
-            $output .= '<label style="position: relative;"><input type="'.($singlevalueSelect==="yes"?'radio':'checkbox').'" class="filter-color" name="' . $name . '[]" value="' . $value . '"' . $checked . '>
-                <span class="color-box" style="background-color: ' . $color . '; border: ' . $border . '; width: 30px; height: 30px;"></span><span style="display:'.$value_show.';">'.$value.'<span></label>';
+            $output .= '<label style="position: relative;"><input type="' . ($singlevalueSelect === "yes" ? 'radio' : 'checkbox') . '" class="filter-color" name="' . $name . '[]" value="' . $value . '"' . $checked . '>
+                <span class="color-box" style="background-color: ' . $color . '; border: ' . $border . '; width: 30px; height: 30px;"></span><span style="display:' . $value_show . ';">' . $value . '<span></label>';
             break;
 
         case 'image':
@@ -451,80 +495,80 @@ function dapfforwc_render_filter_option($sub_option, $title, $value, $checked, $
             $image = $dapfforwc_styleoptions[$attribute]['images'][$value] ?? 'default-image.jpg'; // Default image
             $border_class = ($sub_option === 'image_no_border') ? 'no-border' : '';
             $output .= '<label class="image-option ' . $border_class . '">
-                <input type="'.($singlevalueSelect==="yes"?'radio':'checkbox').'" class="filter-image" name="' . $name . '[]" value="' . $value . '"' . $checked . '>
+                <input type="' . ($singlevalueSelect === "yes" ? 'radio' : 'checkbox') . '" class="filter-image" name="' . $name . '[]" value="' . $value . '"' . $checked . '>
                 <img src="' . esc_url($image) . '" alt="' . esc_attr($title) . '" /></label>';
             break;
 
         case 'select2':
         case 'select2_classic':
         case 'select':
-            $output .= '<option class="filter-option" value="' . $value . '"' . $checked . '> ' . $title . ($count!=0?' ('.$count.')':''). '</option>';
+            $output .= '<option class="filter-option" value="' . $value . '"' . ($checked ? 'selected' : '') . '> ' . $title . ($count != 0 ? ' (' . $count . ')' : '') . '</option>';
             break;
         case 'input-price-range':
-                $default_min_price= $dapfforwc_styleoptions["price"]["min_price"] ?? $min_max_prices['min'];
-                $default_max_price=$dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max']+1;
-                $output .= '<div class="range-input"><label for="min-price">Min Price:</label>
-        <input type="number" id="min-price" name="min_price" min="'.$default_min_price.'" step="1" placeholder="Min" value="'.$min_price.'" style="position: relative; height: max-content; top: unset; pointer-events: all;">
+            $default_min_price = $dapfforwc_styleoptions["price"]["min_price"] ?? $min_max_prices['min'];
+            $default_max_price = $dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max'] + 1;
+            $output .= '<div class="range-input"><label for="min-price">Min Price:</label>
+        <input type="number" id="min-price" name="min_price" min="' . $default_min_price . '" step="1" placeholder="Min" value="' . $min_price . '" style="position: relative; height: max-content; top: unset; pointer-events: all;">
         
         <label for="max-price">Max Price:</label>
-        <input type="number" id="max-price" name="max_price" min="'.$default_min_price.'" step="1" placeholder="Max" value="'.$max_price.'" style="position: relative; height: max-content; top: unset; pointer-events: all;"></div>';
-                break;
+        <input type="number" id="max-price" name="max_price" min="' . $default_min_price . '" step="1" placeholder="Max" value="' . $max_price . '" style="position: relative; height: max-content; top: unset; pointer-events: all;"></div>';
+            break;
         case 'slider':
-            $default_min_price= $dapfforwc_styleoptions["price"]["min_price"] ?? $min_max_prices['min'];
-            $default_max_price=$dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max']+1;
+            $default_min_price = $dapfforwc_styleoptions["price"]["min_price"] ?? $min_max_prices['min'];
+            $default_max_price = $dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max'] + 1;
             $output .= '<div class="price-input">
         <div class="field">
           <span>Min</span>
-          <input type="number" id="min-price" name="min_price" class="input-min" min="'.$default_min_price.'" value="'.$min_price.'">
+          <input type="number" id="min-price" name="min_price" class="input-min" min="' . $default_min_price . '" value="' . $min_price . '">
         </div>
         <div class="separator">-</div>
         <div class="field">
           <span>Max</span>
-          <input type="number" id="max-price" name="max_price" min="'.$default_min_price.'" class="input-max" value="'.$max_price.'">
+          <input type="number" id="max-price" name="max_price" min="' . $default_min_price . '" class="input-max" value="' . $max_price . '">
         </div>
       </div>
       <div class="slider">
         <div class="progress"></div>
       </div>
       <div class="range-input">
-        <input type="range" id="price-range-min" class="range-min" min="'.$default_min_price.'" max="'.$default_max_price.'" value="'.$min_price.'" >
-        <input type="range" id="price-range-max" class="range-max" min="'.$default_min_price.'" max="'.$default_max_price.'" value="'.$max_price.'">
+        <input type="range" id="price-range-min" class="range-min" min="' . $default_min_price . '" max="' . $default_max_price . '" value="' . $min_price . '" >
+        <input type="range" id="price-range-max" class="range-max" min="' . $default_min_price . '" max="' . $default_max_price . '" value="' . $max_price . '">
       </div>';
             break;
         case 'price':
-            $default_min_price= $dapfforwc_styleoptions["price"]["min_price"] ?? $min_max_prices['min'];
-            $default_max_price=$dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max']+1;
+            $default_min_price = $dapfforwc_styleoptions["price"]["min_price"] ?? $min_max_prices['min'];
+            $default_max_price = $dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max'] + 1;
             $output .= '<div class="price-input" style="visibility: hidden; margin: 0;">
         <div class="field">
-            <input type="number" id="min-price" name="min_price" class="input-min" min="'.$default_min_price.'" value="'.$min_price.'">
+            <input type="number" id="min-price" name="min_price" class="input-min" min="' . $default_min_price . '" value="' . $min_price . '">
         </div>
         <div class="separator">-</div>
         <div class="field">
-            <input type="number" id="max-price" name="max_price" min="'.$default_min_price.'" class="input-max" value="'.$max_price.'">
+            <input type="number" id="max-price" name="max_price" min="' . $default_min_price . '" class="input-max" value="' . $max_price . '">
         </div>
         </div>
         <div class="slider">
         <div class="progress progress-percentage"></div>
         </div>
         <div class="range-input">
-        <input type="range" id="price-range-min" class="range-min" min="'.$default_min_price.'" max="'.$default_max_price.'" value="'.$min_price.'">
-        <input type="range" id="price-range-max" class="range-max" min="'.$default_min_price.'" max="'.$default_max_price.'" value="'.$max_price.'">
+        <input type="range" id="price-range-min" class="range-min" min="' . $default_min_price . '" max="' . $default_max_price . '" value="' . $min_price . '">
+        <input type="range" id="price-range-max" class="range-max" min="' . $default_min_price . '" max="' . $default_max_price . '" value="' . $max_price . '">
         </div>';
             break;
         case 'rating-text':
-            $output .= '<label><input type="checkbox" name="rating[]" value="5" '.(in_array("5", $checked) ? ' checked' : '').'> 5 Stars 
+            $output .= '<label><input type="checkbox" name="rating[]" value="5" ' . (in_array("5", $checked) ? ' checked' : '') . '> 5 Stars 
     </label>
-        <label><input type="checkbox" name="rating[]" value="4" '.(in_array("4", $checked) ? ' checked' : '').'> 4 Stars & Up</label>
-        <label><input type="checkbox" name="rating[]" value="3" '.(in_array("3", $checked) ? ' checked' : '').'> 3 Stars & Up</label>
-        <label><input type="checkbox" name="rating[]" value="2" '.(in_array("2", $checked) ? ' checked' : '').'> 2 Stars & Up</label>
-        <label><input type="checkbox" name="rating[]" value="1" '.(in_array("1", $checked) ? ' checked' : '').'> 1 Star & Up</label>';
+        <label><input type="checkbox" name="rating[]" value="4" ' . (in_array("4", $checked) ? ' checked' : '') . '> 4 Stars & Up</label>
+        <label><input type="checkbox" name="rating[]" value="3" ' . (in_array("3", $checked) ? ' checked' : '') . '> 3 Stars & Up</label>
+        <label><input type="checkbox" name="rating[]" value="2" ' . (in_array("2", $checked) ? ' checked' : '') . '> 2 Stars & Up</label>
+        <label><input type="checkbox" name="rating[]" value="1" ' . (in_array("1", $checked) ? ' checked' : '') . '> 1 Star & Up</label>';
             break;
         case 'rating':
-            for ( $i = 5; $i >= 1; $i-- ) {
+            for ($i = 5; $i >= 1; $i--) {
                 $output .= '<label>';
-                $output .= '<input type="checkbox" name="rating[]" value="' . esc_attr( $i ) . '" '.(in_array($i, $checked) ? ' checked' : '').'>';
+                $output .= '<input type="checkbox" name="rating[]" value="' . esc_attr($i) . '" ' . (in_array($i, $checked) ? ' checked' : '') . '>';
                 $output .= '<span class="stars">';
-                for ( $j = 1; $j <= $i; $j++ ) {
+                for ($j = 1; $j <= $i; $j++) {
                     $output .= '<i class="fa fa-star" aria-hidden="true"></i>';
                 }
                 $output .= '</span>';
@@ -544,19 +588,29 @@ function dapfforwc_render_filter_option($sub_option, $title, $value, $checked, $
   <label class="star" for="star1" title="Bad" aria-hidden="true"></label>';
             break;
         default:
-            $output .= '<label><input type="checkbox" class="filter-checkbox" name="' . $name . '[]" value="' . $value . '"' . $checked . '> ' . $title . ($count!=0?' ('.$count.')':''). '</label>';
+            $output .= '<label><input type="checkbox" class="filter-checkbox" name="' . $name . '[]" value="' . $value . '"' . $checked . '> ' . $title . ($count != 0 ? ' (' . $count . ')' : '') . '</label>';
             break;
     }
 
     return $output;
 }
 // Function to get child categories from $updated_filters["categories"]
-function dapfforwc_get_child_categories($categories, $parent_id) {
+function dapfforwc_get_child_categories($categories, $parent_id)
+{
     $child_categories = array();
 
     foreach ($categories as $category) {
-        if ($category instanceof WP_Term && $category->parent == $parent_id) {
-            $child_categories[] = $category;
+        // Check if the category is a WP_Term object
+        if ($category instanceof WP_Term) {
+            if ($category->parent == $parent_id) {
+                $child_categories[] = $category;
+            }
+        }
+        // Check if the category is a stdClass object
+        elseif (is_object($category) && $category instanceof stdClass) {
+            if (isset($category->parent) && $category->parent == $parent_id) {
+                $child_categories[] = $category;
+            }
         }
     }
 
@@ -564,49 +618,59 @@ function dapfforwc_get_child_categories($categories, $parent_id) {
 }
 // Recursive function to render categories
 function dapfforwc_render_category_hierarchy(
-    $categories, 
-    $selected_categories, 
-    $sub_option, 
-    $dapfforwc_styleoptions, 
-    $singlevaluecataSelect, 
-    $show_count, 
-    $use_anchor, 
-    $use_filters_word, 
+    $categories,
+    $selected_categories,
+    $sub_option,
+    $dapfforwc_styleoptions,
+    $singlevaluecataSelect,
+    $show_count,
+    $use_anchor,
+    $use_filters_word,
     $hierarchical,
     $child_category
 ) {
     $categoryHierarchyOutput = "";
     foreach ($categories as $category) {
-        $value = esc_attr($category->slug);
-        $title = esc_html($category->name);
-        $count = $show_count === 'yes' ? $category->count : 0;
+        if (is_object($category)) {
+            $value = esc_attr($category->slug);
+            $title = esc_html($category->name);
+        } elseif (is_array($category)) {
+            $value = esc_attr($category['slug']);
+            $title = esc_html($category['name']);
+        } else {
+            // Handle cases where $category is neither an object nor an array
+            $value = '';
+            $title = '';
+        }
+        $count = $show_count === 'yes' ? (is_object($category) ? $category->count : $category["count"]) : 0;
         $checked = in_array($category->slug, $selected_categories) ? ($sub_option === 'select' || str_contains($sub_option, 'select2') ? ' selected' : ' checked') : '';
         $anchorlink = $use_filters_word === 'on' ? "filters/$value" : $value;
-        
+
         // Fetch child categories
         $child_categories = dapfforwc_get_child_categories($child_category, $category->term_id);
 
         // Render current category
-        $categoryHierarchyOutput.= $use_anchor === 'on'
+        $categoryHierarchyOutput .= $use_anchor === 'on'
             ? '<a href="' . esc_attr($anchorlink) . '" style="display:flex;align-items: center;">'
-                . dapfforwc_render_filter_option($sub_option, $title, $value, $checked, $dapfforwc_styleoptions, 'category', 'category', $singlevaluecataSelect, $count)
-                . (!empty($child_categories) && $hierarchical === 'enable_hide_child' ? '<span class="show-sub-cata">+</span>' : '')
-              . '</a>'
-            : '<a style="display:flex;align-items: center;">'
-                . dapfforwc_render_filter_option($sub_option, $title, $value, $checked, $dapfforwc_styleoptions, 'category', 'category', $singlevaluecataSelect, $count) . (!empty($child_categories) && $hierarchical === 'enable_hide_child' ? '<span class="show-sub-cata" style="cursor:pointer;">+</span>' : '')
-              . '</a>';
+            . dapfforwc_render_filter_option($sub_option, $title, $value, $checked, $dapfforwc_styleoptions, 'category', 'category', $singlevaluecataSelect, $count)
+            . (!empty($child_categories) && $hierarchical === 'enable_hide_child' ? '<span class="show-sub-cata">+</span>' : '')
+            . '</a>'
+            : '<a style="display:flex;align-items: center;text-decoration: none;">'
+            . dapfforwc_render_filter_option($sub_option, $title, $value, $checked, $dapfforwc_styleoptions, 'category', 'category', $singlevaluecataSelect, $count) . (!empty($child_categories) && $hierarchical === 'enable_hide_child' ? '<span class="show-sub-cata" style="cursor:pointer;">+</span>' : '')
+            . '</a>';
 
         // Render child categories
         if (!empty($child_categories)) {
-            $categoryHierarchyOutput.= '<div class="child-categories" style="display:' . ($hierarchical === 'enable_hide_child' ? 'none;' : 'block;') . '">';
+            $categoryHierarchyOutput .= '<div class="child-categories" style="display:' . ($hierarchical === 'enable_hide_child' ? 'none;' : 'block;') . '">';
             $categoryHierarchyOutput .= dapfforwc_render_category_hierarchy($child_categories, $selected_categories, $sub_option, $dapfforwc_styleoptions, $singlevaluecataSelect, $show_count, $use_anchor, $use_filters_word, $hierarchical, $child_category);
-            $categoryHierarchyOutput.= '</div>';
+            $categoryHierarchyOutput .= '</div>';
         }
     }
     return $categoryHierarchyOutput;
 }
 
-function dapfforwc_product_filter_shortcode_single($atts) {
+function dapfforwc_product_filter_shortcode_single($atts)
+{
     $atts = shortcode_atts(
         array(
             'name' => '', // Default attribute name
@@ -621,7 +685,7 @@ function dapfforwc_product_filter_shortcode_single($atts) {
     }
 
     // Generate the output
-    $output = '<form class="rfilterbuttons" id="'.$atts['name'].'"><ul>';
+    $output = '<form class="rfilterbuttons" id="' . $atts['name'] . '"><ul>';
     $output .= '<li>
                 <input id="selected_category_1" type="checkbox" value="category_1" checked="">
                 <label for="selected_category_1">Category 1</label>
@@ -637,12 +701,11 @@ function dapfforwc_product_filter_shortcode_single($atts) {
     $output .= '</ul></form>';
 
     return $output;
-
-
 }
 add_shortcode('plugincy_filters_single', 'dapfforwc_product_filter_shortcode_single');
 
-function dapfforwc_product_filter_shortcode_selected() {
+function dapfforwc_product_filter_shortcode_selected()
+{
 
     // Generate the output
     $output = '<form class="rfilterselected"><div><ul>';
@@ -664,59 +727,249 @@ function dapfforwc_product_filter_shortcode_selected() {
     $output .= '</ul></div></form>';
 
     return $output;
-
-
 }
 add_shortcode('plugincy_filters_selected', 'dapfforwc_product_filter_shortcode_selected');
 
 
-function dapfforwc_get_updated_filters($query) {
-    // Get the current product IDs based on the filtered query
-    $product_ids = wp_list_pluck($query->posts, 'ID');
-    // Initialize arrays to store filter data
-    $categories = array();
-    $attributes = array();
-    $tags = array();
+// function dapfforwc_get_updated_filters($query) {
+//     // Get the current product IDs based on the filtered query
+//     $product_ids = wp_list_pluck($query->posts, 'ID');
+//     // Initialize arrays to store filter data
+//     $categories = array();
+//     $attributes = array();
+//     $tags = array();
+
+//     if (!empty($product_ids)) {
+//         // Get categories for the filtered products
+//         $categories = wp_get_object_terms($product_ids, 'product_cat', array('fields' => 'all'));
+//         foreach ($categories as $category) {
+//             $category->count = count(array_filter($query->posts, function($product) use ($category) {
+//                 return has_term($category->term_id, 'product_cat', $product->ID);
+//             }));
+//         }
+
+//         // Get attributes for the filtered products
+//         $attributes_taxonomies = wc_get_attribute_taxonomies();
+//         if ($attributes_taxonomies) {
+//             foreach ($attributes_taxonomies as $attribute) {
+//                 $attribute_terms = wp_get_object_terms($product_ids, 'pa_' . $attribute->attribute_name, array('fields' => 'all'));
+//                 if (!empty($attribute_terms)) {
+//                     foreach ($attribute_terms as $term) {
+//                         $term->count = count(array_filter($query->posts, function($product) use ($term, $attribute) {
+//                             return has_term($term->term_id, 'pa_' . $attribute->attribute_name, $product->ID);
+//                         }));
+//                         // Add the attribute label to the term
+//                         $term->attribute_label = $attribute->attribute_label; // Add this line
+//                     }
+//                     $attributes[$attribute->attribute_name] = $attribute_terms;
+//                 }
+//             }
+//         }
+
+//         // Get tags for the filtered products
+//         $tags = wp_get_object_terms($product_ids, 'product_tag', array('fields' => 'all'));
+//         foreach ($tags as $tag) {
+//             $tag->count = count(array_filter($query->posts, function($product) use ($tag) {
+//                 return has_term($tag->term_id, 'product_tag', $product->ID);
+//             }));
+//         }
+//     }
+
+//     $data = array(
+//         'categories' => $categories,
+//         'attributes' => $attributes,
+//         'tags' => $tags
+//     );
+
+//     return $data;
+// }
+
+function dapfforwc_get_updated_filters($product_ids)
+{
+    $categories = [];
+    $attributes = [];
+    $tags = [];
 
     if (!empty($product_ids)) {
-        // Get categories for the filtered products
-        $categories = wp_get_object_terms($product_ids, 'product_cat', array('fields' => 'all'));
-        foreach ($categories as $category) {
-            $category->count = count(array_filter($query->posts, function($product) use ($category) {
-                return has_term($category->term_id, 'product_cat', $product->ID);
-            }));
-        }
+        // Get attributes with terms
+        $all_data = dapfforwc_get_woocommerce_attributes_with_terms();
 
-        // Get attributes for the filtered products
-        $attributes_taxonomies = wc_get_attribute_taxonomies();
-        if ($attributes_taxonomies) {
-            foreach ($attributes_taxonomies as $attribute) {
-                $attribute_terms = wp_get_object_terms($product_ids, 'pa_' . $attribute->attribute_name, array('fields' => 'all'));
-                if (!empty($attribute_terms)) {
-                    foreach ($attribute_terms as $term) {
-                        $term->count = count(array_filter($query->posts, function($product) use ($term, $attribute) {
-                            return has_term($term->term_id, 'pa_' . $attribute->attribute_name, $product->ID);
-                        }));
-                    }
-                    $attributes[$attribute->attribute_name] = $attribute_terms;
+        // Extract categories and tags from all_data
+        // Categories
+        if (is_array($all_data['categories']) || is_object($all_data['categories'])) {
+            foreach ($all_data['categories'] as $term_id => $category) {
+                if (!empty(array_intersect($product_ids, $category['products']))) {
+                    $categories[$term_id] = (object) [
+                        'term_id' => $term_id,
+                        'name'    => $category['name'],
+                        'slug'    => $category['slug'],
+                        'parent'  => $category['parent'],
+                        'taxonomy' => 'product_cat',
+                        'count'   => count(array_intersect($category['products'], $product_ids)),
+                    ];
                 }
             }
         }
 
-        // Get tags for the filtered products
-        $tags = wp_get_object_terms($product_ids, 'product_tag', array('fields' => 'all'));
-        foreach ($tags as $tag) {
-            $tag->count = count(array_filter($query->posts, function($product) use ($tag) {
-                return has_term($tag->term_id, 'product_tag', $product->ID);
-            }));
+        // Tags
+        if (is_array($all_data['tags']) || is_object($all_data['tags'])) {
+            foreach ($all_data['tags'] as $term_id => $tag) {
+                if (!empty(array_intersect($product_ids, $tag['products']))) {
+                    $tags[$term_id] = (object) [
+                        'term_id' => $term_id,
+                        'name'    => $tag['name'],
+                        'slug'    => $tag['slug'],
+                        'taxonomy' => 'product_tag',
+                        'count'   => count(array_intersect($tag['products'], $product_ids)),
+                    ];
+                }
+            }
+        }
+
+        // Extract attributes
+        if (is_array($all_data['attributes']) || is_object($all_data['attributes'])) {
+            foreach ($all_data['attributes'] as $attribute) {
+                $attribute_name = $attribute['attribute_name'];
+                $terms = $attribute['terms'];
+
+                if (is_array($terms) || is_object($terms)) {
+                    foreach ($terms as $term) {
+                        // Check if the term's products match the provided product IDs
+                        if (!empty(array_intersect($product_ids, $term['products']))) {
+                            $attributes[$attribute_name][] = [
+                                'term_id' => $term['term_id'],
+                                'attribute_label' => $term['name'],
+                                'name'    => $term['name'],
+                                'slug'    => $term['slug'],
+                                'count'   => count(array_intersect($term['products'], $product_ids)),
+                            ];
+                        }
+                    }
+                }
+            }
         }
     }
-    
-    $data = array(
-        'categories' => $categories,
+
+    error_log(json_encode([
+        'categories' => array_values($categories), // Return as array
         'attributes' => $attributes,
-        'tags' => $tags
-    );
+        'tags' => array_values($tags), // Return as array
+    ]));
+
+    return [
+        'categories' => array_values($categories), // Return as array
+        'attributes' => $attributes,
+        'tags' => array_values($tags), // Return as array
+    ];
+}
+
+
+function dapfforwc_get_woocommerce_attributes_with_terms()
+{
+    global $wpdb;
+
+    $cache_file = __DIR__ . '/woocommerce_attributes_cache.json'; // Path to cache file
+    $cache_time = 43200; // 12 hours in seconds
+
+    // Check if the cache file exists and is still valid
+    if (file_exists($cache_file) && (filemtime($cache_file) > (time() - $cache_time))) {
+        // Read the cached data
+        return json_decode(file_get_contents($cache_file), true);
+    }
+
+    $data = ['attributes' => [], 'categories' => [], 'tags' => []];
+
+    // Fetch attributes, categories, tags, and associated product IDs in a single query
+
+    $query = "
+    SELECT t.term_id, t.name, t.slug, tr.object_id, tt.taxonomy, a.attribute_name, a.attribute_label, tt.parent
+    FROM {$wpdb->prefix}terms AS t
+    INNER JOIN {$wpdb->prefix}term_taxonomy AS tt ON t.term_id = tt.term_id
+    LEFT JOIN {$wpdb->prefix}term_relationships AS tr ON tt.term_taxonomy_id = tr.term_taxonomy_id
+    LEFT JOIN {$wpdb->prefix}woocommerce_attribute_taxonomies AS a ON tt.taxonomy = CONCAT('pa_', a.attribute_name)
+    WHERE tt.taxonomy IN ('product_cat', 'product_tag') OR a.attribute_name IS NOT NULL
+    ORDER BY tt.taxonomy, t.name;
+";
+
+    $results = $wpdb->get_results($query, ARRAY_A);
+
+    if (is_array($results) || is_object($results)) {
+        foreach ($results as $row) {
+            $term_id = $row['term_id'];
+            $taxonomy = $row['taxonomy'];
+
+            if ($taxonomy === 'product_cat') {
+                if (!isset($data['categories'][$term_id])) {
+                    $data['categories'][$term_id] = [
+                        'name' => $row['name'],
+                        'slug' => $row['slug'],
+                        'parent' => $row['parent'],
+                        'products' => []
+                    ];
+                }
+                if ($row['object_id']) {
+                    $data['categories'][$term_id]['products'][] = $row['object_id'];
+                }
+            } elseif ($taxonomy === 'product_tag') {
+                if (!isset($data['tags'][$term_id])) {
+                    $data['tags'][$term_id] = [
+                        'name' => $row['name'],
+                        'slug' => $row['slug'],
+                        'products' => []
+                    ];
+                }
+                if ($row['object_id']) {
+                    $data['tags'][$term_id]['products'][] = $row['object_id'];
+                }
+            } elseif (!empty($row['attribute_name'])) {
+                $attr_name = $row['attribute_name'];
+
+                if (!isset($data['attributes'][$attr_name])) {
+                    $data['attributes'][$attr_name] = [
+                        'attribute_label' => $row['attribute_label'],
+                        'attribute_name' => $attr_name,
+                        'terms' => []
+                    ];
+                }
+
+                // Check if the term already exists
+                $term_key = array_search($term_id, array_column($data['attributes'][$attr_name]['terms'], 'term_id'));
+
+                if ($term_key === false) {
+                    $data['attributes'][$attr_name]['terms'][] = [
+                        'term_id'    => $term_id,
+                        'name'       => $row['name'],
+                        'slug'       => $row['slug'],
+                        'products'   => $row['object_id'] ? [$row['object_id']] : [],
+                    ];
+                } else {
+                    if ($row['object_id']) {
+                        $data['attributes'][$attr_name]['terms'][$term_key]['products'][] = $row['object_id'];
+                    }
+                }
+            }
+        }
+    }
+
+    // Write the data to the cache file
+    file_put_contents($cache_file, json_encode($data));
 
     return $data;
 }
+
+
+// Clear cache when a term is updated
+add_action('edited_term', function ($term_id) {
+    $cache_file = __DIR__ . '/woocommerce_attributes_cache.json';
+    if (file_exists($cache_file)) {
+        unlink($cache_file);
+    }
+});
+
+// Clear cache when a product is updated
+add_action('save_post_product', function ($post_id) {
+    $cache_file = __DIR__ . '/woocommerce_attributes_cache.json';
+    if (file_exists($cache_file)) {
+        unlink($cache_file);
+    }
+});

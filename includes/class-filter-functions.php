@@ -2,46 +2,57 @@
 if (!defined('ABSPATH')) {
     exit;
 }
-class dapfforwc_Filter_Functions {
+class dapfforwc_Filter_Functions
+{
 
-    public function process_filter() {
-        global $dapfforwc_options,$dapfforwc_styleoptions,$dapfforwc_advance_settings;
+    public function process_filter()
+    {
+        global $dapfforwc_options, $dapfforwc_styleoptions, $dapfforwc_advance_settings;
         // Initialize variables with default values
         $update_filter_options =  isset($dapfforwc_options["update_filter_options"]) ? $dapfforwc_options["update_filter_options"] : "";
-        $remove_outofStock_product = isset($dapfforwc_advance_settings["remove_outofStock"]) ? $dapfforwc_advance_settings["remove_outofStock"] : ""; 
+        $remove_outofStock_product = isset($dapfforwc_advance_settings["remove_outofStock"]) ? $dapfforwc_advance_settings["remove_outofStock"] : "";
 
         if (!isset($_POST['gm-product-filter-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['gm-product-filter-nonce'])), 'gm-product-filter-action')) {
             wp_send_json_error(array('message' => 'Security check failed'), 403);
             wp_die();
         }
-            // Determine the current page number
-    $paged = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
-    $orderbyFormUser = isset($_POST['orderby']) && $_POST['orderby'] !== "undefined" ? sanitize_text_field(wp_unslash($_POST['orderby'])) : "";
-    $currentpage_slug = isset($_POST['current-page']) ? sanitize_text_field(wp_unslash($_POST['current-page'])) : "";
+        // Determine the current page number
+        $paged = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
+        $orderbyFormUser = isset($_POST['orderby']) && $_POST['orderby'] !== "undefined" ? sanitize_text_field(wp_unslash($_POST['orderby'])) : "";
+        $currentpage_slug = isset($_POST['current-page']) ? sanitize_text_field(wp_unslash($_POST['current-page'])) : "";
 
-        $args = $this->build_query_args($paged, $orderbyFormUser, $currentpage_slug);
-        $args_options = $this->build_query_args(-1, '', $currentpage_slug);
+        $args = $this->build_query_args($paged, $orderbyFormUser, $currentpage_slug, false);
+        if ($update_filter_options === "on") {
+            $args_options = $this->build_query_args(-1, '', $currentpage_slug, true);
+        }
 
-        if ($remove_outofStock_product==="on") {
+        if ($remove_outofStock_product === "on") {
             $args['meta_query'][] =
                 array(
                     'key' => '_stock_status',
                     'value' => 'instock',
                 );
-            $args_options['meta_query'][] =
-            array(
-                'key' => '_stock_status',
-                'value' => 'instock',
-            );
+            if ($update_filter_options === "on") {
+                $args_options['meta_query'][] =
+                    array(
+                        'key' => '_stock_status',
+                        'value' => 'instock',
+                    );
+            }
         }
 
-        $filter_options = new WP_Query($args_options);
-        $count_total_showing_product = $filter_options->post_count;
         $query = new WP_Query($args);
+        if ($update_filter_options === "on") {
+        $filter_options = new WP_Query($args_options);
+        // $product_ids = wp_list_pluck($query->posts, 'ID');
+        $product_ids = $filter_options->posts;
+        $count_total_showing_product = $filter_options->post_count;
 
-        
-
-        $updated_filters = dapfforwc_get_updated_filters($filter_options);
+        $updated_filters = dapfforwc_get_updated_filters($product_ids);
+        }else{
+            $updated_filters = [];
+            $count_total_showing_product = $query->post_count;
+        }
         $default_filter = [];
         $min_max_prices = dapfforwc_get_min_max_price($query);
 
@@ -50,17 +61,17 @@ class dapfforwc_Filter_Functions {
             // Convert the string to an array
             $default_filter = array_map('sanitize_text_field', explode(',', wp_unslash($_POST['selectedvalues'])));
         }
-        
-        $filterform = dapfforwc_filter_form($updated_filters,$default_filter,"","","",$min_price=floatval($_POST['min_price']) ?? $dapfforwc_styleoptions["price"]["min_price"] ?? $min_max_prices['min'],$max_price=floatval($_POST['max_price']) ?? $dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max']+1);
+
+        $filterform = dapfforwc_filter_form($updated_filters, $default_filter, "", "", "", $min_price = floatval($_POST['min_price']) ?? $dapfforwc_styleoptions["price"]["min_price"] ?? $min_max_prices['min'], $max_price = floatval($_POST['max_price']) ?? $dapfforwc_styleoptions["price"]["max_price"] ?? $min_max_prices['max'] + 1);
         // Capture the product listing
         ob_start();
-        
+
         if ($query->have_posts()) {
             while ($query->have_posts()) : $query->the_post();
-            $this->display_product($query->post);
+                $this->display_product($query->post, $currentpage_slug);
             endwhile;
-         // Add pagination links
-        $this->pagination($query,$paged);
+            // Add pagination links
+            $this->pagination($query, $paged);
         } else {
             echo '<div style="display: flex ; flex-direction: column; align-items: center; gap: 10px;">
             <p style="margin-top: 20px; font-size: 24px; color: #212121;">No products found</p>
@@ -77,40 +88,36 @@ class dapfforwc_Filter_Functions {
         wp_send_json_success(array(
             'products' => $product_html,
             'total_product_fetch' => $count_total_showing_product,
-            'pagination' => $this->pagination($query,$paged),
+            'pagination' => $this->pagination($query, $paged),
             'filter_options' => $filterform
         ));
 
         wp_die();
     }
-    private function build_query_args($paged, $orderby, $currentpage_slug) {
+    private function build_query_args($paged, $orderby, $currentpage_slug, $get_id_count_only)
+    {
         global $dapfforwc_options, $dapfforwc_front_page_slug;
-        $currentpage_slug = $currentpage_slug=="/"?$dapfforwc_front_page_slug:$currentpage_slug;
+        $currentpage_slug = $currentpage_slug == "/" ? $dapfforwc_front_page_slug : $currentpage_slug;
         $orderProductby = 'date';
         $meta_key = "";
         $order = isset($dapfforwc_options["product_show_settings"][$currentpage_slug]["order"]) ? strtoupper($dapfforwc_options["product_show_settings"][$currentpage_slug]["order"]) : 'ASC';
-        if($orderby == ""){
+        if ($orderby == "") {
             $orderProductby = $dapfforwc_options["product_show_settings"][$currentpage_slug]["orderby"] ?? 'date';
-        }
-        elseif($orderby == "popularity"){
+        } elseif ($orderby == "popularity") {
             $orderProductby = 'meta_value_num';
             $meta_key = 'total_sales';
-        }
-        elseif($orderby == "rating"){
+        } elseif ($orderby == "rating") {
             $orderProductby = 'meta_value_num';
             $meta_key = '_wc_average_rating';
-        }
-        elseif($orderby == "price"){
+        } elseif ($orderby == "price") {
             $orderProductby = 'meta_value_num';
             $meta_key = '_price';
             $order = "ASC";
-        }
-        elseif($orderby == "price-desc"){
+        } elseif ($orderby == "price-desc") {
             $orderProductby = 'meta_value_num';
             $meta_key = '_price';
             $order = "desc";
-        }
-        else{
+        } else {
             $orderProductby = $orderby;
         }
         $args = array(
@@ -121,18 +128,20 @@ class dapfforwc_Filter_Functions {
             'orderby' => $orderProductby,
             'order' => $order,
             'paged' => $paged,
-            'tax_query' => array('relation' => 'AND')
+            'tax_query' => array('relation' => 'AND'),
+            'fields'    => $get_id_count_only ? 'ids' : '',
         );
 
         $second_operator = isset($dapfforwc_options["product_show_settings"]["upcoming-conferences"]["operator_second"]) ? strtoupper($dapfforwc_options["product_show_settings"]["upcoming-conferences"]["operator_second"]) : "IN";
         return $this->apply_filters_to_args($args, $second_operator);
     }
-    private function apply_filters_to_args($args,$second_operator) {
+    private function apply_filters_to_args($args, $second_operator)
+    {
         if (!isset($_POST['gm-product-filter-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['gm-product-filter-nonce'])), 'gm-product-filter-action')) {
             wp_send_json_error(array('message' => 'Security check failed'), 403);
             wp_die();
         }
-    
+
         // Minimum Price Filter
         if (isset($_POST['min_price']) && $_POST['min_price'] !== '') {
             $args['meta_query'][] = array(
@@ -142,7 +151,7 @@ class dapfforwc_Filter_Functions {
                 'type' => 'NUMERIC',
             );
         }
-    
+
         // Maximum Price Filter
         if (isset($_POST['max_price']) && $_POST['max_price'] !== '') {
             $args['meta_query'][] = array(
@@ -152,7 +161,7 @@ class dapfforwc_Filter_Functions {
                 'type' => 'NUMERIC',
             );
         }
-    
+
         // Rating Filter
         if (isset($_POST['rating']) && !empty($_POST['rating'])) {
             $ratings = array_map('intval', $_POST['rating']);
@@ -163,7 +172,7 @@ class dapfforwc_Filter_Functions {
                 'type'    => 'DECIMAL(2,1)',
             );
         }
-    
+
         // Category Filter
         if (!empty($_POST['category'])) {
             $args['tax_query'][] = array(
@@ -173,7 +182,7 @@ class dapfforwc_Filter_Functions {
                 'operator' => $second_operator,
             );
         }
-    
+
         // Attribute Filters
         if (!empty($_POST['attribute']) && is_array($_POST['attribute'])) {
             $attributes = map_deep(wp_unslash($_POST['attribute']), 'sanitize_text_field');
@@ -189,7 +198,7 @@ class dapfforwc_Filter_Functions {
                 }
             }
         }
-    
+
         // Tag Filter
         if (!empty($_POST['tag'])) {
             $args['tax_query'][] = array(
@@ -203,27 +212,33 @@ class dapfforwc_Filter_Functions {
             $search_term = sanitize_text_field(wp_unslash($_POST['s']));
             $args['s'] = $search_term; // Add the search term to the main query args
         }
-    
+
         return $args;
     }
-    private function display_product($post) {
+    private function display_product($post, $currentpage_slug)
+    {
         global $dapfforwc_options;
         $product = wc_get_product($post->ID);
-        if(isset($dapfforwc_options['use_custom_template']) && $dapfforwc_options['use_custom_template']==="on"){
-        // Get product details
-        $product_link = get_permalink();
-        $product_title = get_the_title(); 
-        $product_image = wp_get_attachment_image_src(get_post_thumbnail_id(), 'full')[0];
-        $product_excerpt = get_the_excerpt();
-        $product_price = $product->get_price_html(); 
-        $product_category = wp_strip_all_tags(get_the_term_list(get_the_ID(), 'product_cat', '', ', ')); 
-        $product_sku = $product->get_sku(); 
-        $product_stock = $product->is_in_stock() ? __('In Stock', 'dynamic-ajax-product-filters-for-woocommerce') : __('Out of Stock', 'dynamic-ajax-product-filters-for-woocommerce'); 
-        $add_to_cart_url = esc_url(add_query_arg('add-to-cart', get_the_ID(), $product_link)); 
+        if (isset($dapfforwc_options['use_custom_template']) && $dapfforwc_options['use_custom_template'] === "on" && in_array($currentpage_slug, $dapfforwc_options['use_custom_template_in_page'])) {
+            // Get product details
+            $product_link = get_permalink();
+            $product_title = get_the_title();
+            $product_image_data = wp_get_attachment_image_src(get_post_thumbnail_id(), 'full');
+            if ($product_image_data && is_array($product_image_data)) {
+                $product_image = $product_image_data[0];
+            } else {
+                $product_image = ''; // Set a default value or handle the error as needed
+            }
+            $product_excerpt = get_the_excerpt();
+            $product_price = $product->get_price_html();
+            $product_category = wp_strip_all_tags(get_the_term_list(get_the_ID(), 'product_cat', '', ', '));
+            $product_sku = $product->get_sku();
+            $product_stock = $product->is_in_stock() ? __('In Stock', 'dynamic-ajax-product-filters-for-woocommerce') : __('Out of Stock', 'dynamic-ajax-product-filters-for-woocommerce');
+            $add_to_cart_url = esc_url(add_query_arg('add-to-cart', get_the_ID(), $product_link));
 
             // Retrieve the custom template from the database
             $custom_template = $dapfforwc_options['custom_template_code'];
-            
+
             // Replace placeholders with actual values
             $custom_template = str_replace('{{product_link}}', esc_url($product_link), $custom_template);
             $custom_template = str_replace('{{product_title}}', esc_html($product_title), $custom_template);
@@ -292,25 +307,26 @@ class dapfforwc_Filter_Functions {
                 'ol' => array('class' => array()), // Allow ordered lists
                 'script' => array(), // Be cautious with scripts
             );
-            
+
             echo wp_kses(do_shortcode($custom_template), $allowed_tags);
-            } else {
-                wc_get_template_part('content', 'product');
-            }
+        } else {
+            wc_get_template_part('content', 'product');
+        }
     }
     // Function to generate pagination
-    private function pagination($query,$paged) {
+    private function pagination($query, $paged)
+    {
         $big = 999999999; // an unlikely integer
         $paginationLinks = paginate_links(array(
             'base' => str_replace($big, '%#%', esc_url(get_pagenum_link($big))),
             'format' => '?paged=%#%',
             'current' => max(1, $paged),
             'total' => $query->max_num_pages,
-            'prev_text' => __('« Prev','dynamic-ajax-product-filters-for-woocommerce'),
+            'prev_text' => __('« Prev', 'dynamic-ajax-product-filters-for-woocommerce'),
             'next_text' => __('Next »', 'dynamic-ajax-product-filters-for-woocommerce'),
             'type' => 'array', // This returns an array of pagination links
         ));
-    
+
         if ($paginationLinks) {
             // Start building the pagination HTML
             $paginationHtml = '';

@@ -158,7 +158,8 @@ function dapfforwc_generate_css($styles, $device = 'desktop', $hover = false, $a
 function dapfforwc_render_dynamic_ajax_filter_block($attributes)
 {
     $filter_type = $attributes['filterType'];
-    $filter_options_manage = $attributes['filterOptions'];
+    $use_custom_design = $attributes['usecustomdesign'];
+    $filter_options_manage = isset($attributes['filterOptions'])?$attributes['filterOptions']:[];
     $mobile_style = $attributes['mobileStyle'] ?? "style_1";
     $output = '';
 
@@ -369,7 +370,7 @@ function dapfforwc_render_dynamic_ajax_filter_block($attributes)
   .dynamic-rating  input:checked ~ label:hover ~ label {' . $rating_active_css . '}';
             }
             $output .= '</style>';
-            $output .= '<div class="' . $class_name . '">' . do_shortcode("[plugincy_filters mobile_responsive=\"$mobile_style\" product_selector=\"$product_selector\" pagination_selector=\"$pagination_selector\"]") . '</div>';
+            $output .= '<div class="' . $class_name . '">' . do_shortcode("[plugincy_filters use_custom_template_design=\"$use_custom_design\"  mobile_responsive=\"$mobile_style\" product_selector=\"$product_selector\" pagination_selector=\"$pagination_selector\"]") . '</div>';
             break;
         case 'single':
             $filter_name = esc_attr($attributes['filterName']);

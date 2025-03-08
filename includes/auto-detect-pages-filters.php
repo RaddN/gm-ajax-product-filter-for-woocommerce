@@ -58,37 +58,43 @@ function dapfforwc_get_shortcode_attributes_from_page($content, $shortcode) {
 
 function dapfforwc_update_options_with_filters() {
     global $dapfforwc_advance_settings;
-    $shortcode = $dapfforwc_advance_settings["product_shortcode"] ?? 'products'; // Shortcode to search for
-    $pages_with_shortcode = dapfforwc_find_shortcode_pages($shortcode);
 
-    // Get the current options
-    $dapfforwc_options = get_option('dapfforwc_options')?:[];
+    // Get the product shortcodes, explode by commas, and trim whitespace
+    $shortcodes = array_map('trim', explode(',', $dapfforwc_advance_settings["product_shortcode"] ?? 'products'));
+    
+    // Initialize default options
+    $dapfforwc_options = get_option('dapfforwc_options') ?: [];
     $dapfforwc_options['default_filters'] = []; // Initialize if not set
     $dapfforwc_options['product_show_settings'] = [];
 
-    foreach ($pages_with_shortcode as $page) {
-        $attributes_list = dapfforwc_get_shortcode_attributes_from_page($page->post_content, $shortcode);
+    // Find pages for each shortcode
+    foreach ($shortcodes as $shortcode) {
+        $pages_with_shortcode = dapfforwc_find_shortcode_pages($shortcode);
 
-        // Get the full slug using the new function
-        $full_slug = dapfforwc_get_full_slug($page->ID);
+        foreach ($pages_with_shortcode as $page) {
+            $attributes_list = dapfforwc_get_shortcode_attributes_from_page($page->post_content, $shortcode);
 
-        foreach ($attributes_list as $attributes) {
-            // Ensure that the 'category', 'attribute', and 'terms' keys exist
-            $arrayCata = isset($attributes['category']) ? explode(",", $attributes['category']) : [];
-            $tagValue = isset($attributes['tags']) ? $attributes['tags'] : [];
-            $termsValue = isset($attributes['terms']) ? $attributes['terms'] : [];
-            $filters = !empty($arrayCata) ? $arrayCata : (!empty($tagValue) ? $tagValue : $termsValue);
+            // Get the full slug using the new function
+            $full_slug = dapfforwc_get_full_slug($page->ID);
 
-            // Use the combined full slug as the key in default_filters
-            $dapfforwc_options['default_filters'][$full_slug] = $filters;
+            foreach ($attributes_list as $attributes) {
+                // Ensure that the 'category', 'attribute', and 'terms' keys exist
+                $arrayCata = isset($attributes['category']) ? explode(",", $attributes['category']) : [];
+                $tagValue = isset($attributes['tags']) ? $attributes['tags'] : [];
+                $termsValue = isset($attributes['terms']) ? $attributes['terms'] : [];
+                $filters = !empty($arrayCata) ? $arrayCata : (!empty($tagValue) ? $tagValue : $termsValue);
 
-            // Set display settings
-            $dapfforwc_options['product_show_settings'][$full_slug] = [
-                'per_page'        => $attributes['limit'] ?? $attributes['per_page'] ?? '',
-                'orderby'         => $attributes['orderby'] ?? '',
-                'order'           => $attributes['order'] ?? '',
-                'operator_second' => $attributes['terms_operator'] ?? $attributes['tag_operator'] ?? $attributes['cat_operator'] ?? 'IN'
-            ];
+                // Use the combined full slug as the key in default_filters
+                $dapfforwc_options['default_filters'][$full_slug] = $filters;
+
+                // Set display settings
+                $dapfforwc_options['product_show_settings'][$full_slug] = [
+                    'per_page'        => $attributes['limit'] ?? $attributes['per_page'] ?? '',
+                    'orderby'         => $attributes['orderby'] ?? '',
+                    'order'           => $attributes['order'] ?? '',
+                    'operator_second' => $attributes['terms_operator'] ?? $attributes['tag_operator'] ?? $attributes['cat_operator'] ?? 'IN'
+                ];
+            }
         }
     }
 

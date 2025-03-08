@@ -189,7 +189,7 @@ if (!defined('ABSPATH')) {
     <input type="checkbox" name="dapfforwc_style_options[<?php echo esc_attr($dapfforwc_attribute_name); ?>][auto_price]" <?php echo isset($dapfforwc_form_styles[esc_attr($dapfforwc_attribute_name)]['auto_price']) && $dapfforwc_form_styles[esc_attr($dapfforwc_attribute_name)]['auto_price']=="on" ? 'checked' : ''; ?>>
     <span class="slider round"></span>
 </label></p>
-       <?php if(!isset($dapfforwc_form_styles[esc_attr($dapfforwc_attribute_name)]['auto_price']) && $dapfforwc_form_styles[esc_attr($dapfforwc_attribute_name)]['auto_price']!=="on"){ ?>
+       <?php if(!isset($dapfforwc_form_styles[esc_attr($dapfforwc_attribute_name)]['auto_price'])){ ?>
         <div id="price_set">
         <label for="min_price"> Min Price </label>
         <input type="number" name="dapfforwc_style_options[<?php echo esc_attr($dapfforwc_attribute_name); ?>][min_price]" value="<?php echo esc_attr($product_min); ?>">

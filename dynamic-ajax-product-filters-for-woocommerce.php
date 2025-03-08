@@ -24,7 +24,7 @@ function dapfforwc_load_textdomain() {
 }
 
 // Global Variables
-global $dapfforwc_options, $dapfforwc_advance_settings, $dapfforwc_styleoptions, $dapfforwc_use_url_filter, $dapfforwc_auto_detect_pages_filters, $dapfforwc_slug, $dapfforwc_sub_options,$dapfforwc_front_page_slug;
+global $dapfforwc_options, $dapfforwc_advance_settings, $dapfforwc_styleoptions, $dapfforwc_use_url_filter, $dapfforwc_auto_detect_pages_filters, $dapfforwc_sub_options,$dapfforwc_front_page_slug;
 
 
 $dapfforwc_options = get_option('dapfforwc_options') ?: [];
@@ -33,14 +33,10 @@ $dapfforwc_styleoptions = get_option('dapfforwc_style_options') ?: [];
 
 $dapfforwc_use_url_filter = isset($dapfforwc_options['use_url_filter']) ? $dapfforwc_options['use_url_filter'] : false;
 $dapfforwc_auto_detect_pages_filters = isset($dapfforwc_options['pages_filter_auto']) ? $dapfforwc_options['pages_filter_auto'] : '';
-$dapfforwc_slug = "";
 
 // Get the ID of the front page
-$dapfforwc_front_page_id = get_transient('dapfforwc_front_page_id')?:false;
-if ($dapfforwc_front_page_id === false) {
-    $dapfforwc_front_page_id = get_option('page_on_front') ?: null;
-    set_transient('dapfforwc_front_page_id', $dapfforwc_front_page_id, 0.5 * HOUR_IN_SECONDS);
-}
+$dapfforwc_front_page_id = get_option('page_on_front') ?: null;
+
 // Get the front page object
 $dapfforwc_front_page = isset($dapfforwc_front_page_id) ? get_post($dapfforwc_front_page_id) : null;
 // Get the slug of the front page
@@ -120,7 +116,7 @@ function dapfforwc_missing_woocommerce_notice() {
 
 // Enqueue scripts and styles
 function dapfforwc_enqueue_scripts() {
-    global $dapfforwc_use_url_filter, $dapfforwc_options, $dapfforwc_slug , $dapfforwc_styleoptions, $dapfforwc_advance_settings,$dapfforwc_front_page_slug;
+    global $dapfforwc_use_url_filter, $dapfforwc_options, $dapfforwc_styleoptions, $dapfforwc_advance_settings,$dapfforwc_front_page_slug;
 
     $script_handle = 'filter-ajax';
     $script_path = 'assets/js/filter.min.js';
@@ -131,13 +127,12 @@ function dapfforwc_enqueue_scripts() {
     } elseif ($dapfforwc_use_url_filter === 'permalinks') {
         $script_handle = 'permalinksfilter-ajax';
         $script_path = 'assets/js/permalinksfilter.min.js';
-        $dapfforwc_slug = sanitize_text_field(get_transient('dapfforwc_slug')) ?: '';
     }
 
     wp_enqueue_script('jquery');
     wp_enqueue_script($script_handle, plugin_dir_url(__FILE__) . $script_path, ['jquery'], '1.0.4', true);
     wp_script_add_data($script_handle, 'async', true); // Load script asynchronously
-    wp_localize_script($script_handle, 'dapfforwc_data', compact('dapfforwc_options', 'dapfforwc_slug', 'dapfforwc_styleoptions', 'dapfforwc_advance_settings','dapfforwc_front_page_slug'));
+    wp_localize_script($script_handle, 'dapfforwc_data', compact('dapfforwc_options', 'dapfforwc_styleoptions', 'dapfforwc_advance_settings','dapfforwc_front_page_slug'));
     wp_localize_script($script_handle, 'dapfforwc_ajax', ['ajax_url' => admin_url('admin-ajax.php')]);
 
     wp_enqueue_style('filter-style', plugin_dir_url(__FILE__) . 'assets/css/style.min.css', [], '1.0.4');
@@ -170,6 +165,7 @@ function dapfforwc_enqueue_scripts() {
     // Add the generated CSS as inline style
     wp_add_inline_style('filter-style', $css);
     wp_add_inline_script('select2-js', '
+    
         jQuery(document).ready(function($) {
             
             $(".select2").select2({
@@ -182,6 +178,7 @@ function dapfforwc_enqueue_scripts() {
                 placeholder: "Select Options",
                 allowClear: true
             });
+            
             if ($(window).width() > 768) {
     function initializeCollapsible() {
         $(".title").each(function () {

@@ -1,4 +1,4 @@
-const { useState } = wp.element;
+const { useState, useEffect } = wp.element;
 const { useSelect, useDispatch } = wp.data;
 
 const CustomBoxControl = ( { label, values, unit="px", onChange } ) => {
@@ -115,8 +115,16 @@ const DeviceSelector = ({ onChange }) => {
         icon: 'filter',
         category: 'widgets',
         attributes: {
+            filterOptions: { type: 'array', default: [
+                { id: 'category', title: 'Category', visible: true },
+                { id: 'tag', title: 'Tag' , visible: true },
+                { id: 'price-range', title: 'Price Range', visible: true },
+                { id: 'rating', title: 'Rating', visible: true  },
+                { id: 'search_text', title: 'Search Text', visible: true }
+            ]},
             filterType: storestring(defaultvalue = 'all'),
-            mobileStyle: storestring(defaultvalue = 'style_4'),
+            usecustomdesign:storestring(defaultvalue = 'no'),
+            mobileStyle: storestring(defaultvalue = 'style_1'),
             productSelector:storestring(),
             paginationSelector:storestring(),
             filterName:storestring(),
@@ -160,6 +168,8 @@ const DeviceSelector = ({ onChange }) => {
         edit: function( props ) {
             var attributes = props.attributes;
             var setAttributes = props.setAttributes;
+            const [filterOptions, setFilterOptions] = useState(attributes.filterOptions || ['category','tag' ,'price-range','rating','search_text']);
+
 
             const handleBackgroundChange = (value, section) => {
                 const updatedBackground = { ...attributes[section].background, [attributes.selectedDevice]: value };
@@ -169,6 +179,51 @@ const DeviceSelector = ({ onChange }) => {
                 const updatedcssproperty = { ...attributes[section][attributes.selectedDevice], [cssproperty]: value };
                 setAttributes({ [section]: { ...attributes[section], [attributes.selectedDevice]: updatedcssproperty } });
             };
+
+            useEffect(() => {
+                const fetchAttributes = async () => {
+                    try {
+                        const response = await fetch('/wp-json/dynamic-ajax-product-filters-for-woocommerce/v1/attributes/');
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        const attributes = await response.json();
+                        const options = attributes.map(attr => ({
+                            id: attr.slug,
+                            title: attr.name,
+                            visible: true
+                        }));
+                        const updatedOptions = Array.from(new Map([...filterOptions, ...options].map(item => [item.id, item])).values());
+                        setFilterOptions(updatedOptions);
+                        setAttributes({ filterOptions: updatedOptions });
+                    } catch (error) {
+                        console.error('Error fetching attributes:', error);
+                    }
+                };
+            
+                fetchAttributes();
+            }, []);
+
+            const handleDragStart = (e, index) => {
+                e.dataTransfer.setData('text/plain', index);
+            };
+
+            const handleDrop = (e, dropIndex) => {
+                const draggedIndex = e.dataTransfer.getData('text/plain');
+                const updatedOptions = [...filterOptions];
+                const [draggedItem] = updatedOptions.splice(draggedIndex, 1);
+                updatedOptions.splice(dropIndex, 0, draggedItem);
+                setFilterOptions(updatedOptions);
+                setAttributes({ filterOptions: updatedOptions });
+            };
+
+            const toggleVisibility = (index) => {
+                const updatedOptions = [...filterOptions];
+                updatedOptions[index].visible = !updatedOptions[index].visible;
+                setFilterOptions(updatedOptions);
+                setAttributes({ filterOptions: updatedOptions });
+            };
+            
 
             return [
                 el( InspectorControls, {},
@@ -222,6 +277,17 @@ const DeviceSelector = ({ onChange }) => {
                                         setAttributes( { paginationSelector: value } );
                                     }
                                 } ),
+                                attributes.filterType === 'all' && el( SelectControl, {
+                                    label: 'Use Custom Design',
+                                    value: attributes.usecustomdesign,
+                                    options: [
+                                        { label: 'Yes', value: 'yes' },
+                                        { label: 'No', value: 'no' },
+                                    ],
+                                    onChange: function( value ) {
+                                        setAttributes( { usecustomdesign: value } );
+                                    }
+                                } ),
                                 attributes.filterType === 'single' && el( TextControl, {
                                     label: 'Attribute Id',
                                     value: attributes.filterName,
@@ -229,6 +295,29 @@ const DeviceSelector = ({ onChange }) => {
                                         setAttributes( { filterName: value } );
                                     }
                                 } )
+                            ),
+                            el(
+                                PanelBody,
+                                { title: "Form Manage", initialOpen: false },
+                                el('div', { className: 'draggable-options' },
+                                    filterOptions.map((option, index) =>
+                                        el('div', {
+                                            key: option.id,
+                                            className: `draggable-option ${option.visible ?'':'invisible'}`,
+                                            draggable: true,
+                                            onDragStart: (e) => handleDragStart(e, index),
+                                            onDragOver: (e) => e.preventDefault(),
+                                            onDrop: (e) => handleDrop(e, index),
+                                        }, 
+                                            wp.element.createElement('span', {}, option.title),
+                                            wp.element.createElement('span', {
+                                                className: `dashicons ${option.visible ? 'dashicons-visibility' : 'dashicons-hidden'}`,
+                                                style: { marginLeft: '5px', cursor: 'pointer' },
+                                                onClick: () => toggleVisibility(index),
+                                            })
+                                        )
+                                    )
+                                )
                             ),
                             el( PanelBody, {title: "Mobile Responsive Style", initialOpen: false},
                                 el( SelectControl, {

@@ -138,9 +138,19 @@ function anyFilterSelected() {
                 $(productSelector_shortcode ?? product_selector).html(response.data.products);
                 $('.woocommerce-result-count').text(`${response.data.total_product_fetch} results found`);
                 $('#rcountproduct').text(`show(${response.data.total_product_fetch})`);
-                if(dapfforwc_options["update_filter_options"]==="on"){
+                if(dapfforwc_options["update_filter_options"]==="on" && (typeof updatefilteroptions === "undefined")){
                 $('#product-filter div').remove();
                 $("form#product-filter").append(response.data.filter_options);
+                $(document).ajaxComplete(function() {
+                    $(".select2").select2({
+                        placeholder: "Select Options",
+                        allowClear: true
+                    });     
+                    $("select.select2_classic").select2({
+                        placeholder: "Select Options",
+                        allowClear: true
+                    });
+                });
                 }
                 $(paginationSelector_shortcode ?? pagination_selector).html(response.data.pagination);
                 syncCheckboxSelections();
@@ -222,6 +232,8 @@ function anyFilterSelected() {
         let priceParams = '';
         if (minPrice) priceParams += `&min_price=${encodeURIComponent(minPrice)}`;
         if (maxPrice) priceParams += `&max_price=${encodeURIComponent(maxPrice)}`;
+
+        console.log(formData);
         
         return formData + priceParams + `&current-page=${encodeURIComponent(currentPageSlug)}`;
     }
@@ -273,8 +285,10 @@ function anyFilterSelected() {
     }
 
     function syncToMainFilter() {
-        $(`#product-filter #${rfilterbuttonsId} input[value="${$(this).val()}"]`).prop('checked', $(this).is(':checked'));
-        $(`#product-filter #${rfilterbuttonsId} select option[value="${$(this).val()}"]`).prop('selected', $(this).is(':checked'));
+        const value = $(this).val();
+        const isChecked = $(this).is(':checked') || $(this).is(':selected');
+        $(`#product-filter #${rfilterbuttonsId} input[value="${value}"]`).prop('checked', isChecked);
+        $(`#product-filter #${rfilterbuttonsId} select option[value="${value}"]`).prop('selected', isChecked);
     }
 
     function attachCheckboxClickEvents() {

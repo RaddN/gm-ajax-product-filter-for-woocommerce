@@ -106,8 +106,10 @@ span.dashicons.selected {
     background: #f1f1f1;
     border: 1px solid #ccc;
     cursor: move;
+    justify-content: space-between;
 }
 
 .dashicons-visibility {
     color: #000;
 }
+.invisible{opacity: .4;}
