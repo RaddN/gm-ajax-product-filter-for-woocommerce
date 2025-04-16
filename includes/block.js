@@ -124,6 +124,7 @@ const DeviceSelector = ({ onChange }) => {
             ]},
             filterType: storestring(defaultvalue = 'all'),
             usecustomdesign:storestring(defaultvalue = 'no'),
+            perPage:storestring(defaultvalue = '12'),
             mobileStyle: storestring(defaultvalue = 'style_1'),
             productSelector:storestring(),
             paginationSelector:storestring(),
@@ -286,6 +287,13 @@ const DeviceSelector = ({ onChange }) => {
                                     ],
                                     onChange: function( value ) {
                                         setAttributes( { usecustomdesign: value } );
+                                    }
+                                } ),
+                                attributes.filterType === 'all' && el( TextControl, {
+                                    label: 'Per Page',
+                                    value: attributes.perPage,
+                                    onChange: function( value ) {
+                                        setAttributes( { perPage: value } );
                                     }
                                 } ),
                                 attributes.filterType === 'single' && el( TextControl, {

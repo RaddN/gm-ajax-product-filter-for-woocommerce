@@ -15,7 +15,7 @@ jQuery(document).ready(function($) {
     var currentPage = path==="/"? front_page_slug : path.replace(/^\/|\/$/g, '');
     // Initialize filters
     var orderby;
-    let selectedValesbyuser = store_selected_values();
+    let selectedValesbyuser = store_selected_values();    
     // Initialize filters and handle changes
     $('#product-filter, .rfilterbuttons').on('change', handleFilterChange);
     $('#product-filter, .rfilterbuttons').on('submit', handleFilterChange);
@@ -47,8 +47,14 @@ jQuery(document).ready(function($) {
 
     function handleFilterChange(e) {
         e.preventDefault();
-        
-        
+
+        const currentValue = $(e.target).val();
+        const isChecked = $(e.target).is(':checked');
+
+        // Select or deselect all inputs with the same value
+        $(`#product-filter input[value="${currentValue}"]`).prop('checked', isChecked);
+        $(`.rfilterbuttons input[value="${currentValue}"]`).prop('checked', isChecked);
+
         selectedValesbyuser = store_selected_values();
         updateUrlFilters();
         if (!anyFilterSelected()) return location.reload();
@@ -58,6 +64,8 @@ jQuery(document).ready(function($) {
         $('#loader').show();
         fetchFilteredProducts();
     }
+    
+
     function store_selected_values() {
         let selectedValues = [];
     
@@ -90,7 +98,7 @@ jQuery(document).ready(function($) {
         }
     });
     }
-    selectfromurl();
+    // selectfromurl();
     function anyFilterSelected() {
         const inputchecked = $('#product-filter input:checked').length > 0;
         const selectSelected = $('#product-filter select').filter(function() { return this.value; }).length > 0;
@@ -106,7 +114,7 @@ jQuery(document).ready(function($) {
     let paginationSelector_shortcode = $('#product-filter').data('pagination_selector');
    
     function fetchFilteredProducts(page = 1) {
-        selectfromurl();
+        // selectfromurl();
         selectedValesbyuser = store_selected_values();
         $.post(dapfforwc_ajax.ajax_url, gatherFormData() + `&selectedvalues=${selectedValesbyuser}&orderby=${orderby}&paged=${page}&action=dapfforwc_filter_products`, function(response) {
             $('#roverlay').hide();
@@ -328,7 +336,6 @@ jQuery(document).ready(function($) {
         // Create the filters query string from the Set
         let filtersQueryString = Array.from(selectedFilters); // Convert Set back to array
             if (dapfforwc_options.default_filters) {
-                
                 var defaultFilters = dapfforwc_options.default_filters[currentPage]??[];
                 let urlvalues = currentPage.split('/');
                 defaultFilters = defaultFilters.concat(urlvalues);
@@ -338,6 +345,7 @@ jQuery(document).ready(function($) {
                     return !defaultFilters.includes(value);
                 });}
             }
+
         const filterString = filtersQueryString.length !== 0 ? filtersQueryString.join(',') : '';
         const newUrl = filterString.length !== 0 ? `?filters=${filterString}` : `/${currentPage}/`;
         
